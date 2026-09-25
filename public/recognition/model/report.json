@@ -1,0 +1,6 @@
+{
+  "kind": "trainer-real-samples",
+  "trainedAt": "2026-09-24T12:24:33.421Z",
+  "numClasses": 22,
+  "note": "Trained in Träningsverkstan (test/train tabs) on real handwriting samples collected there, then exported via Träna och exportera and installed here. Sample count/accuracy for this specific export weren't captured by this install step - check the trainer UI at train time for those."
+}

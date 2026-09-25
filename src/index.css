@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Nunito", system-ui, sans-serif;
+  /* Blocks the mobile-web chrome that makes this feel like a website: no
+     pull-to-refresh, no text selection while tapping cells, no long-press
+     menus. Real theming/PWA polish is a later milestone. */
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Accessibility settings (see build brief "Accessibility"). */
+[data-reduced-motion="true"] *,
+[data-reduced-motion="true"] *::before,
+[data-reduced-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+[data-high-contrast="true"] {
+  filter: contrast(1.35) saturate(1.15);
+}
+
+/* Comic Sans is a pragmatic, zero-dependency stand-in for a real dyslexia
+   font (e.g. OpenDyslexic): it has more distinct letterforms than typical
+   UI sans fonts and needs no external download. Swap for a bundled
+   OpenDyslexic family during the art pass if a licensed copy is sourced. */
+[data-dyslexia-font="true"] {
+  font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+}
