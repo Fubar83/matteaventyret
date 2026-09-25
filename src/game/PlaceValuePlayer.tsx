@@ -52,29 +52,32 @@ export function PlaceValuePlayer({ problem, onSolved }: PlaceValuePlayerProps) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <PlaceValueBoard
-        number={problem.number}
-        columnAsked={problem.columnAsked}
-        answerText={typed}
-        verdict={verdict}
-      />
-      {message && <p className="text-slate-600 text-sm max-w-xs text-center">{message}</p>}
-      {revealed ? (
-        <button
-          type="button"
-          onClick={() =>
-            onSolved({
-              wrongFirstAttempts: attempts >= 1 ? 1 : 0,
-              hintUsed: true,
-              miniTutorialUsed: true,
-            })
-          }
-          className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow"
-        >
-          {t("placeValue.next")}
-        </button>
-      ) : (
+    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-center gap-6 lg:gap-12">
+      <div className="flex flex-col items-center gap-6">
+        <PlaceValueBoard
+          number={problem.number}
+          columnAsked={problem.columnAsked}
+          answerText={typed}
+          verdict={verdict}
+        />
+        {message && <p className="text-slate-600 text-sm max-w-xs text-center">{message}</p>}
+        {revealed && (
+          <button
+            type="button"
+            onClick={() =>
+              onSolved({
+                wrongFirstAttempts: attempts >= 1 ? 1 : 0,
+                hintUsed: true,
+                miniTutorialUsed: true,
+              })
+            }
+            className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow"
+          >
+            {t("placeValue.next")}
+          </button>
+        )}
+      </div>
+      {!revealed && (
         <Numpad
           onDigit={(d) => setTyped((prev) => (prev.length >= 5 ? prev : prev + d))}
           onDelete={() => setTyped((prev) => prev.slice(0, -1))}

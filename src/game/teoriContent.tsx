@@ -6,7 +6,9 @@ export type TeoriTopic =
   | "subtractionBasic"
   | "additionCarry"
   | "subtractionBorrow"
-  | "subtractionZero";
+  | "subtractionZero"
+  | "multiplicationBasic"
+  | "multiplicationCarry";
 
 export interface TeoriSlide {
   /** i18n key for the narration text - see i18n/sv.json, en.json. */
@@ -313,6 +315,122 @@ const subtractionZero: TeoriSlide[] = [
   },
 ];
 
+const multiplicationBasic: TeoriSlide[] = [
+  {
+    textKey: "teori.multiplicationBasic.1",
+    render: () => (
+      <div className="flex flex-col items-center gap-1">
+        <Row>
+          <Box>2</Box>
+          <Box tone="highlight">3</Box>
+        </Row>
+        <Row>
+          <Box tone="muted" />
+          <Box tone="highlight">3</Box>
+        </Row>
+      </div>
+    ),
+  },
+  {
+    textKey: "teori.multiplicationBasic.2",
+    render: () => (
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-2">
+          <DotGroup count={3} tone="sky" />
+          <DotGroup count={3} tone="sky" />
+          <DotGroup count={3} tone="sky" />
+        </div>
+        <Row>
+          <Box tone="muted">?</Box>
+          <Box tone="new">9</Box>
+        </Row>
+      </div>
+    ),
+  },
+  {
+    textKey: "teori.multiplicationBasic.3",
+    render: () => (
+      <Row>
+        <Box tone="new">6</Box>
+        <Box tone="new">9</Box>
+      </Row>
+    ),
+  },
+];
+
+const multiplicationCarry: TeoriSlide[] = [
+  {
+    textKey: "teori.multiplicationCarry.1",
+    render: () => (
+      <div className="flex flex-col items-center gap-1">
+        <Row>
+          <Box>4</Box>
+          <Box tone="highlight">7</Box>
+        </Row>
+        <Row>
+          <Box tone="muted" />
+          <Box tone="highlight">6</Box>
+        </Row>
+      </div>
+    ),
+  },
+  {
+    textKey: "teori.multiplicationCarry.2",
+    render: () => <div className="text-2xl font-bold text-slate-700">7 · 6 = 42</div>,
+  },
+  {
+    textKey: "teori.multiplicationCarry.3",
+    render: () => (
+      <div className="flex items-center gap-4">
+        <div className="flex flex-col items-center gap-1">
+          <Box tone="new">4</Box>
+          <span className="text-xs text-slate-500">tiotal</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <Box tone="new">2</Box>
+          <span className="text-xs text-slate-500">ental</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    textKey: "teori.multiplicationCarry.4",
+    render: () => (
+      <div className="flex flex-col items-center gap-1">
+        <Row>
+          <Box size="sm" tone="new">
+            4
+          </Box>
+          <Box size="sm" tone="muted" />
+        </Row>
+        <Row>
+          <Box>4</Box>
+          <Box>7</Box>
+        </Row>
+        <Row>
+          <Box tone="muted" />
+          <Box>6</Box>
+        </Row>
+        <div className="w-full border-t-2 border-slate-700" />
+        <Row>
+          <Box tone="muted">?</Box>
+          <Box tone="new">2</Box>
+        </Row>
+      </div>
+    ),
+  },
+  {
+    textKey: "teori.multiplicationCarry.5",
+    render: () => (
+      <Row>
+        <Box tone="new">2</Box>
+        <Box tone="new">8</Box>
+        <Box tone="new">2</Box>
+      </Row>
+    ),
+  },
+];
+
 export const TEORI_SLIDES: Record<TeoriTopic, TeoriSlide[]> = {
   placeValue,
   additionBasic,
@@ -320,6 +438,8 @@ export const TEORI_SLIDES: Record<TeoriTopic, TeoriSlide[]> = {
   additionCarry,
   subtractionBorrow,
   subtractionZero,
+  multiplicationBasic,
+  multiplicationCarry,
 };
 
 export function topicForStage(stageId: string): TeoriTopic {
@@ -337,6 +457,11 @@ export function topicForStage(stageId: string): TeoriTopic {
       return "subtractionBorrow";
     case "1.1.7":
       return "subtractionZero";
+    case "2.1.1":
+      return "multiplicationBasic";
+    case "2.1.2":
+    case "2.1.3":
+      return "multiplicationCarry";
     default:
       return "additionBasic";
   }

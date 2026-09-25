@@ -30,7 +30,7 @@ export function StageSelect({ stageStars, onSelect, onBlixtrunda, onBoss, forceU
   return (
     <div className="flex flex-col items-center gap-4 py-10 px-4">
       <h1 className="text-2xl font-bold text-slate-800">{t("ui.chooseStage")}</h1>
-      <div className="flex flex-col gap-3 w-full max-w-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 w-full max-w-sm lg:max-w-3xl">
         {STAGES.map((s) => {
           const unlocked = forceUnlock || isStageUnlocked(s.id, stageStars);
           const stars = stageStars[s.id] ?? 0;
@@ -54,7 +54,7 @@ export function StageSelect({ stageStars, onSelect, onBlixtrunda, onBoss, forceU
           type="button"
           disabled={!blixtrundaOpen}
           onClick={onBlixtrunda}
-          className={`h-16 rounded-xl border-2 shadow text-left px-5 font-semibold flex items-center justify-between ${
+          className={`lg:col-span-2 h-16 rounded-xl border-2 shadow text-left px-5 font-semibold flex items-center justify-between ${
             blixtrundaOpen ? "bg-sky-50 border-sky-200 text-sky-800" : "bg-slate-100 border-slate-100 text-slate-400"
           }`}
         >
@@ -66,7 +66,7 @@ export function StageSelect({ stageStars, onSelect, onBlixtrunda, onBoss, forceU
           type="button"
           disabled={!bossOpen}
           onClick={onBoss}
-          className={`h-16 rounded-xl border-2 shadow text-left px-5 font-semibold flex items-center justify-between ${
+          className={`lg:col-span-2 h-16 rounded-xl border-2 shadow text-left px-5 font-semibold flex items-center justify-between ${
             bossOpen ? "bg-purple-50 border-purple-200 text-purple-800" : "bg-slate-100 border-slate-100 text-slate-400"
           }`}
         >

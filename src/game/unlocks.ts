@@ -16,7 +16,7 @@ export function isBlixtrundaUnlocked(stageStars: StageStars): boolean {
   return (stageStars["1.1.2"] ?? 0) >= 2;
 }
 
-/** The mini-boss unlocks once every stage in the world has at least 1 star; version 1 only ships world 1's stages. */
+/** Siffer-Slukaren unlocks once every level 1.1 stage has at least 1 star (it is level 1.1's mini-boss, not gated on later levels like 2.1). */
 export function isBossUnlocked(stageStars: StageStars): boolean {
-  return STAGES.every((s) => (stageStars[s.id] ?? 0) >= 1);
+  return STAGES.filter((s) => s.id.startsWith("1.1.")).every((s) => (stageStars[s.id] ?? 0) >= 1);
 }

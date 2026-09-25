@@ -117,45 +117,47 @@ export function ExempelPlayer({ stageId, method, count = 2, inputMode = "numpad"
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-        {t("ui.exempel")} {index + 1}/{problems.length}
-      </p>
-      <ColumnBoard
-        graph={graph}
-        top={problem.top}
-        bottom={problem.bottom}
-        operator={operatorFor(method)}
-        written={written}
-        selectedCellId={selectedCellId}
-        activeCellIds={activeCellIds}
-        verdicts={{}}
-        onCellTap={handleCellTap}
-        inputMode={inputMode}
-        onCellStrokes={handleCellStrokes}
-        pendingCellId={pendingCellId}
-        canvasResetTokens={canvasResetTokens}
-      />
-      <div className="bg-sky-50 border-2 border-sky-200 rounded-xl px-4 py-3 text-slate-700 text-center max-w-xs min-h-[3rem] flex flex-col items-center gap-2">
-        <span>{activeCell && exempelPrompt(method, activeCell, problem.top, problem.bottom)}</span>
-        {nudge && <div className="text-rose-500 text-sm">{t("exempel.nudge")}</div>}
-        {pendingCellId && pendingGuesses && (
-          <div className="flex flex-col items-center gap-1">
-            <p className="text-xs text-slate-500">{t("ui.didYouMean")}</p>
-            <div className="flex gap-2">
-              {pendingGuesses.map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => resolvePending(d)}
-                  className="w-11 h-11 rounded-xl bg-sky-500 text-white text-xl font-bold"
-                >
-                  {d}
-                </button>
-              ))}
+    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-center gap-4 lg:gap-12">
+      <div className="flex flex-col items-center gap-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          {t("ui.exempel")} {index + 1}/{problems.length}
+        </p>
+        <ColumnBoard
+          graph={graph}
+          top={problem.top}
+          bottom={problem.bottom}
+          operator={operatorFor(method)}
+          written={written}
+          selectedCellId={selectedCellId}
+          activeCellIds={activeCellIds}
+          verdicts={{}}
+          onCellTap={handleCellTap}
+          inputMode={inputMode}
+          onCellStrokes={handleCellStrokes}
+          pendingCellId={pendingCellId}
+          canvasResetTokens={canvasResetTokens}
+        />
+        <div className="bg-sky-50 border-2 border-sky-200 rounded-xl px-4 py-3 text-slate-700 text-center max-w-xs min-h-[3rem] flex flex-col items-center gap-2">
+          <span>{activeCell && exempelPrompt(method, activeCell, problem.top, problem.bottom)}</span>
+          {nudge && <div className="text-rose-500 text-sm">{t("exempel.nudge")}</div>}
+          {pendingCellId && pendingGuesses && (
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-xs text-slate-500">{t("ui.didYouMean")}</p>
+              <div className="flex gap-2">
+                {pendingGuesses.map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => resolvePending(d)}
+                    className="w-11 h-11 rounded-xl bg-sky-500 text-white text-xl font-bold"
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       {inputMode === "numpad" && <Numpad onDigit={handleDigit} onDelete={() => {}} disabled={!selectedCellId} />}
     </div>

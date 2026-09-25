@@ -263,63 +263,78 @@ export function ColumnProblemPlayer({ problem, phase, inputMode = "numpad", onSo
   const canType = effectivePhase === "fritt" ? !!selectedCell : !!selectedCell && selectedCell.type !== "strike";
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        <span>{t(`ui.phase.${effectivePhase}`)}</span>
-        {!forcedGuidat && effectivePhase !== "guidat" && (
-          <button type="button" className="underline" onClick={() => setForcedGuidat(true)}>
-            {t("ui.showOrder")}
+    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-center gap-4 lg:gap-12">
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <span>{t(`ui.phase.${effectivePhase}`)}</span>
+          {!forcedGuidat && effectivePhase !== "guidat" && (
+            <button type="button" className="underline" onClick={() => setForcedGuidat(true)}>
+              {t("ui.showOrder")}
+            </button>
+          )}
+        </div>
+
+        <ColumnBoard
+          graph={graph}
+          top={problem.top}
+          bottom={problem.bottom}
+          operator={operatorFor(method)}
+          written={written}
+          selectedCellId={selectedCellId}
+          activeCellIds={activeCellIds}
+          verdicts={verdicts}
+          onCellTap={handleCellTap}
+          inputMode={inputMode}
+          onCellStrokes={handleCellStrokes}
+          pendingCellId={pendingCellId}
+          canvasResetTokens={canvasResetTokens}
+        />
+
+        <div className="min-h-[3rem] flex flex-col items-center gap-2">
+          <p className="text-sm text-slate-600 text-center max-w-xs">{message}</p>
+          {pendingCellId && pendingGuesses && (
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-xs text-slate-500">{t("ui.didYouMean")}</p>
+              <div className="flex gap-2">
+                {pendingGuesses.map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => resolvePending(d)}
+                    className="w-11 h-11 rounded-xl bg-sky-500 text-white text-xl font-bold"
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {effectivePhase === "fritt" && (
+          <button
+            type="button"
+            onClick={handleCheck}
+            className={`h-12 px-8 rounded-xl bg-emerald-600 text-white font-bold shadow ${inputMode === "numpad" ? "lg:hidden" : ""}`}
+          >
+            {t("ui.check")}
           </button>
         )}
       </div>
 
-      <ColumnBoard
-        graph={graph}
-        top={problem.top}
-        bottom={problem.bottom}
-        operator={operatorFor(method)}
-        written={written}
-        selectedCellId={selectedCellId}
-        activeCellIds={activeCellIds}
-        verdicts={verdicts}
-        onCellTap={handleCellTap}
-        inputMode={inputMode}
-        onCellStrokes={handleCellStrokes}
-        pendingCellId={pendingCellId}
-        canvasResetTokens={canvasResetTokens}
-      />
-
-      <div className="min-h-[3rem] flex flex-col items-center gap-2">
-        <p className="text-sm text-slate-600 text-center max-w-xs">{message}</p>
-        {pendingCellId && pendingGuesses && (
-          <div className="flex flex-col items-center gap-1">
-            <p className="text-xs text-slate-500">{t("ui.didYouMean")}</p>
-            <div className="flex gap-2">
-              {pendingGuesses.map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => resolvePending(d)}
-                  className="w-11 h-11 rounded-xl bg-sky-500 text-white text-xl font-bold"
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {inputMode === "numpad" && <Numpad onDigit={handleDigit} onDelete={handleDelete} disabled={!canType} />}
-
-      {effectivePhase === "fritt" && (
-        <button
-          type="button"
-          onClick={handleCheck}
-          className="h-12 px-8 rounded-xl bg-emerald-600 text-white font-bold shadow"
-        >
-          {t("ui.check")}
-        </button>
+      {inputMode === "numpad" && (
+        <div className="flex flex-col items-center gap-4">
+          <Numpad onDigit={handleDigit} onDelete={handleDelete} disabled={!canType} />
+          {effectivePhase === "fritt" && (
+            <button
+              type="button"
+              onClick={handleCheck}
+              className="hidden lg:block h-12 px-8 rounded-xl bg-emerald-600 text-white font-bold shadow"
+            >
+              {t("ui.check")}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { digitAt, digitsOf } from "../digits";
 import { generateProblem, generateRound, type GeneratedProblem } from "../generator";
 import { makeRng } from "../rng";
-import { classifyAdditionCarries, classifySubtractionBorrows } from "../verifier";
+import { classifyAdditionCarries, classifyMultiplicationCarries, classifySubtractionBorrows } from "../verifier";
 
 const N = 10_000;
 
@@ -138,6 +138,52 @@ describe("generator: stage 1.1.7 (4 digits, växling across zeros)", () => {
     const proportion = zeroCrossCount / subCount;
     expect(proportion).toBeGreaterThan(0.25);
     expect(proportion).toBeLessThan(0.55);
+  });
+});
+
+describe("generator: stage 2.1.1 (2-digit x 1-digit, no minnessiffra)", () => {
+  it("multiplier is a single digit 2-9, no column carries", () => {
+    const rng = makeRng(201);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.1.1", rng);
+      if (p.kind !== "columnMul") throw new Error("expected columnMul");
+      expect(p.top).toBeGreaterThanOrEqual(10);
+      expect(p.top).toBeLessThanOrEqual(99);
+      expect(p.bottom).toBeGreaterThanOrEqual(2);
+      expect(p.bottom).toBeLessThanOrEqual(9);
+      expect(p.answer).toBe(p.top * p.bottom);
+      expect(classifyMultiplicationCarries(p.top, p.bottom).columnsWithCarry).toHaveLength(0);
+    }
+  });
+});
+
+describe("generator: stage 2.1.2 (2-digit x 1-digit, with minnessiffra)", () => {
+  it("always carries out of the ones column", () => {
+    const rng = makeRng(202);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.1.2", rng);
+      if (p.kind !== "columnMul") throw new Error("expected columnMul");
+      expect(p.top).toBeGreaterThanOrEqual(10);
+      expect(p.top).toBeLessThanOrEqual(99);
+      expect(p.answer).toBe(p.top * p.bottom);
+      expect(classifyMultiplicationCarries(p.top, p.bottom).columnsWithCarry).toContain(0);
+    }
+  });
+});
+
+describe("generator: stage 2.1.3 (3-digit x 1-digit, several carries)", () => {
+  it("3-digit top, carries in 1-2 of the first two columns", () => {
+    const rng = makeRng(203);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.1.3", rng);
+      if (p.kind !== "columnMul") throw new Error("expected columnMul");
+      expect(p.top).toBeGreaterThanOrEqual(100);
+      expect(p.top).toBeLessThanOrEqual(999);
+      expect(p.answer).toBe(p.top * p.bottom);
+      const carries = classifyMultiplicationCarries(p.top, p.bottom).columnsWithCarry;
+      expect(carries.length).toBeGreaterThanOrEqual(1);
+      for (const c of carries) expect(c).toBeLessThanOrEqual(1);
+    }
   });
 });
 
