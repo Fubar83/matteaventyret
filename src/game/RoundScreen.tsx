@@ -48,7 +48,7 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
   // A "mixed" stage (6-7) generates both operators in one round, so the active
   // method is read off the current problem, not fixed per stage.
   const currentMethod: Extract<MethodId, "columnAdd" | "columnSub" | "columnMul"> | null =
-    problem && problem.kind !== "placeValue" ? problem.kind : null;
+    problem && problem.kind !== "placeValue" && problem.kind !== "shortDiv" ? problem.kind : null;
 
   function recordCommon(outcome: { wrongFirstAttempts: number; hintUsed: boolean; miniTutorialUsed: boolean }) {
     setStats((s) => ({
@@ -158,6 +158,10 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
 
       {problem.kind === "placeValue" ? (
         <PlaceValuePlayer key={index} problem={problem} onSolved={handlePlaceValueSolved} />
+      ) : problem.kind === "shortDiv" ? (
+        // shortDiv has its own board layout (kort division), not yet wired into a
+        // player component - not reachable yet since no StageMeta uses it (see stages.ts).
+        null
       ) : (
         <ColumnProblemPlayer
           key={index}

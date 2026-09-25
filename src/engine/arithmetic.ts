@@ -7,6 +7,7 @@
 import * as columnAdd from "./methods/columnAdd";
 import * as columnMul from "./methods/columnMul";
 import * as columnSub from "./methods/columnSub";
+import * as shortDiv from "./methods/shortDiv";
 import type { BuildOptions, Cell, CellGraph, CellValue, CheckReport, MethodId, Phase, WrittenMap } from "./types";
 
 export function buildGraph(method: MethodId, operands: Record<string, number>, options?: BuildOptions): CellGraph {
@@ -17,8 +18,10 @@ export function buildGraph(method: MethodId, operands: Record<string, number>, o
       return columnSub.buildGraph({ top: operands.top, bottom: operands.bottom }, options);
     case "columnMul":
       return columnMul.buildGraph({ top: operands.top, bottom: operands.bottom }, options);
+    case "shortDiv":
+      return shortDiv.buildGraph({ dividend: operands.dividend, divisor: operands.divisor }, options);
     default:
-      throw new Error(`No plugin implemented yet for method "${method}" (v1 only ships columnAdd/columnSub/columnMul)`);
+      throw new Error(`No plugin implemented yet for method "${method}" (v1 only ships columnAdd/columnSub/columnMul/shortDiv)`);
   }
 }
 
@@ -35,8 +38,10 @@ export function checkAll(
       return columnSub.checkAll({ top: operands.top, bottom: operands.bottom }, written, phase);
     case "columnMul":
       return columnMul.checkAll({ top: operands.top, bottom: operands.bottom }, written);
+    case "shortDiv":
+      return shortDiv.checkAll({ dividend: operands.dividend, divisor: operands.divisor }, written);
     default:
-      throw new Error(`No plugin implemented yet for method "${method}" (v1 only ships columnAdd/columnSub/columnMul)`);
+      throw new Error(`No plugin implemented yet for method "${method}" (v1 only ships columnAdd/columnSub/columnMul/shortDiv)`);
   }
 }
 

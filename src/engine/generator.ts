@@ -6,27 +6,45 @@
  * should never reach a child.
  */
 import { digitAt, digitsToNumber } from "./digits";
+import { computeShortDivisionPlan } from "./methods/shortDiv";
 import {
   classifyAdditionCarries,
   classifyMultiplicationCarries,
   classifySubtractionBorrows,
   verifyAddition,
+  verifyDivision,
   verifyMultiplication,
   verifySubtraction,
 } from "./verifier";
 import type { Rng } from "./rng";
 import { randInt } from "./rng";
 
-export type StageId = "1.1.1" | "1.1.2" | "1.1.3" | "1.1.4" | "1.1.5" | "1.1.6" | "1.1.7" | "2.1.1" | "2.1.2" | "2.1.3";
+export type StageId =
+  | "1.1.1"
+  | "1.1.2"
+  | "1.1.3"
+  | "1.1.4"
+  | "1.1.5"
+  | "1.1.6"
+  | "1.1.7"
+  | "2.1.1"
+  | "2.1.2"
+  | "2.1.3"
+  | "2.2.1"
+  | "2.2.2"
+  | "2.2.3"
+  | "2.2.4";
 
 type AddSubStageId = "1.1.2" | "1.1.3" | "1.1.4" | "1.1.5" | "1.1.6" | "1.1.7";
 type MulStageId = "2.1.1" | "2.1.2" | "2.1.3";
+type DivStageId = "2.2.1" | "2.2.2" | "2.2.3" | "2.2.4";
 
 export type GeneratedProblem =
   | { stageId: "1.1.1"; kind: "placeValue"; number: number; columnAsked: number; answer: number }
   | { stageId: AddSubStageId; kind: "columnAdd"; top: number; bottom: number; answer: number }
   | { stageId: AddSubStageId; kind: "columnSub"; top: number; bottom: number; answer: number }
-  | { stageId: MulStageId; kind: "columnMul"; top: number; bottom: number; answer: number };
+  | { stageId: MulStageId; kind: "columnMul"; top: number; bottom: number; answer: number }
+  | { stageId: DivStageId; kind: "shortDiv"; dividend: number; divisor: number; answer: number; remainder: number };
 
 const MAX_ATTEMPTS = 200;
 
@@ -174,6 +192,7 @@ function chooseColumns(rng: Rng, fromCols: readonly number[], count: number): Se
 
 function makeKey(p: GeneratedProblem): string {
   if (p.kind === "placeValue") return `pv:${p.number}:${p.columnAsked}`;
+  if (p.kind === "shortDiv") return `${p.kind}:${p.dividend}:${p.divisor}`;
   return `${p.kind}:${p.top}:${p.bottom}`;
 }
 
@@ -344,6 +363,81 @@ function finalizeMul(stageId: MulStageId, top: number, bottom: number): Generate
   return { stageId, kind: "columnMul", top, bottom, answer };
 }
 
+function finalizeDiv(stageId: DivStageId, dividend: number, divisor: number): GeneratedProblem {
+  const answer = Math.floor(dividend / divisor);
+  const remainder = dividend % divisor;
+  const check = verifyDivision(dividend, divisor, answer, remainder);
+  if (!check.valid) throw new Error(`generator/verifier mismatch for ${dividend}/${divisor}: ${check.reason}`);
+  return { stageId, kind: "shortDiv", dividend, divisor, answer, remainder };
+}
+
+/** Digits 0-9 that divide `divisor` evenly - the only digits that can appear in a no-carry kort division dividend. */
+function digitsDivisibleBy(divisor: number): number[] {
+  return Array.from({ length: 10 }, (_, d) => d).filter((d) => d % divisor === 0);
+}
+
+// Stages generate a random 3-digit dividend and single-digit divisor, then
+// independently re-derive the column-by-column plan (the same logic buildGraph
+// itself uses) to check the pattern actually matches the stage. 2.2.1 and 2.2.3
+// target patterns too rare to reliably hit by rejection-sampling a random
+// dividend within MAX_ATTEMPTS, so they construct digits directly instead.
+function generateStage221(rng: Rng): GeneratedProblem {
+  // No minnesrest: every digit must itself be an exact multiple of the divisor.
+  const divisor = randInt(rng, 2, 9);
+  const valid = digitsDivisibleBy(divisor);
+  const leadingChoices = valid.filter((d) => d > 0); // divisor itself is always one such digit
+  const leading = leadingChoices[randInt(rng, 0, leadingChoices.length - 1)];
+  const middle = valid[randInt(rng, 0, valid.length - 1)];
+  const ones = valid[randInt(rng, 0, valid.length - 1)];
+  return finalizeDiv("2.2.1", leading * 100 + middle * 10 + ones, divisor);
+}
+
+function generateStage222(rng: Rng): GeneratedProblem {
+  // With minnesrest: at least one column carries a remainder, but the division is still exact overall.
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const divisor = randInt(rng, 2, 9);
+    const dividend = randInt(rng, 100, 999);
+    if (dividend % divisor !== 0) continue;
+    const { columns } = computeShortDivisionPlan(dividend, divisor);
+    if (columns[0].quotientDigit === 0) continue;
+    if (!columns.some((c) => c.col > 0 && c.remainderOut > 0)) continue;
+    return finalizeDiv("2.2.2", dividend, divisor);
+  }
+  throw new Error("generateStage222: exhausted attempts");
+}
+
+function generateStage223(rng: Rng): GeneratedProblem {
+  // Zero in the quotient: force it at the tens column by making the hundreds
+  // column divide exactly (no carry in) and the tens digit itself < divisor
+  // (so tens' own quotient digit is 0); the ones digit is then chosen so the
+  // whole division still comes out exact.
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const divisor = randInt(rng, 2, 9);
+    const validLead = digitsDivisibleBy(divisor).filter((d) => d > 0);
+    const leading = validLead[randInt(rng, 0, validLead.length - 1)];
+    const middle = randInt(rng, 0, divisor - 1);
+    const onesCandidates: number[] = [];
+    for (let d = 0; d <= 9; d++) if ((middle * 10 + d) % divisor === 0) onesCandidates.push(d);
+    if (onesCandidates.length === 0) continue;
+    const ones = onesCandidates[randInt(rng, 0, onesCandidates.length - 1)];
+    return finalizeDiv("2.2.3", leading * 100 + middle * 10 + ones, divisor);
+  }
+  throw new Error("generateStage223: exhausted attempts");
+}
+
+function generateStage224(rng: Rng): GeneratedProblem {
+  // Division with a genuine leftover remainder.
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const divisor = randInt(rng, 2, 9);
+    const dividend = randInt(rng, 100, 999);
+    if (dividend % divisor === 0) continue;
+    const { columns } = computeShortDivisionPlan(dividend, divisor);
+    if (columns[0].quotientDigit === 0) continue;
+    return finalizeDiv("2.2.4", dividend, divisor);
+  }
+  throw new Error("generateStage224: exhausted attempts");
+}
+
 const GENERATORS: Record<StageId, (rng: Rng) => GeneratedProblem> = {
   "1.1.1": generateStage1,
   "1.1.2": generateStage2,
@@ -355,6 +449,10 @@ const GENERATORS: Record<StageId, (rng: Rng) => GeneratedProblem> = {
   "2.1.1": generateStage201,
   "2.1.2": generateStage202,
   "2.1.3": generateStage203,
+  "2.2.1": generateStage221,
+  "2.2.2": generateStage222,
+  "2.2.3": generateStage223,
+  "2.2.4": generateStage224,
 };
 
 export function generateProblem(stageId: StageId, rng: Rng): GeneratedProblem {

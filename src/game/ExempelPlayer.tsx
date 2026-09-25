@@ -30,7 +30,9 @@ export function ExempelPlayer({ stageId, method, count = 2, inputMode = "numpad"
       let p;
       do {
         p = generateProblem(stageId, rngRef);
-      } while (p.kind === "placeValue");
+        // shortDiv isn't wired into this player yet (see RoundScreen.tsx) - not
+        // reachable since no StageMeta uses a shortDiv stage id yet.
+      } while (p.kind === "placeValue" || p.kind === "shortDiv");
       list.push(p);
     }
     return list;

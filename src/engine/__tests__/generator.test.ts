@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { digitAt, digitsOf } from "../digits";
 import { generateProblem, generateRound, type GeneratedProblem } from "../generator";
+import { computeShortDivisionPlan } from "../methods/shortDiv";
 import { makeRng } from "../rng";
 import { classifyAdditionCarries, classifyMultiplicationCarries, classifySubtractionBorrows } from "../verifier";
 
@@ -14,7 +15,7 @@ function zeroCount(n: number): number {
 }
 
 function checkCommonRules(p: GeneratedProblem, allowExtraZeros: boolean) {
-  if (p.kind === "placeValue") return;
+  if (p.kind === "placeValue" || p.kind === "shortDiv") return;
   expect(p.top).toBeGreaterThan(1);
   expect(p.bottom).toBeGreaterThan(1);
   expect(p.top).not.toBe(p.bottom);
@@ -183,6 +184,66 @@ describe("generator: stage 2.1.3 (3-digit x 1-digit, several carries)", () => {
       const carries = classifyMultiplicationCarries(p.top, p.bottom).columnsWithCarry;
       expect(carries.length).toBeGreaterThanOrEqual(1);
       for (const c of carries) expect(c).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+const DIV_N = 2000;
+
+describe("generator: stage 2.2.1 (kort division, no minnesrest)", () => {
+  it("3-digit dividend, single-digit divisor, exact and no column ever carries", () => {
+    const rng = makeRng(221);
+    for (let i = 0; i < DIV_N; i++) {
+      const p = generateProblem("2.2.1", rng);
+      if (p.kind !== "shortDiv") throw new Error("expected shortDiv");
+      expect(p.dividend).toBeGreaterThanOrEqual(100);
+      expect(p.dividend).toBeLessThanOrEqual(999);
+      expect(p.divisor).toBeGreaterThanOrEqual(2);
+      expect(p.divisor).toBeLessThanOrEqual(9);
+      expect(p.remainder).toBe(0);
+      expect(p.answer).toBe(Math.floor(p.dividend / p.divisor));
+      const { columns } = computeShortDivisionPlan(p.dividend, p.divisor);
+      expect(columns.every((c) => c.col === 0 || c.remainderOut === 0)).toBe(true);
+    }
+  });
+});
+
+describe("generator: stage 2.2.2 (kort division, with minnesrest)", () => {
+  it("exact overall, but at least one column carries a remainder", () => {
+    const rng = makeRng(222);
+    for (let i = 0; i < DIV_N; i++) {
+      const p = generateProblem("2.2.2", rng);
+      if (p.kind !== "shortDiv") throw new Error("expected shortDiv");
+      expect(p.remainder).toBe(0);
+      const { columns } = computeShortDivisionPlan(p.dividend, p.divisor);
+      expect(columns.some((c) => c.col > 0 && c.remainderOut > 0)).toBe(true);
+    }
+  });
+});
+
+describe("generator: stage 2.2.3 (zero in the quotient)", () => {
+  it("an internal (non-leading) quotient digit is 0", () => {
+    const rng = makeRng(223);
+    for (let i = 0; i < DIV_N; i++) {
+      const p = generateProblem("2.2.3", rng);
+      if (p.kind !== "shortDiv") throw new Error("expected shortDiv");
+      expect(p.remainder).toBe(0);
+      const { columns } = computeShortDivisionPlan(p.dividend, p.divisor);
+      expect(columns[0].quotientDigit).toBeGreaterThan(0); // no leading zero
+      expect(columns.slice(1).some((c) => c.quotientDigit === 0)).toBe(true);
+    }
+  });
+});
+
+describe("generator: stage 2.2.4 (division with remainder)", () => {
+  it("leaves a genuine nonzero remainder", () => {
+    const rng = makeRng(224);
+    for (let i = 0; i < DIV_N; i++) {
+      const p = generateProblem("2.2.4", rng);
+      if (p.kind !== "shortDiv") throw new Error("expected shortDiv");
+      expect(p.remainder).toBeGreaterThan(0);
+      expect(p.remainder).toBeLessThan(p.divisor);
+      expect(p.dividend).toBe(p.answer * p.divisor + p.remainder);
     }
   });
 });

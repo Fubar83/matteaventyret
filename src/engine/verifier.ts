@@ -73,6 +73,22 @@ export function classifyMultiplicationCarries(top: number, bottom: number): Carr
   return { columnsWithCarry };
 }
 
+/** Single-digit divisor only - see shortDiv.ts scope note. */
+export function verifyDivision(dividend: number, divisor: number, expectedQuotient: number, expectedRemainder: number): VerifyResult {
+  if (!Number.isInteger(divisor) || divisor < 2 || divisor > 9) {
+    return { valid: false, reason: "divisor must be a single digit 2-9 (v1 scope)" };
+  }
+  const trueQuotient = Math.floor(dividend / divisor);
+  const trueRemainder = dividend % divisor;
+  if (trueQuotient !== expectedQuotient || trueRemainder !== expectedRemainder) {
+    return {
+      valid: false,
+      reason: `expected ${expectedQuotient} remainder ${expectedRemainder}, plain arithmetic gives ${trueQuotient} remainder ${trueRemainder}`,
+    };
+  }
+  return { valid: true };
+}
+
 export interface BorrowPattern {
   /** Columns (0 = ones) that could not subtract directly and needed a växling. */
   columnsWithBorrow: number[];
