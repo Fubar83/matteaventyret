@@ -12,7 +12,8 @@ export type TeoriTopic =
   | "decimalColumn"
   | "statisticsMean"
   | "statisticsMedian"
-  | "statisticsMode";
+  | "statisticsMode"
+  | "chartReading";
 
 export interface TeoriSlide {
   /** i18n key for the narration text - see i18n/sv.json, en.json. */
@@ -550,6 +551,40 @@ const statisticsMode: TeoriSlide[] = [
   },
 ];
 
+const chartReading: TeoriSlide[] = [
+  {
+    textKey: "teori.chartReading.1",
+    render: () => (
+      <div className="flex items-end gap-4" style={{ height: 100 }}>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-sm font-bold text-slate-700">3</span>
+          <div className="w-10 bg-sky-400 rounded-t" style={{ height: 40 }} />
+          <span className="text-xs text-slate-600">Äpplen</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-sm font-bold text-slate-700">7</span>
+          <div className="w-10 bg-sky-400 rounded-t" style={{ height: 90 }} />
+          <span className="text-xs text-slate-600">Bananer</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-sm font-bold text-slate-700">5</span>
+          <div className="w-10 bg-sky-400 rounded-t" style={{ height: 65 }} />
+          <span className="text-xs text-slate-600">Päron</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    textKey: "teori.chartReading.2",
+    render: () => (
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-sm text-slate-500">Den högsta stapeln har flest - här är det bananer, 7 stycken.</span>
+        <Box tone="new">7</Box>
+      </div>
+    ),
+  },
+];
+
 export const TEORI_SLIDES: Record<TeoriTopic, TeoriSlide[]> = {
   placeValue,
   additionBasic,
@@ -563,6 +598,7 @@ export const TEORI_SLIDES: Record<TeoriTopic, TeoriSlide[]> = {
   statisticsMean,
   statisticsMedian,
   statisticsMode,
+  chartReading,
 };
 
 export function topicForStage(stageId: string): TeoriTopic {
@@ -594,6 +630,10 @@ export function topicForStage(stageId: string): TeoriTopic {
       return "statisticsMedian";
     case "2.7.3":
       return "statisticsMode";
+    case "2.8.1":
+    case "2.8.2":
+    case "2.8.3":
+      return "chartReading";
     default:
       return "additionBasic";
   }

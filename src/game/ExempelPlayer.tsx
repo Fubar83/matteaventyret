@@ -32,8 +32,8 @@ export function ExempelPlayer({ stageId, method, count = 2, inputMode = "numpad"
         p = generateProblem(stageId, rngRef);
         // shortDiv isn't wired into this player yet (see RoundScreen.tsx) - not
         // reachable since no StageMeta uses a shortDiv stage id yet. statistics
-        // stages skip Exempel entirely (see RoundScreen.tsx, same as placeValue).
-      } while (p.kind === "placeValue" || p.kind === "shortDiv" || p.kind === "statistics");
+        // and chart stages skip Exempel entirely (see RoundScreen.tsx, same as placeValue).
+      } while (p.kind === "placeValue" || p.kind === "shortDiv" || p.kind === "statistics" || p.kind === "chart");
       list.push(p);
     }
     return list;

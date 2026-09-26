@@ -15,7 +15,7 @@ function zeroCount(n: number): number {
 }
 
 function checkCommonRules(p: GeneratedProblem, allowExtraZeros: boolean) {
-  if (p.kind === "placeValue" || p.kind === "shortDiv" || p.kind === "statistics") return;
+  if (p.kind === "placeValue" || p.kind === "shortDiv" || p.kind === "statistics" || p.kind === "chart") return;
   expect(p.top).toBeGreaterThan(1);
   expect(p.bottom).toBeGreaterThan(1);
   expect(p.top).not.toBe(p.bottom);
@@ -327,6 +327,49 @@ describe("generator: stage 2.7.3 (typvärde)", () => {
       for (const v of p.values) counts.set(v, (counts.get(v) ?? 0) + 1);
       expect(counts.get(p.answer)).toBe(3);
       for (const [v, c] of counts) if (v !== p.answer) expect(c).toBe(1);
+    }
+  });
+});
+
+describe("generator: stage 2.8.1 (chart lookup)", () => {
+  it("answer matches the value at the asked category", () => {
+    const rng = makeRng(281);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.8.1", rng);
+      if (p.kind !== "chart") throw new Error("expected chart");
+      expect(p.questionType).toBe("lookup");
+      expect(p.values.length).toBe(4);
+      expect(p.askIndex).toBeGreaterThanOrEqual(0);
+      expect(p.askIndex).toBeLessThan(4);
+      expect(p.answer).toBe(p.values[p.askIndex!]);
+    }
+  });
+});
+
+describe("generator: stage 2.8.2 (chart difference)", () => {
+  it("answer is the absolute difference between two distinct-valued bars", () => {
+    const rng = makeRng(282);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.8.2", rng);
+      if (p.kind !== "chart") throw new Error("expected chart");
+      expect(p.questionType).toBe("difference");
+      const [a, b] = p.compareIndices!;
+      expect(a).not.toBe(b);
+      expect(p.values[a]).not.toBe(p.values[b]);
+      expect(p.answer).toBe(Math.abs(p.values[a] - p.values[b]));
+      expect(p.answer).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("generator: stage 2.8.3 (chart sum)", () => {
+  it("answer is the total across every bar", () => {
+    const rng = makeRng(283);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.8.3", rng);
+      if (p.kind !== "chart") throw new Error("expected chart");
+      expect(p.questionType).toBe("sum");
+      expect(p.answer).toBe(p.values.reduce((a, b) => a + b, 0));
     }
   });
 });

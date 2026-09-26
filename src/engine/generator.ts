@@ -38,7 +38,10 @@ export type StageId =
   | "2.3.4"
   | "2.7.1"
   | "2.7.2"
-  | "2.7.3";
+  | "2.7.3"
+  | "2.8.1"
+  | "2.8.2"
+  | "2.8.3";
 
 type AddSubStageId = "1.1.2" | "1.1.3" | "1.1.4" | "1.1.5" | "1.1.6" | "1.1.7";
 type MulStageId = "2.1.1" | "2.1.2" | "2.1.3";
@@ -46,6 +49,10 @@ type DivStageId = "2.2.1" | "2.2.2" | "2.2.3" | "2.2.4";
 type DecimalStageId = "2.3.3" | "2.3.4";
 type StatStageId = "2.7.1" | "2.7.2" | "2.7.3";
 export type StatMeasure = "mean" | "median" | "mode";
+type ChartStageId = "2.8.1" | "2.8.2" | "2.8.3";
+export type ChartQuestionType = "lookup" | "difference" | "sum";
+/** i18n keys (see i18n/sv.json, en.json's "chart.cat.*") - always 4 fixed fruit categories, kept short across screens. */
+export const CHART_CATEGORY_KEYS = ["chart.cat.apple", "chart.cat.banana", "chart.cat.pear", "chart.cat.orange"] as const;
 
 export type GeneratedProblem =
   | { stageId: "1.1.1"; kind: "placeValue"; number: number; columnAsked: number; answer: number }
@@ -53,7 +60,17 @@ export type GeneratedProblem =
   | { stageId: AddSubStageId | DecimalStageId; kind: "columnSub"; top: number; bottom: number; answer: number; decimalPlaces?: number }
   | { stageId: MulStageId; kind: "columnMul"; top: number; bottom: number; answer: number }
   | { stageId: DivStageId; kind: "shortDiv"; dividend: number; divisor: number; answer: number; remainder: number }
-  | { stageId: StatStageId; kind: "statistics"; measure: StatMeasure; values: number[]; answer: number };
+  | { stageId: StatStageId; kind: "statistics"; measure: StatMeasure; values: number[]; answer: number }
+  | {
+      stageId: ChartStageId;
+      kind: "chart";
+      categoryKeys: readonly string[];
+      values: number[];
+      questionType: ChartQuestionType;
+      askIndex?: number;
+      compareIndices?: [number, number];
+      answer: number;
+    };
 
 const MAX_ATTEMPTS = 200;
 
@@ -203,6 +220,7 @@ function makeKey(p: GeneratedProblem): string {
   if (p.kind === "placeValue") return `pv:${p.number}:${p.columnAsked}`;
   if (p.kind === "shortDiv") return `${p.kind}:${p.dividend}:${p.divisor}`;
   if (p.kind === "statistics") return `${p.kind}:${p.measure}:${p.values.join(",")}`;
+  if (p.kind === "chart") return `${p.kind}:${p.questionType}:${p.values.join(",")}:${p.askIndex ?? ""}:${p.compareIndices?.join("-") ?? ""}`;
   return `${p.kind}:${p.top}:${p.bottom}`;
 }
 
@@ -545,6 +563,48 @@ function generateStage273(rng: Rng): GeneratedProblem {
   return { stageId: "2.7.3", kind: "statistics", measure: "mode", values, answer: mode };
 }
 
+// Tabeller och diagram (Lgr22 åk 4-6 "Sannolikhet och statistik": tolka data i
+// tabeller och diagram). A simple bar chart over 4 fixed fruit categories;
+// every question has a whole-number answer read straight off the chart.
+function generateChartValues(rng: Rng): number[] {
+  return CHART_CATEGORY_KEYS.map(() => randInt(rng, 1, 15));
+}
+
+function generateStage281(rng: Rng): GeneratedProblem {
+  // Direct lookup: read one bar's value.
+  const values = generateChartValues(rng);
+  const askIndex = randInt(rng, 0, values.length - 1);
+  return { stageId: "2.8.1", kind: "chart", categoryKeys: CHART_CATEGORY_KEYS, values, questionType: "lookup", askIndex, answer: values[askIndex] };
+}
+
+function generateStage282(rng: Rng): GeneratedProblem {
+  // Difference between two distinct-valued bars (retried so the answer isn't trivially 0).
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const values = generateChartValues(rng);
+    const a = randInt(rng, 0, values.length - 1);
+    let b = randInt(rng, 0, values.length - 1);
+    while (b === a) b = randInt(rng, 0, values.length - 1);
+    if (values[a] === values[b]) continue;
+    return {
+      stageId: "2.8.2",
+      kind: "chart",
+      categoryKeys: CHART_CATEGORY_KEYS,
+      values,
+      questionType: "difference",
+      compareIndices: [a, b],
+      answer: Math.abs(values[a] - values[b]),
+    };
+  }
+  throw new Error("generateStage282: exhausted attempts");
+}
+
+function generateStage283(rng: Rng): GeneratedProblem {
+  // Total across every bar.
+  const values = generateChartValues(rng);
+  const answer = values.reduce((sum, v) => sum + v, 0);
+  return { stageId: "2.8.3", kind: "chart", categoryKeys: CHART_CATEGORY_KEYS, values, questionType: "sum", answer };
+}
+
 const GENERATORS: Record<StageId, (rng: Rng) => GeneratedProblem> = {
   "1.1.1": generateStage1,
   "1.1.2": generateStage2,
@@ -565,6 +625,9 @@ const GENERATORS: Record<StageId, (rng: Rng) => GeneratedProblem> = {
   "2.7.1": generateStage271,
   "2.7.2": generateStage272,
   "2.7.3": generateStage273,
+  "2.8.1": generateStage281,
+  "2.8.2": generateStage282,
+  "2.8.3": generateStage283,
 };
 
 export function generateProblem(stageId: StageId, rng: Rng): GeneratedProblem {

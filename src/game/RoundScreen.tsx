@@ -5,6 +5,7 @@ import type { RoundStats } from "../engine/scoring";
 import { computeProblemXp, computeStars, type Stars } from "../engine/scoring";
 import type { MethodId } from "../engine/types";
 import { t } from "../i18n";
+import { ChartPlayer } from "./ChartPlayer";
 import type { ColumnProblemSummary } from "./ColumnProblemPlayer";
 import { ColumnProblemPlayer } from "./ColumnProblemPlayer";
 import type { MethodProgress } from "./phaseProgress";
@@ -49,7 +50,7 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
   // A "mixed" stage (6-7) generates both operators in one round, so the active
   // method is read off the current problem, not fixed per stage.
   const currentMethod: Extract<MethodId, "columnAdd" | "columnSub" | "columnMul"> | null =
-    problem && problem.kind !== "placeValue" && problem.kind !== "shortDiv" && problem.kind !== "statistics" ? problem.kind : null;
+    problem && (problem.kind === "columnAdd" || problem.kind === "columnSub" || problem.kind === "columnMul") ? problem.kind : null;
 
   function recordCommon(outcome: { wrongFirstAttempts: number; hintUsed: boolean; miniTutorialUsed: boolean }) {
     setStats((s) => ({
@@ -66,6 +67,10 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
   }
 
   function handleStatisticsSolved(summary: ProblemSummary) {
+    recordCommon(summary);
+  }
+
+  function handleChartSolved(summary: ProblemSummary) {
     recordCommon(summary);
   }
 
@@ -108,7 +113,7 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
         topic={topic}
         onDone={() => {
           onTeoriSeen();
-          setIntro(stage.method === "placeValue" || stage.method === "statistics" ? "uppgift" : "exempel");
+          setIntro(stage.method === "placeValue" || stage.method === "statistics" || stage.method === "chart" ? "uppgift" : "exempel");
         }}
       />
     );
@@ -165,6 +170,8 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
         <PlaceValuePlayer key={index} problem={problem} inputMode={inputMode} onSolved={handlePlaceValueSolved} />
       ) : problem.kind === "statistics" ? (
         <StatisticsPlayer key={index} problem={problem} inputMode={inputMode} onSolved={handleStatisticsSolved} />
+      ) : problem.kind === "chart" ? (
+        <ChartPlayer key={index} problem={problem} inputMode={inputMode} onSolved={handleChartSolved} />
       ) : problem.kind === "shortDiv" ? (
         // shortDiv has its own board layout (kort division), not yet wired into a
         // player component - not reachable yet since no StageMeta uses it (see stages.ts).
