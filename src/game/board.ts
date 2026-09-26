@@ -12,6 +12,8 @@ export interface TenSlot {
   ones: Cell;
   /** The strike cell that, once written, draws a line across this "10" (null if this ten is never struck). */
   strikeCell: Cell | null;
+  /** The strike cell that must be crossed out first, before this borrowed "10" is even shown (the lending column's own diagonal line) - null if nothing gates it. */
+  revealedBy: Cell | null;
 }
 export interface SingleSlot {
   kind: "single";
@@ -47,7 +49,9 @@ export function buildColumns(graph: CellGraph, top: number, bottom: number): Col
       if (cell.type === "borrowTen" && cell.meta?.part === "tens") {
         const onesCell = boxCells[i + 1];
         if (onesCell?.type === "borrowTen" && onesCell.meta?.part === "ones") {
-          annotations.push({ kind: "ten", tens: cell, ones: onesCell, strikeCell: strikeOnBorrowTen ?? null });
+          const gate = graph.cells.find((c) => c.id === cell.dependsOn[0]);
+          const revealedBy = gate?.type === "strike" ? gate : null;
+          annotations.push({ kind: "ten", tens: cell, ones: onesCell, strikeCell: strikeOnBorrowTen ?? null, revealedBy });
           i++;
           continue;
         }

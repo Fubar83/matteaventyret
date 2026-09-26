@@ -127,7 +127,7 @@ export function ColumnBoard({
               <div key={col.col} className={`${COLUMN_WIDTH} flex flex-col-reverse items-center gap-1 min-h-[4rem]`}>
                 {col.annotations.map((slot, i) =>
                   slot.kind === "ten" ? (
-                    (() => {
+                    slot.revealedBy && written[slot.revealedBy.id] !== "struck" ? null : (() => {
                       const struck = !!slot.strikeCell && written[slot.strikeCell.id] === "struck";
                       const strikeable = !!slot.strikeCell && !struck && activeCellIds.has(slot.strikeCell.id);
                       return (
