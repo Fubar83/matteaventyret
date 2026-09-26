@@ -9,7 +9,10 @@ export type TeoriTopic =
   | "subtractionZero"
   | "multiplicationBasic"
   | "multiplicationCarry"
-  | "decimalColumn";
+  | "decimalColumn"
+  | "statisticsMean"
+  | "statisticsMedian"
+  | "statisticsMode";
 
 export interface TeoriSlide {
   /** i18n key for the narration text - see i18n/sv.json, en.json. */
@@ -473,6 +476,80 @@ const decimalColumn: TeoriSlide[] = [
   },
 ];
 
+const statisticsMean: TeoriSlide[] = [
+  {
+    textKey: "teori.statisticsMean.1",
+    render: () => (
+      <Row>
+        <Box>4</Box>
+        <Box>7</Box>
+        <Box>9</Box>
+        <Box>12</Box>
+      </Row>
+    ),
+  },
+  {
+    textKey: "teori.statisticsMean.2",
+    render: () => (
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-lg font-bold text-slate-700">4 + 7 + 9 + 12 = 32</span>
+        <span className="text-lg font-bold text-slate-700">32 : 4 = 8</span>
+        <Box tone="new">8</Box>
+      </div>
+    ),
+  },
+];
+
+const statisticsMedian: TeoriSlide[] = [
+  {
+    textKey: "teori.statisticsMedian.1",
+    render: () => (
+      <Row>
+        <Box>3</Box>
+        <Box>5</Box>
+        <Box tone="highlight">6</Box>
+        <Box>8</Box>
+        <Box>10</Box>
+      </Row>
+    ),
+  },
+  {
+    textKey: "teori.statisticsMedian.2",
+    render: () => (
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-sm text-slate-500">2 tal till vänster, 2 tal till höger</span>
+        <Box tone="new">6</Box>
+      </div>
+    ),
+  },
+];
+
+const statisticsMode: TeoriSlide[] = [
+  {
+    textKey: "teori.statisticsMode.1",
+    render: () => (
+      <Row>
+        <Box>2</Box>
+        <Box>3</Box>
+        <Box>3</Box>
+        <Box tone="highlight">5</Box>
+        <Box tone="highlight">5</Box>
+        <Box tone="highlight">5</Box>
+        <Box>8</Box>
+      </Row>
+    ),
+  },
+  {
+    textKey: "teori.statisticsMode.2",
+    render: () => (
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-sm text-slate-500">5:an är med tre gånger - flest av alla</span>
+        <Box tone="new">5</Box>
+      </div>
+    ),
+  },
+];
+
 export const TEORI_SLIDES: Record<TeoriTopic, TeoriSlide[]> = {
   placeValue,
   additionBasic,
@@ -483,6 +560,9 @@ export const TEORI_SLIDES: Record<TeoriTopic, TeoriSlide[]> = {
   multiplicationBasic,
   multiplicationCarry,
   decimalColumn,
+  statisticsMean,
+  statisticsMedian,
+  statisticsMode,
 };
 
 export function topicForStage(stageId: string): TeoriTopic {
@@ -508,6 +588,12 @@ export function topicForStage(stageId: string): TeoriTopic {
     case "2.3.3":
     case "2.3.4":
       return "decimalColumn";
+    case "2.7.1":
+      return "statisticsMean";
+    case "2.7.2":
+      return "statisticsMedian";
+    case "2.7.3":
+      return "statisticsMode";
     default:
       return "additionBasic";
   }

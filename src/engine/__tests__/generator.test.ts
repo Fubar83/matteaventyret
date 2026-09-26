@@ -15,7 +15,7 @@ function zeroCount(n: number): number {
 }
 
 function checkCommonRules(p: GeneratedProblem, allowExtraZeros: boolean) {
-  if (p.kind === "placeValue" || p.kind === "shortDiv") return;
+  if (p.kind === "placeValue" || p.kind === "shortDiv" || p.kind === "statistics") return;
   expect(p.top).toBeGreaterThan(1);
   expect(p.bottom).toBeGreaterThan(1);
   expect(p.top).not.toBe(p.bottom);
@@ -281,6 +281,52 @@ describe("generator: stage 2.3.4 (decimal add/sub, hundredths)", () => {
         expect(p.top).toBeGreaterThanOrEqual(p.bottom);
         expect(p.answer).toBe(p.top - p.bottom);
       }
+    }
+  });
+});
+
+describe("generator: stage 2.7.1 (medelvärde)", () => {
+  it("mean of 4 values divides evenly and isn't trivially all-equal", () => {
+    const rng = makeRng(271);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.7.1", rng);
+      if (p.kind !== "statistics") throw new Error("expected statistics");
+      expect(p.measure).toBe("mean");
+      expect(p.values.length).toBe(4);
+      const sum = p.values.reduce((a, b) => a + b, 0);
+      expect(sum % p.values.length).toBe(0);
+      expect(p.answer).toBe(sum / p.values.length);
+      expect(p.values.every((v) => v === p.answer)).toBe(false);
+    }
+  });
+});
+
+describe("generator: stage 2.7.2 (median)", () => {
+  it("median of 5 values is the middle value once sorted", () => {
+    const rng = makeRng(272);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.7.2", rng);
+      if (p.kind !== "statistics") throw new Error("expected statistics");
+      expect(p.measure).toBe("median");
+      expect(p.values.length).toBe(5);
+      const sorted = [...p.values].sort((a, b) => a - b);
+      expect(p.answer).toBe(sorted[2]);
+    }
+  });
+});
+
+describe("generator: stage 2.7.3 (typvärde)", () => {
+  it("mode is the value repeated 3 times among 4 distinct others", () => {
+    const rng = makeRng(273);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.7.3", rng);
+      if (p.kind !== "statistics") throw new Error("expected statistics");
+      expect(p.measure).toBe("mode");
+      expect(p.values.length).toBe(7);
+      const counts = new Map<number, number>();
+      for (const v of p.values) counts.set(v, (counts.get(v) ?? 0) + 1);
+      expect(counts.get(p.answer)).toBe(3);
+      for (const [v, c] of counts) if (v !== p.answer) expect(c).toBe(1);
     }
   });
 });

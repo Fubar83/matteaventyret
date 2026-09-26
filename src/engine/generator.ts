@@ -17,7 +17,7 @@ import {
   verifySubtraction,
 } from "./verifier";
 import type { Rng } from "./rng";
-import { randInt } from "./rng";
+import { randInt, shuffle } from "./rng";
 
 export type StageId =
   | "1.1.1"
@@ -35,19 +35,25 @@ export type StageId =
   | "2.2.3"
   | "2.2.4"
   | "2.3.3"
-  | "2.3.4";
+  | "2.3.4"
+  | "2.7.1"
+  | "2.7.2"
+  | "2.7.3";
 
 type AddSubStageId = "1.1.2" | "1.1.3" | "1.1.4" | "1.1.5" | "1.1.6" | "1.1.7";
 type MulStageId = "2.1.1" | "2.1.2" | "2.1.3";
 type DivStageId = "2.2.1" | "2.2.2" | "2.2.3" | "2.2.4";
 type DecimalStageId = "2.3.3" | "2.3.4";
+type StatStageId = "2.7.1" | "2.7.2" | "2.7.3";
+export type StatMeasure = "mean" | "median" | "mode";
 
 export type GeneratedProblem =
   | { stageId: "1.1.1"; kind: "placeValue"; number: number; columnAsked: number; answer: number }
   | { stageId: AddSubStageId | DecimalStageId; kind: "columnAdd"; top: number; bottom: number; answer: number; decimalPlaces?: number }
   | { stageId: AddSubStageId | DecimalStageId; kind: "columnSub"; top: number; bottom: number; answer: number; decimalPlaces?: number }
   | { stageId: MulStageId; kind: "columnMul"; top: number; bottom: number; answer: number }
-  | { stageId: DivStageId; kind: "shortDiv"; dividend: number; divisor: number; answer: number; remainder: number };
+  | { stageId: DivStageId; kind: "shortDiv"; dividend: number; divisor: number; answer: number; remainder: number }
+  | { stageId: StatStageId; kind: "statistics"; measure: StatMeasure; values: number[]; answer: number };
 
 const MAX_ATTEMPTS = 200;
 
@@ -196,6 +202,7 @@ function chooseColumns(rng: Rng, fromCols: readonly number[], count: number): Se
 function makeKey(p: GeneratedProblem): string {
   if (p.kind === "placeValue") return `pv:${p.number}:${p.columnAsked}`;
   if (p.kind === "shortDiv") return `${p.kind}:${p.dividend}:${p.divisor}`;
+  if (p.kind === "statistics") return `${p.kind}:${p.measure}:${p.values.join(",")}`;
   return `${p.kind}:${p.top}:${p.bottom}`;
 }
 
@@ -499,6 +506,45 @@ function generateStage234(rng: Rng): GeneratedProblem {
   throw new Error("generateStage234: exhausted attempts");
 }
 
+// Lägesmått (Lgr22 åk 4-6 "Sannolikhet och statistik"): medelvärde, median,
+// typvärde. Values are kept small (1-20) and every measure is constrained to
+// a whole-number answer - no floating point, matching the rest of the engine.
+function generateStage271(rng: Rng): GeneratedProblem {
+  // Medelvärde (mean) of 4 values, chosen so the sum divides evenly.
+  const count = 4;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const values = Array.from({ length: count }, () => randInt(rng, 1, 20));
+    const sum = values.reduce((a, b) => a + b, 0);
+    if (sum % count !== 0) continue;
+    const answer = sum / count;
+    if (values.every((v) => v === answer)) continue; // trivial: already all the same
+    return { stageId: "2.7.1", kind: "statistics", measure: "mean", values, answer };
+  }
+  throw new Error("generateStage271: exhausted attempts");
+}
+
+function generateStage272(rng: Rng): GeneratedProblem {
+  // Median of 5 values (odd count, so it's always a single value in the list,
+  // never an average of two middle values - see module note on scope).
+  const count = 5;
+  const values = Array.from({ length: count }, () => randInt(rng, 1, 20));
+  const sorted = [...values].sort((a, b) => a - b);
+  const answer = sorted[Math.floor(count / 2)];
+  return { stageId: "2.7.2", kind: "statistics", measure: "median", values, answer };
+}
+
+function generateStage273(rng: Rng): GeneratedProblem {
+  // Typvärde (mode): one value repeated 3 times among 4 other, distinct values.
+  const mode = randInt(rng, 1, 20);
+  const others = new Set<number>();
+  while (others.size < 4) {
+    const v = randInt(rng, 1, 20);
+    if (v !== mode) others.add(v);
+  }
+  const values = shuffle(rng, [mode, mode, mode, ...others]);
+  return { stageId: "2.7.3", kind: "statistics", measure: "mode", values, answer: mode };
+}
+
 const GENERATORS: Record<StageId, (rng: Rng) => GeneratedProblem> = {
   "1.1.1": generateStage1,
   "1.1.2": generateStage2,
@@ -516,6 +562,9 @@ const GENERATORS: Record<StageId, (rng: Rng) => GeneratedProblem> = {
   "2.2.4": generateStage224,
   "2.3.3": generateStage233,
   "2.3.4": generateStage234,
+  "2.7.1": generateStage271,
+  "2.7.2": generateStage272,
+  "2.7.3": generateStage273,
 };
 
 export function generateProblem(stageId: StageId, rng: Rng): GeneratedProblem {
