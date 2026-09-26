@@ -22,6 +22,8 @@ const HAND_CELL_PX = 56;
 const CHART_HEIGHT_PX = 140;
 const CHART_MAX_VALUE = 15;
 const GRID_LINES = [0, 5, 10, 15];
+/** Fixed so the axis-label column and the category-label row below line up under the same bars. */
+const AXIS_LABEL_WIDTH = "1.5rem";
 
 /** Same free-answer handwriting cell as StatisticsPlayer's (see its comment: candidate for a shared future component). */
 function HandwrittenDigitCell({
@@ -61,26 +63,50 @@ function BarChart({
   highlightIndices?: number[];
 }) {
   return (
-    <div className="flex items-end gap-2">
-      <div className="flex flex-col justify-between text-xs text-slate-400" style={{ height: CHART_HEIGHT_PX }}>
-        {[...GRID_LINES].reverse().map((g) => (
-          <span key={g}>{g}</span>
-        ))}
+    <div className="flex flex-col gap-1">
+      <div className="flex items-end gap-2">
+        <div className="flex flex-col justify-between text-xs text-slate-400 text-right" style={{ height: CHART_HEIGHT_PX, width: AXIS_LABEL_WIDTH }}>
+          {[...GRID_LINES].reverse().map((g) => (
+            <span key={g}>{g}</span>
+          ))}
+        </div>
+        {/* Only the bars themselves live inside this fixed-height, scaled box - a
+            value label or category name in here too would inflate a tall
+            column's total height past CHART_HEIGHT_PX (they're bottom-aligned
+            via items-end, so that extra height pushes the bar itself above
+            where the scale says it should be, throwing off the whole chart). */}
+        <div className="relative flex items-end gap-4 border-l-2 border-b-2 border-slate-300 pl-3 pr-1" style={{ height: CHART_HEIGHT_PX }}>
+          {GRID_LINES.filter((g) => g > 0).map((g) => (
+            <div key={g} className="absolute left-0 right-0 border-t border-dashed border-slate-200" style={{ bottom: `${(g / CHART_MAX_VALUE) * 100}%` }} />
+          ))}
+          {values.map((v, i) => {
+            const highlighted = highlightIndices?.includes(i) ?? false;
+            return (
+              <div key={i} className="relative w-10 h-full flex items-end">
+                {/* Tracks the bar's own top (bar-height% + a small gap), not a fixed
+                    offset from the box's top - otherwise every label would sit at
+                    the same height regardless of its bar's value. */}
+                <span
+                  className="absolute left-1/2 -translate-x-1/2 text-sm font-bold text-slate-700 whitespace-nowrap"
+                  style={{ bottom: `calc(${(v / CHART_MAX_VALUE) * 100}% + 4px)` }}
+                >
+                  {i === hideIndex ? "?" : v}
+                </span>
+                <div className={`w-full rounded-t ${highlighted ? "bg-amber-400" : "bg-sky-400"}`} style={{ height: `${(v / CHART_MAX_VALUE) * 100}%` }} />
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <div className="flex items-end gap-4 border-l-2 border-b-2 border-slate-300 pl-3 pr-1" style={{ height: CHART_HEIGHT_PX }}>
-        {values.map((v, i) => {
-          const highlighted = highlightIndices?.includes(i) ?? false;
-          return (
-            <div key={i} className="flex flex-col items-center gap-1 w-14">
-              <span className="text-sm font-bold text-slate-700 h-5">{i === hideIndex ? "?" : v}</span>
-              <div
-                className={`w-10 rounded-t ${highlighted ? "bg-amber-400" : "bg-sky-400"}`}
-                style={{ height: `${(v / CHART_MAX_VALUE) * CHART_HEIGHT_PX}px` }}
-              />
-              <span className="text-xs text-slate-600 text-center">{t(categoryKeys[i])}</span>
-            </div>
-          );
-        })}
+      <div className="flex items-start gap-2">
+        <div style={{ width: AXIS_LABEL_WIDTH }} />
+        <div className="flex gap-4 pl-3 pr-1">
+          {values.map((_, i) => (
+            <span key={i} className="w-10 text-xs text-slate-600 text-center">
+              {t(categoryKeys[i])}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
