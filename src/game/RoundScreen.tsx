@@ -157,7 +157,7 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
       )}
 
       {problem.kind === "placeValue" ? (
-        <PlaceValuePlayer key={index} problem={problem} onSolved={handlePlaceValueSolved} />
+        <PlaceValuePlayer key={index} problem={problem} inputMode={inputMode} onSolved={handlePlaceValueSolved} />
       ) : problem.kind === "shortDiv" ? (
         // shortDiv has its own board layout (kort division), not yet wired into a
         // player component - not reachable yet since no StageMeta uses it (see stages.ts).
