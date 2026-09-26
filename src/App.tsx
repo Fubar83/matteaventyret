@@ -159,6 +159,7 @@ function App() {
       {screen === "blixtrunda" && (
         <BlixtrundaScreen
           bestScore={save.blixtrundaBestScore}
+          inputMode={save.settings.inputMode}
           onFinish={(correctCount) =>
             update((s) => ({ ...s, blixtrundaBestScore: Math.max(s.blixtrundaBestScore, correctCount) }))
           }
@@ -170,6 +171,7 @@ function App() {
         <MiniBossScreen
           stageStars={save.stageStars}
           methodProgress={save.methodProgress}
+          inputMode={save.settings.inputMode}
           onDefeated={() =>
             update((s) => ({
               ...s,
