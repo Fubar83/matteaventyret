@@ -248,6 +248,43 @@ describe("generator: stage 2.2.4 (division with remainder)", () => {
   });
 });
 
+describe("generator: stage 2.3.3 (decimal add/sub, tenths)", () => {
+  it("2-digit-scaled operands (e.g. 47 = 4,7), tagged decimalPlaces: 1", () => {
+    const rng = makeRng(233);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.3.3", rng);
+      if (p.kind !== "columnAdd" && p.kind !== "columnSub") throw new Error("expected columnAdd/columnSub");
+      expect(p.decimalPlaces).toBe(1);
+      expect(p.top).toBeGreaterThanOrEqual(10);
+      expect(p.top).toBeLessThanOrEqual(99);
+      if (p.kind === "columnAdd") expect(p.answer).toBe(p.top + p.bottom);
+      else {
+        expect(p.top).toBeGreaterThanOrEqual(p.bottom);
+        expect(p.answer).toBe(p.top - p.bottom);
+      }
+    }
+  });
+});
+
+describe("generator: stage 2.3.4 (decimal add/sub, hundredths)", () => {
+  it("3-digit-scaled operands (e.g. 350 = 3,50), tagged decimalPlaces: 2, genuinely uses 2 places", () => {
+    const rng = makeRng(234);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.3.4", rng);
+      if (p.kind !== "columnAdd" && p.kind !== "columnSub") throw new Error("expected columnAdd/columnSub");
+      expect(p.decimalPlaces).toBe(2);
+      expect(p.top).toBeGreaterThanOrEqual(100);
+      expect(p.top).toBeLessThanOrEqual(999);
+      expect(digitAt(p.top, 0) !== 0 || digitAt(p.bottom, 0) !== 0).toBe(true);
+      if (p.kind === "columnAdd") expect(p.answer).toBe(p.top + p.bottom);
+      else {
+        expect(p.top).toBeGreaterThanOrEqual(p.bottom);
+        expect(p.answer).toBe(p.top - p.bottom);
+      }
+    }
+  });
+});
+
 describe("generateRound", () => {
   it("never repeats a problem within a round or from recent rounds", () => {
     const rng = makeRng(42);

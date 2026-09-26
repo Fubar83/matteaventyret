@@ -40,3 +40,21 @@ export function formatSwedishNumber(n: number): string {
   }
   return (negative ? "-" : "") + groups.join(" ");
 }
+
+/**
+ * Formats a value stored as an integer scaled by 10^decimalPlaces (e.g. 4,7
+ * stored as 47 with decimalPlaces=1) as a Swedish decimal - comma separator,
+ * fractional part zero-padded to the full decimalPlaces. `decimalPlaces <= 0`
+ * is just formatSwedishNumber (no comma). See build brief "Decimaltal i
+ * vardagen": all decimal arithmetic is exact integer math at a fixed scale,
+ * never floating point - this is purely a display step.
+ */
+export function formatSwedishDecimal(scaled: number, decimalPlaces: number): string {
+  if (decimalPlaces <= 0) return formatSwedishNumber(scaled);
+  const negative = scaled < 0;
+  const abs = Math.abs(scaled);
+  const divisor = 10 ** decimalPlaces;
+  const whole = Math.floor(abs / divisor);
+  const frac = abs % divisor;
+  return (negative ? "-" : "") + formatSwedishNumber(whole) + "," + String(frac).padStart(decimalPlaces, "0");
+}

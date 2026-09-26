@@ -8,7 +8,8 @@ export type TeoriTopic =
   | "subtractionBorrow"
   | "subtractionZero"
   | "multiplicationBasic"
-  | "multiplicationCarry";
+  | "multiplicationCarry"
+  | "decimalColumn";
 
 export interface TeoriSlide {
   /** i18n key for the narration text - see i18n/sv.json, en.json. */
@@ -431,6 +432,47 @@ const multiplicationCarry: TeoriSlide[] = [
   },
 ];
 
+const decimalColumn: TeoriSlide[] = [
+  {
+    textKey: "teori.decimalColumn.1",
+    render: () => (
+      <div className="flex flex-col items-center gap-1">
+        <Row>
+          <Box>4</Box>
+          <span className="text-xl font-bold text-slate-400 self-end pb-2">,</span>
+          <Box tone="highlight">7</Box>
+        </Row>
+        <Row>
+          <Box>2</Box>
+          <span className="text-xl font-bold text-slate-400 self-end pb-2">,</span>
+          <Box tone="highlight">5</Box>
+        </Row>
+      </div>
+    ),
+  },
+  {
+    textKey: "teori.decimalColumn.2",
+    render: () => (
+      <div className="flex flex-col items-center gap-2">
+        <Box size="sm" tone="new">
+          1
+        </Box>
+        <span className="text-lg font-bold text-slate-700">7 + 5 = 12</span>
+      </div>
+    ),
+  },
+  {
+    textKey: "teori.decimalColumn.3",
+    render: () => (
+      <Row>
+        <Box tone="new">7</Box>
+        <span className="text-xl font-bold text-slate-400 self-end pb-2">,</span>
+        <Box tone="new">2</Box>
+      </Row>
+    ),
+  },
+];
+
 export const TEORI_SLIDES: Record<TeoriTopic, TeoriSlide[]> = {
   placeValue,
   additionBasic,
@@ -440,6 +482,7 @@ export const TEORI_SLIDES: Record<TeoriTopic, TeoriSlide[]> = {
   subtractionZero,
   multiplicationBasic,
   multiplicationCarry,
+  decimalColumn,
 };
 
 export function topicForStage(stageId: string): TeoriTopic {
@@ -462,6 +505,9 @@ export function topicForStage(stageId: string): TeoriTopic {
     case "2.1.2":
     case "2.1.3":
       return "multiplicationCarry";
+    case "2.3.3":
+    case "2.3.4":
+      return "decimalColumn";
     default:
       return "additionBasic";
   }

@@ -33,16 +33,19 @@ export type StageId =
   | "2.2.1"
   | "2.2.2"
   | "2.2.3"
-  | "2.2.4";
+  | "2.2.4"
+  | "2.3.3"
+  | "2.3.4";
 
 type AddSubStageId = "1.1.2" | "1.1.3" | "1.1.4" | "1.1.5" | "1.1.6" | "1.1.7";
 type MulStageId = "2.1.1" | "2.1.2" | "2.1.3";
 type DivStageId = "2.2.1" | "2.2.2" | "2.2.3" | "2.2.4";
+type DecimalStageId = "2.3.3" | "2.3.4";
 
 export type GeneratedProblem =
   | { stageId: "1.1.1"; kind: "placeValue"; number: number; columnAsked: number; answer: number }
-  | { stageId: AddSubStageId; kind: "columnAdd"; top: number; bottom: number; answer: number }
-  | { stageId: AddSubStageId; kind: "columnSub"; top: number; bottom: number; answer: number }
+  | { stageId: AddSubStageId | DecimalStageId; kind: "columnAdd"; top: number; bottom: number; answer: number; decimalPlaces?: number }
+  | { stageId: AddSubStageId | DecimalStageId; kind: "columnSub"; top: number; bottom: number; answer: number; decimalPlaces?: number }
   | { stageId: MulStageId; kind: "columnMul"; top: number; bottom: number; answer: number }
   | { stageId: DivStageId; kind: "shortDiv"; dividend: number; divisor: number; answer: number; remainder: number };
 
@@ -438,6 +441,64 @@ function generateStage224(rng: Rng): GeneratedProblem {
   throw new Error("generateStage224: exhausted attempts");
 }
 
+function finalizeAddDecimal(stageId: DecimalStageId, top: number, bottom: number, decimalPlaces: number): GeneratedProblem {
+  const answer = top + bottom;
+  const check = verifyAddition(top, bottom, answer);
+  if (!check.valid) throw new Error(`generator/verifier mismatch for ${top}+${bottom}: ${check.reason}`);
+  return { stageId, kind: "columnAdd", top, bottom, answer, decimalPlaces };
+}
+
+function finalizeSubDecimal(stageId: DecimalStageId, top: number, bottom: number, decimalPlaces: number): GeneratedProblem {
+  const answer = top - bottom;
+  const check = verifySubtraction(top, bottom, answer);
+  if (!check.valid) throw new Error(`generator/verifier mismatch for ${top}-${bottom}: ${check.reason}`);
+  return { stageId, kind: "columnSub", top, bottom, answer, decimalPlaces };
+}
+
+// Decimal addition/subtraction is exact integer arithmetic at a fixed scale
+// (see build brief "Decimaltal i vardagen": never floating point) - a value
+// like 4,7 is just the integer 47 with decimalPlaces=1, reusing columnAdd/
+// columnSub entirely; only the display layer (ColumnBoard) knows to draw a
+// comma. The carry/borrow mechanic itself was already taught in world 1, so
+// these stages don't force a specific pattern - only that the numbers are
+// genuinely at the stated decimal scale.
+function generateStage233(rng: Rng): GeneratedProblem {
+  // Tenths: 2-digit-scaled operands, e.g. 47 = 4,7.
+  const isAdd = rng() < 0.5;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    if (isAdd) {
+      const { top, bottom } = buildAdditionWithCarryPattern(rng, 2, new Set());
+      if (isTrivial(top, bottom, "add")) continue;
+      return finalizeAddDecimal("2.3.3", top, bottom, 1);
+    } else {
+      const { top, bottom } = buildSubtractionWithBorrowPattern(rng, 2, new Set());
+      if (top - bottom < 10 || isTrivial(top, bottom, "sub")) continue;
+      return finalizeSubDecimal("2.3.3", top, bottom, 1);
+    }
+  }
+  throw new Error("generateStage233: exhausted attempts");
+}
+
+function generateStage234(rng: Rng): GeneratedProblem {
+  // Hundredths: 3-digit-scaled operands, e.g. 350 = 3,50. At least one operand's
+  // hundredths digit is nonzero, so the problem genuinely needs 2 decimal places.
+  const isAdd = rng() < 0.5;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    if (isAdd) {
+      const { top, bottom } = buildAdditionWithCarryPattern(rng, 3, new Set());
+      if (isTrivial(top, bottom, "add")) continue;
+      if (digitAt(top, 0) === 0 && digitAt(bottom, 0) === 0) continue;
+      return finalizeAddDecimal("2.3.4", top, bottom, 2);
+    } else {
+      const { top, bottom } = buildSubtractionWithBorrowPattern(rng, 3, new Set());
+      if (top - bottom < 10 || isTrivial(top, bottom, "sub")) continue;
+      if (digitAt(top, 0) === 0 && digitAt(bottom, 0) === 0) continue;
+      return finalizeSubDecimal("2.3.4", top, bottom, 2);
+    }
+  }
+  throw new Error("generateStage234: exhausted attempts");
+}
+
 const GENERATORS: Record<StageId, (rng: Rng) => GeneratedProblem> = {
   "1.1.1": generateStage1,
   "1.1.2": generateStage2,
@@ -453,6 +514,8 @@ const GENERATORS: Record<StageId, (rng: Rng) => GeneratedProblem> = {
   "2.2.2": generateStage222,
   "2.2.3": generateStage223,
   "2.2.4": generateStage224,
+  "2.3.3": generateStage233,
+  "2.3.4": generateStage234,
 };
 
 export function generateProblem(stageId: StageId, rng: Rng): GeneratedProblem {

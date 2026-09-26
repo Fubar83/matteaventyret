@@ -31,6 +31,7 @@ interface ColumnProblemPlayerProps {
 export function ColumnProblemPlayer({ problem, phase, inputMode = "numpad", onSolved }: ColumnProblemPlayerProps) {
   const method = problem.kind;
   const operands = { top: problem.top, bottom: problem.bottom };
+  const decimalPlaces = problem.kind === "columnMul" ? 0 : (problem.decimalPlaces ?? 0);
   const graph = useMemo(() => buildGraph(method, operands), [method, problem.top, problem.bottom]);
 
   const [written, setWritten] = useState<WrittenMap>({});
@@ -288,6 +289,7 @@ export function ColumnProblemPlayer({ problem, phase, inputMode = "numpad", onSo
           onCellStrokes={handleCellStrokes}
           pendingCellId={pendingCellId}
           canvasResetTokens={canvasResetTokens}
+          decimalPlaces={decimalPlaces}
         />
 
         <div className="min-h-[3rem] flex flex-col items-center gap-2">

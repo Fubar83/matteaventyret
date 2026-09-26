@@ -1,4 +1,5 @@
-import { formatSwedishNumber } from "../engine/digits";
+import { Fragment } from "react";
+import { formatSwedishDecimal } from "../engine/digits";
 import type { Cell, CellGraph, WrittenMap } from "../engine/types";
 import type { Stroke } from "../recognition/preprocess";
 import { buildColumns } from "./board";
@@ -31,6 +32,8 @@ interface ColumnBoardProps {
   pendingCellId?: string | null;
   /** Bumped per-cell to force that cell's canvas to clear (e.g. after a wrong recognized digit). */
   canvasResetTokens?: Readonly<Record<string, number>>;
+  /** top/bottom/result are stored as plain integers scaled by 10^decimalPlaces (see build brief "Decimaltal i vardagen") - a comma is drawn between that column and the next. 0 (default) means a plain integer, no comma. */
+  decimalPlaces?: number;
 }
 
 function stateFor(
@@ -74,8 +77,19 @@ export function ColumnBoard({
   onCellStrokes,
   pendingCellId = null,
   canvasResetTokens = {},
+  decimalPlaces = 0,
 }: ColumnBoardProps) {
   const columns = buildColumns(graph, top, bottom);
+
+  /** A comma slot after the column at `col.col === decimalPlaces` - visible in operand/result rows, an equal-width blank spacer elsewhere so columns stay aligned across rows. */
+  function commaSlot(colColIndex: number, visible: boolean) {
+    if (decimalPlaces <= 0 || colColIndex !== decimalPlaces) return null;
+    return (
+      <div className="w-3 flex items-end justify-center h-full pb-1" aria-hidden={!visible}>
+        {visible && <span className="text-3xl font-bold text-slate-600">,</span>}
+      </div>
+    );
+  }
 
   const boxProps = (cell: Cell, size: "full" | "small" = "full") => ({
     value: displayValue(cell, written),
@@ -109,69 +123,78 @@ export function ColumnBoard({
         {/* annotation rows */}
         <div className="flex flex-row gap-2">
           {columns.map((col) => (
-            <div key={col.col} className={`${COLUMN_WIDTH} flex flex-col-reverse items-center gap-1 min-h-[4rem]`}>
-              {col.annotations.map((slot, i) =>
-                slot.kind === "ten" ? (
-                  (() => {
-                    const struck = !!slot.strikeCell && written[slot.strikeCell.id] === "struck";
-                    const strikeable = !!slot.strikeCell && !struck && activeCellIds.has(slot.strikeCell.id);
-                    return (
-                      <div key={i} className={`relative flex gap-1 rounded-md ${strikeable ? "ring-2 ring-sky-300" : ""}`}>
-                        {renderWritable(slot.tens, "small")}
-                        {renderWritable(slot.ones, "small")}
-                        {struck && (
-                          <span aria-hidden className="pointer-events-none absolute inset-0 flex items-center">
-                            <span className="block w-full h-1 bg-rose-600" />
-                          </span>
-                        )}
-                        {strikeable && (
-                          <button
-                            type="button"
-                            aria-label="Stryk över"
-                            onClick={() => onCellTap(slot.strikeCell!)}
-                            className="absolute inset-0"
-                          />
-                        )}
-                      </div>
-                    );
-                  })()
-                ) : (
-                  <div key={i}>{renderWritable(slot.cell, "small")}</div>
-                )
-              )}
-            </div>
+            <Fragment key={col.col}>
+              <div key={col.col} className={`${COLUMN_WIDTH} flex flex-col-reverse items-center gap-1 min-h-[4rem]`}>
+                {col.annotations.map((slot, i) =>
+                  slot.kind === "ten" ? (
+                    (() => {
+                      const struck = !!slot.strikeCell && written[slot.strikeCell.id] === "struck";
+                      const strikeable = !!slot.strikeCell && !struck && activeCellIds.has(slot.strikeCell.id);
+                      return (
+                        <div key={i} className={`relative flex gap-1 rounded-md ${strikeable ? "ring-2 ring-sky-300" : ""}`}>
+                          {renderWritable(slot.tens, "small")}
+                          {renderWritable(slot.ones, "small")}
+                          {struck && (
+                            <span aria-hidden className="pointer-events-none absolute inset-0 flex items-center">
+                              <span className="block w-full h-1 bg-rose-600" />
+                            </span>
+                          )}
+                          {strikeable && (
+                            <button
+                              type="button"
+                              aria-label="Stryk över"
+                              onClick={() => onCellTap(slot.strikeCell!)}
+                              className="absolute inset-0"
+                            />
+                          )}
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div key={i}>{renderWritable(slot.cell, "small")}</div>
+                  )
+                )}
+              </div>
+              {commaSlot(col.col, false)}
+            </Fragment>
           ))}
         </div>
 
         {/* top operand */}
         <div className="flex flex-row gap-2">
           {columns.map((col) => (
-            <div key={col.col} className={`${COLUMN_WIDTH} flex justify-center`}>
-              {col.topDigit !== null &&
-                (() => {
-                  const strikeCell = col.topStrikeCell;
-                  const struck = strikeCell ? written[strikeCell.id] === "struck" : false;
-                  const strikeable = !!strikeCell && !struck && activeCellIds.has(strikeCell.id);
-                  return (
-                    <DigitBox
-                      value={col.topDigit}
-                      struck={struck}
-                      state={strikeable ? "strikeable" : "printed"}
-                      onClick={strikeable ? () => onCellTap(strikeCell!) : undefined}
-                    />
-                  );
-                })()}
-            </div>
+            <Fragment key={col.col}>
+              <div key={col.col} className={`${COLUMN_WIDTH} flex justify-center`}>
+                {col.topDigit !== null &&
+                  (() => {
+                    const strikeCell = col.topStrikeCell;
+                    const struck = strikeCell ? written[strikeCell.id] === "struck" : false;
+                    const strikeable = !!strikeCell && !struck && activeCellIds.has(strikeCell.id);
+                    return (
+                      <DigitBox
+                        value={col.topDigit}
+                        struck={struck}
+                        state={strikeable ? "strikeable" : "printed"}
+                        onClick={strikeable ? () => onCellTap(strikeCell!) : undefined}
+                      />
+                    );
+                  })()}
+              </div>
+              {commaSlot(col.col, true)}
+            </Fragment>
           ))}
         </div>
 
         {/* bottom operand with operator */}
         <div className="flex flex-row gap-2 items-center">
           {columns.map((col, idx) => (
-            <div key={col.col} className={`${COLUMN_WIDTH} flex justify-center relative`}>
-              {idx === 0 && <span className="absolute -left-10 text-4xl font-bold text-slate-600">{operator}</span>}
-              {col.bottomDigit !== null && <DigitBox value={col.bottomDigit} state="printed" />}
-            </div>
+            <Fragment key={col.col}>
+              <div key={col.col} className={`${COLUMN_WIDTH} flex justify-center relative`}>
+                {idx === 0 && <span className="absolute -left-10 text-4xl font-bold text-slate-600">{operator}</span>}
+                {col.bottomDigit !== null && <DigitBox value={col.bottomDigit} state="printed" />}
+              </div>
+              {commaSlot(col.col, true)}
+            </Fragment>
           ))}
         </div>
 
@@ -180,14 +203,17 @@ export function ColumnBoard({
         {/* result row */}
         <div className="flex flex-row gap-2">
           {columns.map((col) => (
-            <div key={col.col} className={`${COLUMN_WIDTH} flex justify-center`}>
-              {col.resultCell && renderWritable(col.resultCell)}
-            </div>
+            <Fragment key={col.col}>
+              <div key={col.col} className={`${COLUMN_WIDTH} flex justify-center`}>
+                {col.resultCell && renderWritable(col.resultCell)}
+              </div>
+              {commaSlot(col.col, true)}
+            </Fragment>
           ))}
         </div>
       </div>
       <span className="sr-only">
-        {formatSwedishNumber(top)} {operator} {formatSwedishNumber(bottom)}
+        {formatSwedishDecimal(top, decimalPlaces)} {operator} {formatSwedishDecimal(bottom, decimalPlaces)}
       </span>
     </div>
   );

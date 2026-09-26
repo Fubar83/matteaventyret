@@ -47,6 +47,7 @@ export function ExempelPlayer({ stageId, method, count = 2, inputMode = "numpad"
   const [canvasResetTokens, setCanvasResetTokens] = useState<Record<string, number>>({});
 
   const problem = problems[index];
+  const decimalPlaces = problem.kind === "columnMul" ? 0 : (problem.decimalPlaces ?? 0);
   const graph = useMemo(() => buildGraph(method, { top: problem.top, bottom: problem.bottom }), [method, problem.top, problem.bottom]);
   const readyWithImplicit = resolveImplicitlyReady(graph, written);
   const ready = readyCells(graph, readyWithImplicit).filter((c) => c.required);
@@ -138,6 +139,7 @@ export function ExempelPlayer({ stageId, method, count = 2, inputMode = "numpad"
           onCellStrokes={handleCellStrokes}
           pendingCellId={pendingCellId}
           canvasResetTokens={canvasResetTokens}
+          decimalPlaces={decimalPlaces}
         />
         <div className="bg-sky-50 border-2 border-sky-200 rounded-xl px-4 py-3 text-slate-700 text-center max-w-xs min-h-[3rem] flex flex-col items-center gap-2">
           <span>{activeCell && exempelPrompt(method, activeCell, problem.top, problem.bottom)}</span>
