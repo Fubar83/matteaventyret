@@ -1,6 +1,8 @@
 {
-  "kind": "trainer-real-samples",
-  "trainedAt": "2026-09-24T12:24:33.421Z",
-  "numClasses": 22,
-  "note": "Trained in Träningsverkstan (test/train tabs) on real handwriting samples collected there, then exported via Träna och exportera and installed here. Sample count/accuracy for this specific export weren't captured by this install step - check the trainer UI at train time for those."
+  "kind": "bootstrap-synthetic",
+  "trainedAt": "2026-09-26T10:36:54.459Z",
+  "numClasses": 82,
+  "samplesPerChar": 150,
+  "testAccuracy": 0.9756097793579102,
+  "note": "Trained on geometric synthetic digits/letters/signs, NOT real handwriting. Replace via Träningsverkstan once real, consented samples are collected (see build brief). Look-alike case pairs (e.g. C/c, O/o, S/s) are especially undertrained here and need real samples to tell apart."
 }

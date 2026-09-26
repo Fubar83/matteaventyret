@@ -18,12 +18,15 @@ MatteÄventyret is free to use, with no paid services, subscriptions or third-pa
 | @fontsource/nunito | OFL-1.1 (SIL Open Font License) | Bundled UI font (Nunito, by Vernon Adams et al.) |
 | vite-plugin-pwa | MIT | Offline/installable PWA support |
 | Zod | MIT | Curriculum data validation (planned) |
+| KaTeX | MIT | Renders recognized/edited LaTeX on the handwriting-to-LaTeX test page (`npm run mathinput`) |
+| perfect-freehand | MIT | Smooth ink rendering on that page's drawing canvas |
+| MathLive | MIT | Editable math field for correcting recognized LaTeX by hand |
 
 ## Assets
 
 - **Graphics**: all backgrounds, avatars, the boss, and UI chrome are original SVG/CSS drawn in this codebase (see `src/game/Avatar.tsx`, `src/game/BossMonster.tsx`, `src/game/TeoriIllustration.tsx`). Nothing is traced or copied from another game.
 - **Sound and music**: every sound effect and the background loop are synthesized at runtime with Tone.js (see `src/audio/sound.ts`) - there are no bundled audio files to license.
-- **Digit-recognizer model**: `src/recognition/model/` is trained by `scripts/trainBootstrapModel.mjs` on procedurally generated synthetic digit shapes (see that script's header comment). It is a placeholder until real, consented handwriting samples are collected via Träningsverkstan (`npm run trainer`) and a new model is trained and exported from there.
+- **Handwriting-recognizer model**: `src/recognition/model/` is trained by `scripts/trainBootstrapModel.mjs` on procedurally generated synthetic character shapes (digits, letters, and math signs - see `scripts/charTemplates.mjs`). It is a placeholder until real, consented handwriting samples are collected via Träningsverkstan (`npm run trainer`) and a new model is trained and exported from there.
 
 ## Fonts
 

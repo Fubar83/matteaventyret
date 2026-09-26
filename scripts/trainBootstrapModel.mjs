@@ -86,9 +86,12 @@ function fileSaveHandler(dir) {
 async function main() {
   const rng = makeRng(42);
   console.log(`Generating ${SAMPLES_PER_CHAR * NUM_CLASSES} synthetic samples across ${NUM_CLASSES} classes...`);
+  console.time("buildDataset");
   const { images, labels } = buildDataset(rng);
+  console.timeEnd("buildDataset");
 
   // Shuffle then split 80/20, matching the brief's train/test split ratio.
+  console.time("shuffle");
   const order = images.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
@@ -97,29 +100,39 @@ async function main() {
   const splitAt = Math.floor(order.length * 0.8);
   const trainIdx = order.slice(0, splitAt);
   const testIdx = order.slice(splitAt);
+  console.timeEnd("shuffle");
 
   const toTensors = (idx) => {
-    const xs = tf.tensor4d(
-      idx.flatMap((i) => Array.from(images[i])),
-      [idx.length, SIZE, SIZE, 1]
-    );
+    // A preallocated typed array + set() avoids building a giant boxed JS
+    // array via flatMap/Array.from first, which got dramatically slower once
+    // the label set (and so the dataset) grew from 22 to 82 classes.
+    const pixelsPerImage = SIZE * SIZE;
+    const flat = new Float32Array(idx.length * pixelsPerImage);
+    idx.forEach((i, row) => flat.set(images[i], row * pixelsPerImage));
+    const xs = tf.tensor4d(flat, [idx.length, SIZE, SIZE, 1]);
     const ys = tf.oneHot(tf.tensor1d(idx.map((i) => labels[i]), "int32"), NUM_CLASSES);
     return { xs, ys };
   };
 
+  console.time("toTensors");
   const train = toTensors(trainIdx);
   const test = toTensors(testIdx);
+  console.timeEnd("toTensors");
 
   const model = buildModel();
   console.log("Training...");
+  let epochStart = Date.now();
   await model.fit(train.xs, train.ys, {
     epochs: 14,
     batchSize: 64,
     validationData: [test.xs, test.ys],
     verbose: 0,
     callbacks: {
-      onEpochEnd: (epoch, logs) =>
-        console.log(`  epoch ${epoch + 1}: loss=${logs.loss.toFixed(3)} acc=${logs.acc.toFixed(3)} val_acc=${logs.val_acc.toFixed(3)}`),
+      onEpochEnd: (epoch, logs) => {
+        const elapsed = ((Date.now() - epochStart) / 1000).toFixed(1);
+        epochStart = Date.now();
+        console.log(`  epoch ${epoch + 1}: loss=${logs.loss.toFixed(3)} acc=${logs.acc.toFixed(3)} val_acc=${logs.val_acc.toFixed(3)} (${elapsed}s)`);
+      },
     },
   });
 

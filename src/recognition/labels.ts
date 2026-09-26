@@ -6,10 +6,9 @@
  * script (plain Node has no TS loader here) - keep both in sync if this list
  * changes.
  *
- * Letters are disabled for now (numbers + math signs only, by request) -
- * restore by adding these back in and regenerating the bootstrap model:
- *   lowercase: "abcdefghijklmnopqrstuvwxyzåäö".split(""),
- *   uppercase: "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ".split(""),
+ * Letters were restored for the free-form math-input page (see
+ * src/mathinput/), which needs real variable names (x, y, n, ...), not just
+ * digits and signs.
  */
 export const CATEGORIES = {
   digits: "0123456789".split(""),
@@ -19,14 +18,19 @@ export const CATEGORIES = {
   // cross-only, never a dot: a dot-style × and a period are the same size AND
   // shape, distinguishable only by baseline position, which this per-character
   // isolated recognizer has no notion of - no preprocessing fix can recover that.
+  // "^" and "π" are for the math-input page: an explicit exponent marker (in
+  // addition to position-based superscript detection - see mathinput/layout.ts)
+  // and the Greek letter pi, drawn as its own glyph rather than spelled "pi".
   // New characters are always appended, never inserted, so no existing
   // character's class index shifts under whatever model is currently installed.
-  math: ["+", "-", "×", "÷", "=", "<", ">", "(", ")", "/", ",", "."],
+  math: ["+", "-", "×", "÷", "=", "<", ">", "(", ")", "/", ",", ".", "^", "π"],
+  lowercase: "abcdefghijklmnopqrstuvwxyzåäö".split(""),
+  uppercase: "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ".split(""),
 } as const;
 
 export type Category = keyof typeof CATEGORIES;
 
-export const LABELS: readonly string[] = [...CATEGORIES.digits, ...CATEGORIES.math];
+export const LABELS: readonly string[] = [...CATEGORIES.digits, ...CATEGORIES.math, ...CATEGORIES.lowercase, ...CATEGORIES.uppercase];
 
 export const NUM_CLASSES = LABELS.length;
 
