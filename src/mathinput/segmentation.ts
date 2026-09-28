@@ -54,7 +54,7 @@ function union(a: BoundingBox, b: BoundingBox): BoundingBox {
   return boxFromCorners(Math.min(a.minX, b.minX), Math.min(a.minY, b.minY), Math.max(a.maxX, b.maxX), Math.max(a.maxY, b.maxY));
 }
 
-/** How far (as a fraction of a stroke's OWN size) two strokes' boxes are allowed to bridge a gap and still merge - deliberately small: it only needs to close the little gaps within one multi-stroke symbol (the two legs of an "x", the two bars of "=", a dot next to its stem), not the gap to the next symbol over. Scaling by each stroke's own size (rather than a single page-wide size) matters because real handwriting mixes stroke sizes - a page-wide margin sized for a big "x" would happily bridge the small gap to a neighboring "=" too. */
+/** How far (as a fraction of a stroke's OWN size) two strokes' boxes are allowed to bridge a gap and still merge - deliberately small: it only needs to close the little gaps within one multi-stroke symbol (the two legs of an "x", a dot next to its stem), not the gap to the next symbol over. Scaling by each stroke's own size (rather than a single page-wide size) matters because real handwriting mixes stroke sizes - a page-wide margin sized for a big "x" would happily bridge the small gap to a neighboring "=" too. The two bars of "=" itself are too far apart for this to bridge - see pairEqualsBars. */
 const MERGE_RATIO = 0.2;
 /** Floor for the margin above, in px, so a near-zero-size stroke (a precise tap, or a dot drawn with almost no drag) still gets a sensible merge radius instead of ~0. */
 const MIN_MERGE_MARGIN = 6;
@@ -71,6 +71,50 @@ function expand(box: BoundingBox): BoundingBox {
 
 function overlaps(a: BoundingBox, b: BoundingBox): boolean {
   return a.minX <= b.maxX && b.minX <= a.maxX && a.minY <= b.maxY && b.minY <= a.maxY;
+}
+
+/** One roughly-horizontal single stroke - a candidate bar of an "=". */
+function isFlatBar(s: SegmentedSymbol): boolean {
+  return s.strokes.length === 1 && s.box.width >= 8 && s.box.height <= s.box.width * 0.35;
+}
+
+/**
+ * The two bars of an "=" sit farther apart than the proximity merge above
+ * can bridge - by design, since that margin is scaled off a bar's thin side
+ * so a fraction bar can't swallow its numerator. So they're paired
+ * explicitly here: two flat bars of similar length, mostly overlapping
+ * horizontally, close together relative to their length, with nothing drawn
+ * between them. That last check is what keeps two stacked bars of a nested
+ * fraction (which always have a digit or letter between them) apart.
+ */
+function pairEqualsBars(symbols: SegmentedSymbol[]): SegmentedSymbol[] {
+  const bars = symbols.filter(isFlatBar);
+  const paired = new Set<SegmentedSymbol>();
+  const merged: SegmentedSymbol[] = [];
+  for (const a of bars) {
+    if (paired.has(a)) continue;
+    for (const b of bars) {
+      if (b === a || paired.has(b)) continue;
+      const [top, bottom] = a.box.cy <= b.box.cy ? [a, b] : [b, a];
+      const shorter = Math.min(a.box.width, b.box.width);
+      const longer = Math.max(a.box.width, b.box.width);
+      const overlapLeft = Math.max(a.box.minX, b.box.minX);
+      const overlapRight = Math.min(a.box.maxX, b.box.maxX);
+      const gap = bottom.box.minY - top.box.maxY;
+      if (shorter / longer < 0.6) continue;
+      if (overlapRight - overlapLeft < shorter * 0.6) continue;
+      if (gap < 0 || gap > longer * 0.7) continue;
+      const somethingBetween = symbols.some(
+        (s) => s !== a && s !== b && s.box.cy > top.box.maxY && s.box.cy < bottom.box.minY && s.box.cx > overlapLeft && s.box.cx < overlapRight
+      );
+      if (somethingBetween) continue;
+      paired.add(a);
+      paired.add(b);
+      merged.push({ strokes: [...top.strokes, ...bottom.strokes], box: union(a.box, b.box) });
+      break;
+    }
+  }
+  return [...symbols.filter((s) => !paired.has(s)), ...merged];
 }
 
 /** Groups strokes into symbols by proximity, then orders the result left-to-right. Empty strokes are ignored. */
@@ -109,13 +153,14 @@ export function segmentSymbols(strokes: Stroke[]): SegmentedSymbol[] {
     groups.set(root, list);
   }
 
-  const symbols: SegmentedSymbol[] = [];
+  const grouped: SegmentedSymbol[] = [];
   for (const indices of groups.values()) {
     const groupStrokes = indices.map((i) => nonEmpty[i]);
     const box = indices.map((i) => boxes[i]).reduce(union);
-    symbols.push({ strokes: groupStrokes, box });
+    grouped.push({ strokes: groupStrokes, box });
   }
 
+  const symbols = pairEqualsBars(grouped);
   symbols.sort((a, b) => a.box.cx - b.box.cx);
   return symbols;
 }

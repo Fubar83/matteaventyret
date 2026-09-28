@@ -38,9 +38,19 @@ describe("detectLine", () => {
     expect(line!.type).toBe("line");
   });
 
-  it("detects a clean diagonal line (e.g. a division slash)", () => {
-    const symbol = symbolOf([jitteredLine({ x: 0, y: 30 }, { x: 40, y: 0 }, 1)]);
+  it("still accepts a bar that drifts slightly up or down", () => {
+    const symbol = symbolOf([jitteredLine({ x: 0, y: 0 }, { x: 100, y: 25 }, 1)]);
     expect(detectLine(symbol)).not.toBeNull();
+  });
+
+  it("leaves a straight diagonal stroke to the classifier (a division slash is a glyph, not a line)", () => {
+    const symbol = symbolOf([jitteredLine({ x: 0, y: 30 }, { x: 40, y: 0 }, 1)]);
+    expect(detectLine(symbol)).toBeNull();
+  });
+
+  it("leaves a straight vertical stroke to the classifier (regression: a '1' written as one stroke came back as a line)", () => {
+    const symbol = symbolOf([jitteredLine({ x: 0, y: 0 }, { x: 0, y: 90 }, 1)]);
+    expect(detectLine(symbol)).toBeNull();
   });
 
   it("rejects a short mark (e.g. a dot or comma) even if technically straight", () => {

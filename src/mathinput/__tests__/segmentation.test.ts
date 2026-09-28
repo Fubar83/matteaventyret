@@ -51,4 +51,32 @@ describe("segmentSymbols", () => {
     const symbols = segmentSymbols([numerator, bar, denominator]);
     expect(symbols.length).toBe(3);
   });
+
+  describe("pairing the two bars of '='", () => {
+    it("merges two stacked bars too far apart for the proximity merge into one symbol (regression: '=' came out as two separate lines)", () => {
+      const symbols = segmentSymbols([box(0, 0, 40, 0), box(0, 15, 40, 0)]);
+      expect(symbols.length).toBe(1);
+      expect(symbols[0].strokes.length).toBe(2);
+    });
+
+    it("tolerates a slightly shorter, slightly offset second bar", () => {
+      const symbols = segmentSymbols([box(0, 0, 40, 0), box(6, 14, 30, 2)]);
+      expect(symbols.length).toBe(1);
+    });
+
+    it("doesn't pair two stacked bars with a symbol between them (a nested fraction's bars, not an '=')", () => {
+      const outerBar = box(0, 0, 80, 0);
+      const digit = box(35, 15, 10, 20);
+      const innerBar = box(0, 50, 80, 0);
+      expect(segmentSymbols([outerBar, digit, innerBar]).length).toBe(3);
+    });
+
+    it("doesn't pair bars of very different lengths (e.g. a long fraction bar and a short minus sign near it)", () => {
+      expect(segmentSymbols([box(0, 0, 80, 0), box(30, 15, 15, 0)]).length).toBe(2);
+    });
+
+    it("doesn't pair bars that are far apart relative to their length", () => {
+      expect(segmentSymbols([box(0, 0, 30, 0), box(0, 40, 30, 0)]).length).toBe(2);
+    });
+  });
 });

@@ -1,10 +1,17 @@
 /**
- * Decides whether a segmented symbol is actually a straight line (a fraction
- * bar, a minus sign, an underline, a division slash) rather than a glyph to
- * hand to the ML recognizer - purely by geometry, no model involved. This is
- * deliberately a separate, cheap, deterministic pass before classification:
- * a wobbly hand-drawn line still looks nothing like a curved digit's path,
- * so there's no need to ask a neural net to tell them apart.
+ * Decides whether a segmented symbol is actually a horizontal straight line
+ * (a fraction bar, a minus sign, the bar over a square root) rather than a
+ * glyph to hand to the ML recognizer - purely by geometry, no model
+ * involved. This is deliberately a separate, cheap, deterministic pass
+ * before classification: a wobbly hand-drawn line still looks nothing like a
+ * curved digit's path, so there's no need to ask a neural net to tell them
+ * apart.
+ *
+ * Only near-horizontal strokes count. Every structural "line" in math
+ * layout is horizontal, while a straight vertical or diagonal stroke is
+ * usually a glyph in its own right - a "1" is very often written as exactly
+ * one straight vertical stroke, and "/" as one diagonal - and those need the
+ * classifier, not to be reported as lines.
  */
 import type { Point, Stroke } from "../recognition/preprocess";
 import type { SegmentedSymbol } from "../mathinput/segmentation";
@@ -21,6 +28,8 @@ export interface DetectedLine {
 const MAX_DEVIATION_RATIO = 0.12;
 /** Shorter than this, it's treated as a glyph (e.g. a dot or a short dash within a letter) rather than a line - see preprocess.ts's own small-mark note for a similar distinction. */
 const MIN_LINE_LENGTH = 18;
+/** Steepest a line may be (rise over run) and still count as horizontal - about 20 degrees, enough slack for a hand-drawn bar that drifts up or down. */
+const MAX_SLOPE = 0.36;
 
 /** Candidate endpoints: each stroke's own first/last point. Cheap (O(strokes), not O(points²)) and correct for how a line is actually drawn - one continuous motion from one end to the other, so the true endpoints are always a stroke's own ends, never a point in its middle. */
 function candidateEndpoints(strokes: Stroke[]): Point[] {
@@ -69,6 +78,7 @@ export function detectLine(symbol: SegmentedSymbol): DetectedLine | null {
   const [a, b] = pair;
   const length = Math.hypot(b.x - a.x, b.y - a.y);
   if (length < MIN_LINE_LENGTH) return null;
+  if (Math.abs(b.y - a.y) > Math.abs(b.x - a.x) * MAX_SLOPE) return null;
 
   let maxDeviation = 0;
   for (const stroke of symbol.strokes) {

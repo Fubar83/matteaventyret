@@ -69,7 +69,7 @@ export function DetectApp() {
       <div className="max-w-2xl text-center">
         <h1 className="text-2xl font-bold text-slate-800">Linjer & tecken</h1>
         <p className="text-slate-500 text-sm mt-1">
-          Rita fritt. Varje form avgörs för sig: en rak form (streck, bråkstreck, minustecken) blir en <span className="text-red-600 font-semibold">linje</span> rent geometriskt,
+          Rita fritt. Varje form avgörs för sig: en rak, vågrät form (bråkstreck, minustecken) blir en <span className="text-red-600 font-semibold">linje</span> rent geometriskt,
           utan att fråga modellen - allt annat (siffror, punkter, +&minus;&times;&divide; och andra tecken) skickas till igenkänningsmodellen.
         </p>
       </div>
