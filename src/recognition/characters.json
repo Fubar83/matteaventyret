@@ -1,0 +1,18 @@
+[
+  { "char": "0", "category": "digits", "sources": [{ "dataset": "emnist" }, { "dataset": "mathwriting", "latex": "0" }] },
+  { "char": "1", "category": "digits", "sources": [{ "dataset": "emnist" }, { "dataset": "mathwriting", "latex": "1" }] },
+  { "char": "2", "category": "digits", "sources": [{ "dataset": "emnist" }, { "dataset": "mathwriting", "latex": "2" }] },
+  { "char": "3", "category": "digits", "sources": [{ "dataset": "emnist" }, { "dataset": "mathwriting", "latex": "3" }] },
+  { "char": "4", "category": "digits", "sources": [{ "dataset": "emnist" }, { "dataset": "mathwriting", "latex": "4" }] },
+  { "char": "5", "category": "digits", "sources": [{ "dataset": "emnist" }, { "dataset": "mathwriting", "latex": "5" }] },
+  { "char": "6", "category": "digits", "sources": [{ "dataset": "emnist" }, { "dataset": "mathwriting", "latex": "6" }] },
+  { "char": "7", "category": "digits", "sources": [{ "dataset": "emnist" }, { "dataset": "mathwriting", "latex": "7" }] },
+  { "char": "8", "category": "digits", "sources": [{ "dataset": "emnist" }, { "dataset": "mathwriting", "latex": "8" }] },
+  { "char": "9", "category": "digits", "sources": [{ "dataset": "emnist" }, { "dataset": "mathwriting", "latex": "9" }] },
+  { "char": ".", "category": "math", "sources": [{ "dataset": "mathwriting", "latex": "." }], "note": "Neither EMNIST nor HASYv2 had a plain decimal point at all - MathWriting's symbols.jsonl (a small, fixed ~6.4k-instance annotation set, not something that scales with the full 2.9GB corpus) is the first real source for it, ~21 samples." },
+  { "char": "+", "category": "math", "sources": [{ "dataset": "hasy", "latex": "+" }, { "dataset": "mathwriting", "latex": "+" }] },
+  { "char": "-", "category": "math", "sources": [{ "dataset": "hasy", "latex": "-" }, { "dataset": "mathwriting", "latex": "-" }] },
+  { "char": "/", "category": "math", "sources": [{ "dataset": "hasy", "latex": "/" }, { "dataset": "mathwriting", "latex": "/" }] },
+  { "char": "=", "category": "math", "sources": [{ "dataset": "mathwriting", "latex": "=" }], "note": "HASYv2 had zero real samples (nobody looks up how to draw '=' on Detexify) - MathWriting is the first real source for it, ~30 samples." },
+  { "char": "x", "category": "lowercase", "sources": [{ "dataset": "emnist" }, { "dataset": "mathwriting", "latex": "x" }] }
+]

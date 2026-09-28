@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Raw/cached training data (large downloads, never committed - see scripts/processEmnist.mjs and scripts/processHasy.mjs)
+/data
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

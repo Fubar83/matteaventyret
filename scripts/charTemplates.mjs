@@ -141,6 +141,7 @@ const MATH = {
   "/": [line(20, 5, 8, 23)],
   "^": [line(7, 16, 14, 6), line(14, 6, 21, 16)],
   π: [line(6, 8, 22, 8), line(9, 8, 8, 23), line(19, 8, 21, 23)],
+  "√": [line(4, 15, 8, 20), line(8, 20, 13, 5), line(13, 5, 24, 5)],
 };
 
 export const CHAR_TEMPLATES = {

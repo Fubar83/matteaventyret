@@ -1,12 +1,24 @@
 /**
- * Trains a small CNN on synthetic, geometrically-generated digit images and
- * exports it to src/recognition/model/. This is a bootstrap model only - it
- * exists so the recognizer pipeline is real and testable end to end before
- * any actual children's handwriting has been collected via Träningsverkstan
- * (see build brief: real samples need parental consent). Run with:
+ * Trains a single small CNN - one combined model, not one per source - and
+ * exports it to src/recognition/model/. Each character class pools REAL
+ * handwriting samples from every source that has a cache file for it:
+ *   - MathWriting (Google Research, 2024 - see scripts/processMathWriting.mjs),
+ *     the primary source: real pen strokes, run through the exact same
+ *     preprocessing the live recognizer uses
+ *   - EMNIST's ByClass split (digits/letters - see scripts/processEmnist.mjs)
+ *   - HASYv2 (math signs crowdsourced via Detexify - see scripts/processHasy.mjs)
+ * A character present in more than one source gets samples from all of them,
+ * shuffled together (see loadRealCache) rather than just the first source
+ * found. Anything with no real samples anywhere falls back to a geometric
+ * synthetic shape (charTemplates.mjs) instead. Run with:
  *   node scripts/trainBootstrapModel.mjs
+ * Populate whichever of data/{mathwriting,emnist,hasy}/cache/ you want first
+ * (the process*.mjs scripts don't touch each other's files, so they can run
+ * at the same time); with none populated, this falls back to fully
+ * synthetic, exactly like the original bootstrap.
  */
 import * as tf from "@tensorflow/tfjs";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,9 +32,30 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // so the documented source-of-truth location in the repo stays informative.
 const OUT_DIR = path.join(__dirname, "..", "public", "recognition", "model");
 const DOC_DIR = path.join(__dirname, "..", "src", "recognition", "model");
+const REAL_DATA_CACHE_DIRS = [
+  path.join(__dirname, "..", "data", "mathwriting", "cache"),
+  path.join(__dirname, "..", "data", "emnist", "cache"),
+  path.join(__dirname, "..", "data", "hasy", "cache"),
+];
 const SAMPLES_PER_CHAR = 400;
 const SIZE = 28;
 const NUM_CLASSES = LABELS.length;
+
+/** Combines every source that has real samples for this character (not just the first match), shuffled together so a later, smaller source's samples aren't all truncated away if the combined pool gets capped to SAMPLES_PER_CHAR. */
+function loadRealCache(char, rng) {
+  const hex = char.charCodeAt(0).toString(16);
+  const combined = [];
+  for (const dir of REAL_DATA_CACHE_DIRS) {
+    const p = path.join(dir, `${hex}.json`);
+    if (existsSync(p)) combined.push(...JSON.parse(readFileSync(p, "utf8")).grids);
+  }
+  if (combined.length === 0) return null;
+  for (let i = combined.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [combined[i], combined[j]] = [combined[j], combined[i]];
+  }
+  return combined;
+}
 
 function makeRng(seed) {
   let a = seed >>> 0;
@@ -38,7 +71,19 @@ function makeRng(seed) {
 function buildDataset(rng) {
   const images = [];
   const labels = [];
+  const realClasses = [];
+  const syntheticClasses = [];
   LABELS.forEach((char, classIndex) => {
+    const real = loadRealCache(char, rng);
+    if (real) {
+      const n = Math.min(real.length, SAMPLES_PER_CHAR);
+      for (let i = 0; i < n; i++) {
+        images.push(Float32Array.from(real[i]));
+        labels.push(classIndex);
+      }
+      realClasses.push(char);
+      return;
+    }
     const template = CHAR_TEMPLATES[char];
     if (!template) throw new Error(`No bootstrap template for character ${JSON.stringify(char)}`);
     for (let i = 0; i < SAMPLES_PER_CHAR; i++) {
@@ -47,8 +92,10 @@ function buildDataset(rng) {
       images.push(grid);
       labels.push(classIndex);
     }
+    syntheticClasses.push(char);
   });
-  return { images, labels };
+  console.log(`  ${realClasses.length} classes from real (EMNIST/HASYv2) samples, ${syntheticClasses.length} classes still synthetic`);
+  return { images, labels, realClasses, syntheticClasses };
 }
 
 function buildModel() {
@@ -85,9 +132,9 @@ function fileSaveHandler(dir) {
 
 async function main() {
   const rng = makeRng(42);
-  console.log(`Generating ${SAMPLES_PER_CHAR * NUM_CLASSES} synthetic samples across ${NUM_CLASSES} classes...`);
+  console.log(`Building dataset for ${NUM_CLASSES} classes (up to ${SAMPLES_PER_CHAR} samples each)...`);
   console.time("buildDataset");
-  const { images, labels } = buildDataset(rng);
+  const { images, labels, realClasses, syntheticClasses } = buildDataset(rng);
   console.timeEnd("buildDataset");
 
   // Shuffle then split 80/20, matching the brief's train/test split ratio.
@@ -138,17 +185,24 @@ async function main() {
 
   const evalResult = model.evaluate(test.xs, test.ys);
   const testAcc = (await evalResult[1].data())[0];
-  console.log(`Final test accuracy on synthetic hold-out: ${(testAcc * 100).toFixed(1)}%`);
+  console.log(`Final test accuracy on hold-out: ${(testAcc * 100).toFixed(1)}%`);
 
   await model.save(fileSaveHandler(OUT_DIR));
 
   const report = {
-    kind: "bootstrap-synthetic",
+    kind: realClasses.length > 0 ? "bootstrap-mixed" : "bootstrap-synthetic",
     trainedAt: new Date().toISOString(),
     numClasses: NUM_CLASSES,
     samplesPerChar: SAMPLES_PER_CHAR,
     testAccuracy: testAcc,
-    note: "Trained on geometric synthetic digits/letters/signs, NOT real handwriting. Replace via Träningsverkstan once real, consented samples are collected (see build brief). Look-alike case pairs (e.g. C/c, O/o, S/s) are especially undertrained here and need real samples to tell apart.",
+    realDataClasses: realClasses,
+    syntheticDataClasses: syntheticClasses,
+    note:
+      realClasses.length === 0
+        ? "Trained on geometric synthetic digits/letters/signs, NOT real handwriting. Replace via Träningsverkstan once real, consented samples are collected (see build brief). Look-alike case pairs (e.g. C/c, O/o, S/s) are especially undertrained here and need real samples to tell apart."
+        : syntheticClasses.length === 0
+          ? `All ${realClasses.length} classes trained on real handwriting, pooled from every source characters.json declares for each (see realDataClasses and characters.json's own "sources" per character for exactly which).`
+          : `${realClasses.length} classes trained on real handwriting (see realDataClasses and characters.json's own "sources" per character for exactly which datasets); ${syntheticClasses.length} classes (${syntheticClasses.map((c) => JSON.stringify(c)).join(", ")}) have no real samples in any configured source and are still geometric synthetic shapes. Replace those via Träningsverkstan once real, consented samples are collected.`,
   };
   await writeFile(path.join(OUT_DIR, "report.json"), JSON.stringify(report, null, 2));
   await mkdir(DOC_DIR, { recursive: true });

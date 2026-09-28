@@ -5,6 +5,16 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // data/ holds the raw training datasets (~800k small files - see
+  // scripts/process*.mjs). Left to Vite's defaults, the dev server's file
+  // watcher and its dependency scanner (which globs **/*.html across the
+  // whole root) walk every one of them, and the dev server stalls for minutes.
+  server: {
+    watch: { ignored: ['**/data/**'] },
+  },
+  optimizeDeps: {
+    entries: ['index.html', 'trainer.html', 'mathinput.html', 'detect.html'],
+  },
   plugins: [
     react(),
     tailwindcss(),

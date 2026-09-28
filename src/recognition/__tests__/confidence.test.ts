@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { isConfident, topTwo } from "../confidence";
 import { charToIndex, DIGIT_INDICES, LABELS } from "../labels";
 
-// "×" stands in here for "some non-digit class" (letters are disabled for now, see
-// labels.ts) - it exercises the same candidate-restriction logic without hardcoding
-// a currently-inactive character.
-const NON_DIGIT = charToIndex("×");
+// "x" stands in here for "some non-digit class" (the label set is a minimal
+// starting set for now, see labels.ts) - it exercises the same
+// candidate-restriction logic without hardcoding a currently-inactive character.
+const NON_DIGIT = charToIndex("x");
 
 function probsFor(index: number, top: number, secondIndex: number, second: number): number[] {
   const p = new Array(LABELS.length).fill((1 - top - second) / (LABELS.length - 2));
@@ -24,7 +24,7 @@ describe("topTwo", () => {
   });
 
   it("restricts the search to given candidate indices", () => {
-    // Top overall is "×", but among digit candidates only 0 and 6 matter.
+    // Top overall is "x", but among digit candidates only 0 and 6 matter.
     const p = probsFor(NON_DIGIT, 0.9, d(0), 0.05);
     p[d(6)] = 0.03;
     const { first, second } = topTwo(p, DIGIT_INDICES);
@@ -67,7 +67,7 @@ describe("isConfident", () => {
 
   it("can restrict confidence to digit-only candidates, ignoring a stronger non-digit guess", () => {
     const p = probsFor(NON_DIGIT, 0.9, d(0), 0.06);
-    expect(isConfident(p)).toBe(true); // globally, "×" wins comfortably
+    expect(isConfident(p)).toBe(true); // globally, "x" wins comfortably
     expect(isConfident(p, DIGIT_INDICES)).toBe(false); // among digits only, 0 doesn't clear the bar
   });
 
