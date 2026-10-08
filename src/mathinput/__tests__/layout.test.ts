@@ -48,6 +48,84 @@ describe("layoutSymbols", () => {
     expect(layoutSymbols([base, e1, e2])).toBe("x^{12}");
   });
 
+  it("reads an exponent on a short letter as a superscript even when it isn't small next to the page's tallest symbol (regression: '1/x²' came out as '1/x 2')", () => {
+    // Denominator of 1/x²: an x only 40 tall, and a "2" 28 tall - 70% of the
+    // x, so the page-wide "small" test misses it - sitting wholly above the x's middle.
+    const x = sym("x", 115, { width: 32, height: 40, cy: 155 });
+    const exp = sym("2", 150, { width: 16, height: 28, cy: 129 });
+    expect(layoutSymbols([x, exp])).toBe("x^{2}");
+  });
+
+  it("continues a positional exponent across a second digit on the same line", () => {
+    const x = sym("x", 0, { width: 30, height: 40, cy: 155 });
+    const e1 = sym("1", 26, { width: 12, height: 28, cy: 129 });
+    const e2 = sym("2", 42, { width: 16, height: 28, cy: 130 });
+    expect(layoutSymbols([x, e1, e2])).toBe("x^{12}");
+  });
+
+  it("doesn't read a same-height neighbor as an exponent just because it's a letter next to a digit", () => {
+    const symbols = [sym("2", 0, { height: 40, cy: 100 }), sym("x", 30, { height: 26, cy: 107 })];
+    expect(layoutSymbols(symbols)).toBe("2 x");
+  });
+
+  it("doesn't turn a minus drawn a bit above the letter's middle into an exponent", () => {
+    // Its bottom (96) is above the x's middle (100), so only the sign exclusion keeps the positional test off it.
+    const symbols = [sym("x", 0, { height: 40, cy: 100 }), sym("-", 30, { height: 2, cy: 95 }), sym("1", 60, { height: 40, cy: 100 })];
+    expect(layoutSymbols(symbols)).toBe("x - 1");
+  });
+
+  describe("square roots", () => {
+    /** A root sign spanning x 0..(barEnd), bar at y 60, tick bottom at y 130. */
+    function root(barEnd: number): ClassifiedSymbol {
+      const box: BoundingBox = { minX: 0, maxX: barEnd, minY: 60, maxY: 130, cx: barEnd / 2, cy: 95, width: barEnd, height: 70 };
+      return { char: "√", box, radical: { minX: 25, maxX: barEnd, y: 61 } };
+    }
+
+    it("takes everything under the bar as the radicand", () => {
+      expect(layoutSymbols([root(100), sym("x", 45), sym("+", 70), sym("1", 92)])).toBe("\\sqrt{x + 1}");
+    });
+
+    it("stops at the end of the bar", () => {
+      expect(layoutSymbols([root(60), sym("2", 45), sym("+", 90), sym("1", 120)])).toBe("\\sqrt{2} + 1");
+    });
+
+    it("reads a small symbol in the crook as the index", () => {
+      const index = sym("3", 8, { width: 10, height: 16, cy: 75 });
+      expect(layoutSymbols([root(80), index, sym("8", 55)])).toBe("\\sqrt[3]{8}");
+    });
+
+    it("lays a fraction under the bar out inside the root", () => {
+      const bar = sym("-", 60, { width: 40, height: 2, cy: 100 });
+      const num = sym("1", 60, { cy: 80, height: 16 });
+      const den = sym("2", 60, { cy: 118, height: 16 });
+      expect(layoutSymbols([root(100), num, bar, den])).toBe("\\sqrt{\\frac{1}{2}}");
+    });
+
+    it("puts a whole root in a fraction's numerator", () => {
+      const r: ClassifiedSymbol = {
+        char: "√",
+        box: { minX: 0, maxX: 60, minY: 20, maxY: 70, cx: 30, cy: 45, width: 60, height: 50 },
+        radical: { minX: 20, maxX: 60, y: 21 },
+      };
+      const two = sym("2", 40, { cy: 48 });
+      const bar = sym("-", 30, { width: 70, height: 2, cy: 90 });
+      const den = sym("2", 30, { cy: 120 });
+      expect(layoutSymbols([r, two, bar, den])).toBe("\\frac{\\sqrt{2}}{2}");
+    });
+  });
+
+  it("renders ⇒ as \\Rightarrow and parentheses verbatim, with an exponent on a closing parenthesis", () => {
+    const symbols = [
+      sym("(", 0, { height: 40 }),
+      sym("x", 20, { height: 24, cy: 104 }),
+      sym(")", 40, { height: 40 }),
+      sym("2", 56, { width: 12, height: 18, cy: 78 }),
+      sym("⇒", 90),
+      sym("π", 130),
+    ];
+    expect(layoutSymbols(symbols)).toBe("( x )^{2} \\Rightarrow \\pi");
+  });
+
   it("reads a small, lowered symbol as a subscript", () => {
     const base = sym("x", 0);
     const sub = sym("n", 22, { width: 10, height: 14, cy: 120 }); // lower cy = lower on screen
@@ -91,9 +169,11 @@ describe("layoutSymbols", () => {
     });
 
     it("attaches an exponent to a closing paren, exactly as LaTeX expects for (expr)^n", () => {
+      const open = sym("(", -40);
+      const x = sym("x", -20);
       const close = sym(")", 0);
       const exp = sym("2", 15, { width: 10, height: 14, cy: 80 });
-      expect(layoutSymbols([close, exp])).toBe(")^{2}");
+      expect(layoutSymbols([open, x, close, exp])).toBe("( x )^{2}");
     });
   });
 

@@ -2,54 +2,25 @@ import { useState } from "react";
 import { digitsOf } from "../engine/digits";
 import type { GeneratedProblem } from "../engine/generator";
 import { t } from "../i18n";
-import type { Stroke } from "../recognition/preprocess";
-import { DigitCanvas } from "./DigitCanvas";
-import { Numpad } from "./Numpad";
-
-export interface ProblemSummary {
-  wrongFirstAttempts: number;
-  hintUsed: boolean;
-  miniTutorialUsed: boolean;
-}
+import { checkWrittenAnswer } from "../mathinput/workCheck";
+import type { WritingLevel } from "../recognition/levels";
+import { profileForStage } from "../recognition/profiles";
+import { AnswerBoard } from "./draw/AnswerBoard";
+import { WorkPad } from "./draw/WorkPad";
+import { HelpLadder } from "./HelpLadder";
+import type { QuestionOutcome } from "./questionOutcome";
 
 interface ChartPlayerProps {
   problem: Extract<GeneratedProblem, { kind: "chart" }>;
-  inputMode?: "numpad" | "handwriting";
-  onSolved: (summary: ProblemSummary) => void;
+  level?: WritingLevel;
+  onSolved: (outcome: QuestionOutcome) => void;
 }
 
-const HAND_CELL_PX = 56;
 const CHART_HEIGHT_PX = 140;
 const CHART_MAX_VALUE = 15;
 const GRID_LINES = [0, 5, 10, 15];
 /** Fixed so the axis-label column and the category-label row below line up under the same bars. */
 const AXIS_LABEL_WIDTH = "1.5rem";
-
-/** Same free-answer handwriting cell as StatisticsPlayer's (see its comment: candidate for a shared future component). */
-function HandwrittenDigitCell({
-  value,
-  disabled,
-  resetToken,
-  onSettled,
-}: {
-  value: number | undefined;
-  disabled: boolean;
-  resetToken: number;
-  onSettled: (strokes: Stroke[], canvasSize: number) => void;
-}) {
-  if (value !== undefined) {
-    return (
-      <div className="w-12 h-14 flex items-center justify-center rounded-md border-2 border-emerald-400 bg-emerald-50 text-emerald-700 text-2xl font-bold">
-        {value}
-      </div>
-    );
-  }
-  return (
-    <div className={disabled ? "opacity-40 pointer-events-none" : ""}>
-      <DigitCanvas size={HAND_CELL_PX} compact resetToken={resetToken} onSettled={(strokes) => onSettled(strokes, HAND_CELL_PX)} />
-    </div>
-  );
-}
 
 function BarChart({
   categoryKeys,
@@ -129,32 +100,53 @@ function hintText(problem: ChartPlayerProps["problem"]): string {
   return t("chart.hint.sum");
 }
 
-/** Tabeller och diagram: read, compare, or sum a simple bar chart (see build brief gap: Lgr22 "Sannolikhet och statistik", åk 4-6). */
-export function ChartPlayer({ problem, inputMode = "numpad", onSolved }: ChartPlayerProps) {
+/** The help ladder's first step and its worked solution, with the chart's own numbers. */
+function helpTexts(problem: ChartPlayerProps["problem"]): { step: string; solution: string } {
+  const name = (i: number) => t(problem.categoryKeys[i]);
+  if (problem.questionType === "lookup") {
+    const category = name(problem.askIndex!);
+    return { step: t("chart.hint.lookup", { category }), solution: t("chart.step.lookup", { category, answer: problem.answer }) };
+  }
+  if (problem.questionType === "difference") {
+    const [ia, ib] = problem.compareIndices!;
+    const [a, b] = [problem.values[ia], problem.values[ib]];
+    return {
+      step: t("chart.step.two", { catA: name(ia), catB: name(ib), a, b }),
+      solution: t("chart.solution.difference", { big: Math.max(a, b), small: Math.min(a, b), answer: problem.answer }),
+    };
+  }
+  return { step: t("chart.step.all", { values: problem.values.join(", ") }), solution: t("chart.solution.sum", { sum: problem.values.join(" + "), answer: problem.answer }) };
+}
+
+/**
+ * Tabeller och diagram: read, compare, or sum a simple bar chart (see build brief gap: Lgr22 "Sannolikhet och statistik", åk 4-6).
+ * Reading one bar has nothing to set up; a difference or a sum does - its
+ * calculation, written under "Visa hur du tänkte", is what makes ★★★.
+ */
+export function ChartPlayer({ problem, level = 2, onSolved }: ChartPlayerProps) {
   const answerLength = digitsOf(problem.answer).length;
-  const [typed, setTyped] = useState("");
-  const [handDigits, setHandDigits] = useState<(number | undefined)[]>(() => Array(answerLength).fill(undefined));
-  const [resetTokens, setResetTokens] = useState<number[]>(() => Array(answerLength).fill(0));
-  const [pendingIndex, setPendingIndex] = useState<number | null>(null);
-  const [pendingGuesses, setPendingGuesses] = useState<[number, number] | null>(null);
+  const [resetToken, setResetToken] = useState(0);
   const [attempts, setAttempts] = useState(0);
+  const [helpUsed, setHelpUsed] = useState(0);
+  const [work, setWork] = useState("");
   const [verdict, setVerdict] = useState<"correct" | "wrong" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
 
-  function resetAnswer() {
-    setTyped("");
-    setHandDigits(Array(answerLength).fill(undefined));
-    setResetTokens((r) => r.map((x) => x + 1));
-    setPendingIndex(null);
-    setPendingGuesses(null);
-  }
+  const calculates = problem.questionType !== "lookup";
+  const outcome = (finalAttempts: number, shown: boolean): QuestionOutcome => ({
+    helped: helpUsed > 0 || finalAttempts >= 2 || shown,
+    fullSetup: calculates ? checkWrittenAnswer(work, { kind: "value", value: problem.answer }).fullSetup : finalAttempts === 0,
+    wrongFirstAttempts: finalAttempts >= 1 ? 1 : 0,
+    hintUsed: finalAttempts >= 2,
+    miniTutorialUsed: finalAttempts >= 3 || shown,
+  });
 
   function submitValue(value: number) {
     if (value === problem.answer) {
       setVerdict("correct");
       setMessage(null);
-      onSolved({ wrongFirstAttempts: attempts >= 1 ? 1 : 0, hintUsed: attempts >= 2, miniTutorialUsed: attempts >= 3 });
+      onSolved(outcome(attempts, false));
       return;
     }
     const nextAttempts = attempts + 1;
@@ -162,115 +154,49 @@ export function ChartPlayer({ problem, inputMode = "numpad", onSolved }: ChartPl
     setVerdict("wrong");
     if (nextAttempts === 1) {
       setMessage(t("statistics.tryAgain"));
-      resetAnswer();
+      setResetToken((r) => r + 1);
     } else if (nextAttempts === 2) {
       setMessage(hintText(problem));
-      resetAnswer();
+      setResetToken((r) => r + 1);
     } else {
       setMessage(t("statistics.reveal", { answer: problem.answer }));
       setRevealed(true);
-      setTyped(String(problem.answer));
-      setHandDigits(digitsOf(problem.answer).reverse());
     }
-  }
-
-  function submit() {
-    if (typed === "") return;
-    submitValue(Number(typed));
-  }
-
-  function applyHandDigit(index: number, digit: number) {
-    const next = [...handDigits];
-    next[index] = digit;
-    setHandDigits(next);
-    if (next.every((d) => d !== undefined)) submitValue(Number(next.join("")));
-  }
-
-  async function handleDigitStrokes(index: number, strokes: Stroke[], canvasSize: number) {
-    const { recognizeDigitStrokes } = await import("../recognition/recognizer");
-    const result = await recognizeDigitStrokes(strokes, canvasSize);
-    if (result.confident) {
-      applyHandDigit(index, result.digit);
-    } else {
-      setPendingIndex(index);
-      setPendingGuesses([result.topTwo.first.digit, result.topTwo.second.digit]);
-    }
-  }
-
-  function resolvePending(digit: number) {
-    if (pendingIndex === null) return;
-    const index = pendingIndex;
-    setPendingIndex(null);
-    setPendingGuesses(null);
-    applyHandDigit(index, digit);
   }
 
   const hideIndex = problem.questionType === "lookup" && !revealed ? problem.askIndex : undefined;
   const highlightIndices = problem.questionType === "difference" ? problem.compareIndices : undefined;
+  const help = helpTexts(problem);
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-center gap-6 lg:gap-12">
-      <div className="flex flex-col items-center gap-6">
-        <BarChart categoryKeys={problem.categoryKeys} values={problem.values} hideIndex={hideIndex} highlightIndices={highlightIndices} />
-        <p className="text-slate-700 text-center font-medium max-w-xs">{questionText(problem)}</p>
-
-        {inputMode === "handwriting" && !revealed && (
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex gap-1">
-              {handDigits.map((d, i) => (
-                <HandwrittenDigitCell
-                  key={i}
-                  value={d}
-                  disabled={pendingIndex !== null && pendingIndex !== i}
-                  resetToken={resetTokens[i]}
-                  onSettled={(strokes, canvasSize) => handleDigitStrokes(i, strokes, canvasSize)}
-                />
-              ))}
-            </div>
-            {pendingIndex !== null && pendingGuesses && (
-              <div className="flex flex-col items-center gap-1">
-                <p className="text-xs text-slate-500">{t("ui.didYouMean")}</p>
-                <div className="flex gap-2">
-                  {pendingGuesses.map((d) => (
-                    <button key={d} type="button" onClick={() => resolvePending(d)} className="w-11 h-11 rounded-xl bg-sky-500 text-white text-xl font-bold">
-                      {d}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        {!revealed && inputMode !== "handwriting" && (
-          <div
-            className={`w-40 h-14 flex items-center justify-center rounded-xl border-2 text-2xl font-bold ${
-              verdict === "correct"
-                ? "bg-emerald-50 border-emerald-400 text-emerald-700"
-                : verdict === "wrong"
-                  ? "bg-rose-50 border-rose-400 text-rose-700"
-                  : "bg-white border-slate-300 border-dashed text-slate-800"
-            }`}
-          >
-            {typed || " "}
-          </div>
-        )}
-        {message && <p className="text-slate-600 text-sm max-w-xs text-center">{message}</p>}
-        {revealed && (
-          <button
-            type="button"
-            onClick={() => onSolved({ wrongFirstAttempts: attempts >= 1 ? 1 : 0, hintUsed: true, miniTutorialUsed: true })}
-            className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow"
-          >
-            {t("placeValue.next")}
-          </button>
-        )}
-      </div>
-      {inputMode === "numpad" && !revealed && (
-        <Numpad
-          onDigit={(d) => setTyped((prev) => (prev.length >= 5 ? prev : prev + d))}
-          onDelete={() => setTyped((prev) => prev.slice(0, -1))}
-          onSubmit={submit}
-        />
+    <div className="flex flex-col items-center gap-5 w-full">
+      <BarChart categoryKeys={problem.categoryKeys} values={problem.values} hideIndex={hideIndex} highlightIndices={highlightIndices} />
+      <p className="text-slate-700 text-center font-medium max-w-xs">{questionText(problem)}</p>
+      {calculates && <WorkPad level={level} profile={profileForStage(problem.stageId)} title={t("work.title")} subtitle={t("work.why")} rows={2} onChange={setWork} disabled={verdict === "correct"} />}
+      <AnswerBoard
+        length={answerLength}
+        onSubmit={submitValue}
+        resetToken={resetToken}
+        revealed={revealed ? problem.answer : null}
+        verdict={verdict === "correct" ? "correct" : null}
+      />
+      {message && <p className="text-slate-600 text-sm max-w-xs text-center">{message}</p>}
+      {revealed ? (
+        <button type="button" onClick={() => onSolved(outcome(attempts, true))} className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow">
+          {t("placeValue.next")}
+        </button>
+      ) : (
+        verdict !== "correct" && (
+          <HelpLadder
+            used={helpUsed}
+            onUse={setHelpUsed}
+            steps={[
+              { title: t("help.tip"), content: hintText(problem) },
+              { title: t("help.step"), content: help.step },
+              { title: t("help.solution"), content: help.solution },
+            ]}
+          />
+        )
       )}
     </div>
   );

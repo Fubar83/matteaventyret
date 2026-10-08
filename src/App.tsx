@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { playEffect, playWorldMusic, setMuted, setVolumes, unlockAudio } from "./audio/sound";
+import { playWorldMusic, setMuted, setVolumes, unlockAudio } from "./audio/sound";
 import { playerLevel, recordRoundCompleted, type Stars } from "./engine/scoring";
 import { setLocale, t } from "./i18n";
 import { AvatarPicker } from "./game/AvatarPicker";
@@ -8,12 +8,16 @@ import { BlixtrundaScreen } from "./game/BlixtrundaScreen";
 import { MiniBossScreen } from "./game/MiniBossScreen";
 import { RoundScreen } from "./game/RoundScreen";
 import { SettingsScreen } from "./game/SettingsScreen";
+import { SkrivskolanScreen } from "./game/SkrivskolanScreen";
+import { HomeScreen } from "./game/HomeScreen";
+import { PathScreen } from "./game/PathScreen";
 import { STAGES } from "./game/stages";
-import { StageSelect } from "./game/StageSelect";
+import { trainingPathById } from "./game/trainingPaths";
+import { recommendNext } from "./game/unlocks";
 import { topicForStage } from "./game/teoriContent";
 import { bestStageStars, loadSave, totalStars, writeSave, type SaveDataV1 } from "./storage/save";
 
-type Screen = "stages" | "round" | "blixtrunda" | "boss" | "avatars" | "settings";
+type Screen = "stages" | "round" | "blixtrunda" | "boss" | "avatars" | "settings" | "skrivskolan";
 
 function todayISO(): string {
   const d = new Date();
@@ -25,6 +29,9 @@ function App() {
   const [save, setSave] = useState<SaveDataV1>(() => loadSave());
   const [screen, setScreen] = useState<Screen>("stages");
   const [stageId, setStageId] = useState<string | null>(null);
+  // The training path open on the start screen (none: the list of paths) - a round goes back to it.
+  const [pathId, setPathId] = useState<string | null>(null);
+  const path = pathId ? trainingPathById(pathId) : undefined;
 
   function update(fn: (s: SaveDataV1) => SaveDataV1) {
     setSave((prev) => {
@@ -36,10 +43,14 @@ function App() {
 
   const stage = STAGES.find((s) => s.id === stageId) ?? null;
 
+  function play(id: string) {
+    setStageId(id);
+    setScreen("round");
+  }
+
+  // The result screen plays the stars and any level-up itself (ResultScreen.tsx).
   function handleRoundComplete(stars: Stars, xp: number) {
     if (!stage) return;
-    if (stars === 3) playEffect("star");
-    const levelBefore = playerLevel(save.totalXp);
     update((s) => {
       const currentBest = bestStageStars(s, stage.id);
       const nextStageStars = { ...s.stageStars, [stage.id]: Math.max(currentBest, stars) as 1 | 2 | 3 };
@@ -51,10 +62,10 @@ function App() {
       if (nextTotalStars >= 5) avatarsUnlocked.add("uggla");
       if (nextTotalStars >= 10) avatarsUnlocked.add("ekorre");
       if (nextTotalStars >= 15) avatarsUnlocked.add("grodan");
-      if (playerLevel(nextTotalXp) > levelBefore) playEffect("levelUp");
       return {
         ...s,
         stageStars: nextStageStars,
+        stageLastPlayed: { ...s.stageLastPlayed, [stage.id]: todayISO() },
         totalXp: nextTotalXp,
         streak: nextStreak,
         avatarsUnlocked: Array.from(avatarsUnlocked),
@@ -104,9 +115,14 @@ function App() {
         <span>
           {totalStars(save)} ⭐ {t("ui.totalStarsSuffix")}
         </span>
-        <button type="button" onClick={() => setScreen("settings")} aria-label={t("ui.settings")} className="text-lg">
-          ⚙️
-        </button>
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={() => setScreen("skrivskolan")} aria-label={t("skriv.open")} title={t("skriv.open")} className="text-lg">
+            ✍️
+          </button>
+          <button type="button" onClick={() => setScreen("settings")} aria-label={t("ui.settings")} className="text-lg">
+            ⚙️
+          </button>
+        </div>
       </header>
 
       {screen === "settings" && (
@@ -116,6 +132,8 @@ function App() {
           onClose={() => setScreen("stages")}
         />
       )}
+
+      {screen === "skrivskolan" && <SkrivskolanScreen onClose={() => setScreen("stages")} />}
 
       {screen === "avatars" && (
         <AvatarPicker
@@ -128,13 +146,16 @@ function App() {
         />
       )}
 
-      {screen === "stages" && (
-        <StageSelect
+      {screen === "stages" && path && (
+        <PathScreen path={path} stageStars={save.stageStars} onPlay={play} onBack={() => setPathId(null)} forceUnlock={testMode} />
+      )}
+
+      {screen === "stages" && !path && (
+        <HomeScreen
           stageStars={save.stageStars}
-          onSelect={(id) => {
-            setStageId(id);
-            setScreen("round");
-          }}
+          recommended={recommendNext(save.stageStars, save.stageLastPlayed, todayISO())}
+          onOpenPath={setPathId}
+          onPlay={play}
           onBlixtrunda={() => setScreen("blixtrunda")}
           onBoss={() => setScreen("boss")}
           forceUnlock={testMode}
@@ -147,19 +168,19 @@ function App() {
           progress={save.methodProgress}
           onProgressChange={(method, next) => update((s) => ({ ...s, methodProgress: { ...s.methodProgress, [method]: next } }))}
           onRoundComplete={handleRoundComplete}
+          totalXp={save.totalXp}
           seenTeori={save.seenTeori.includes(topicForStage(stage.id))}
           onTeoriSeen={() =>
             update((s) => ({ ...s, seenTeori: Array.from(new Set([...s.seenTeori, topicForStage(stage.id)])) }))
           }
-          inputMode={save.settings.inputMode}
           onExit={() => setScreen("stages")}
+          exitLabel={path ? t(path.nameKey) : t("paths.home")}
         />
       )}
 
       {screen === "blixtrunda" && (
         <BlixtrundaScreen
           bestScore={save.blixtrundaBestScore}
-          inputMode={save.settings.inputMode}
           onFinish={(correctCount) =>
             update((s) => ({ ...s, blixtrundaBestScore: Math.max(s.blixtrundaBestScore, correctCount) }))
           }
@@ -171,7 +192,6 @@ function App() {
         <MiniBossScreen
           stageStars={save.stageStars}
           methodProgress={save.methodProgress}
-          inputMode={save.settings.inputMode}
           onDefeated={() =>
             update((s) => ({
               ...s,

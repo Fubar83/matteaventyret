@@ -1,0 +1,10 @@
+The sprites in this folder are by Kenney (www.kenney.nl), from:
+  - New Platformer Pack: https://kenney.nl/assets/new-platformer-pack
+  - Animal Pack Remastered: https://kenney.nl/assets/animal-pack-remastered
+  - Fish Pack: https://kenney.nl/assets/fish-pack
+  - Alien UFO Pack: https://kenney.nl/assets/alien-ufo-pack
+
+License: Creative Commons Zero (CC0) - http://creativecommons.org/publicdomain/zero/1.0/
+They may be used in personal and commercial projects. Credit is not required, but given gladly.
+
+Rebuilt from the official downloads with: npm run kenney (scripts/kenney/).

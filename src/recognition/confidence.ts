@@ -4,14 +4,14 @@
  * they're exhaustively testable, and separate from answer-checking: the
  * recognizer must never know the expected answer.
  */
-import { charToIndex, LABELS } from "./labels";
+import { LABELS } from "./labels";
 
 export interface TopTwo {
   first: { index: number; prob: number };
   second: { index: number; prob: number };
 }
 
-/** Character pairs that look alike in handwriting, checked both directions. Index pairs, derived from LABELS. */
+/** Character pairs that look alike in handwriting, checked both directions. Matched by character, so the same list serves either model's labels. */
 const CONFUSABLE_CHAR_PAIRS: readonly [string, string][] = [
   // digit / digit
   ["1", "7"],
@@ -56,6 +56,20 @@ const CONFUSABLE_CHAR_PAIRS: readonly [string, string][] = [
   // letter / math sign
   ["x", "×"],
   ["X", "×"],
+  ["t", "+"],
+  ["o", "°"],
+  ["0", "°"],
+  ["l", "|"],
+  ["1", "|"],
+  ["a", "α"],
+  ["0", "θ"],
+  ["=", "≠"],
+  ["<", "≤"],
+  [">", "≥"],
+  ["+", "±"],
+  ["·", "."],
+  ["(", "["],
+  [")", "]"],
   // Swedish diacritics / their base letter
   ["a", "å"],
   ["a", "ä"],
@@ -69,22 +83,7 @@ const CONFUSABLE_MIN_MARGIN = 0.4;
 const DEFAULT_MIN_TOP = 0.85;
 const DEFAULT_MIN_MARGIN = 0.3;
 
-function buildConfusablePairSet(pairs: readonly [string, string][]): ReadonlySet<string> {
-  const set = new Set<string>();
-  for (const [a, b] of pairs) {
-    // Some pairs name a character outside the currently active LABELS (e.g. letters,
-    // while they're disabled) - skip those rather than erroring, so the list doesn't
-    // need pruning/restoring by hand each time the active character set changes.
-    if (!LABELS.includes(a) || !LABELS.includes(b)) continue;
-    const ia = charToIndex(a);
-    const ib = charToIndex(b);
-    set.add(`${ia}-${ib}`);
-    set.add(`${ib}-${ia}`);
-  }
-  return set;
-}
-
-const CONFUSABLE_PAIRS = buildConfusablePairSet(CONFUSABLE_CHAR_PAIRS);
+const CONFUSABLE_PAIRS: ReadonlySet<string> = new Set(CONFUSABLE_CHAR_PAIRS.flatMap(([a, b]) => [`${a}|${b}`, `${b}|${a}`]));
 
 /**
  * Top two classes by probability. `candidates` restricts the search to those
@@ -98,15 +97,40 @@ export function topTwo(probs: readonly number[], candidates?: readonly number[])
   return { first: { index: firstIdx, prob: probs[firstIdx] }, second: { index: secondIdx, prob: probs[secondIdx] } };
 }
 
-/** True if the top guess (within `candidates`, if given) clears the general threshold and the confusable-pair margin. */
-export function isConfident(probs: readonly number[], candidates?: readonly number[]): boolean {
+/**
+ * With `candidates` (e.g. digits only), at least this much of the model's
+ * probability must fall on them at all - below it, the ink doesn't look like
+ * any candidate (a scribble, a sign), and no candidate should be read confidently.
+ */
+const MIN_CANDIDATE_MASS = 0.3;
+
+/**
+ * True if the top guess (within `candidates`, if given) clears the general
+ * threshold and the confusable-pair margin. `labels` names the classes of
+ * the model that produced `probs` (the full model's by default).
+ *
+ * With `candidates`, the thresholds apply to the probabilities *among the
+ * candidates* (renormalized to sum to 1): in a digits-only box, the chance the
+ * model gives a non-digit class can't be a competing answer. Without this, a
+ * plain "1" - which the model also finds ")"-like - came out at ~0.6 raw even
+ * with no other digit anywhere near, and was almost never read as confident.
+ */
+export function isConfident(probs: readonly number[], candidates?: readonly number[], labels: readonly string[] = LABELS): boolean {
   const { first, second } = topTwo(probs, candidates);
-  if (first.prob < DEFAULT_MIN_TOP) return false;
-  const margin = first.prob - second.prob;
-  const requiredMargin = CONFUSABLE_PAIRS.has(`${first.index}-${second.index}`) ? CONFUSABLE_MIN_MARGIN : DEFAULT_MIN_MARGIN;
+  let top = first.prob;
+  let runnerUp = second.prob;
+  if (candidates) {
+    const mass = candidates.reduce((sum, i) => sum + (probs[i] ?? 0), 0);
+    if (mass < MIN_CANDIDATE_MASS) return false;
+    top /= mass;
+    runnerUp /= mass;
+  }
+  if (top < DEFAULT_MIN_TOP) return false;
+  const margin = top - runnerUp;
+  const requiredMargin = CONFUSABLE_PAIRS.has(`${labels[first.index]}|${labels[second.index]}`) ? CONFUSABLE_MIN_MARGIN : DEFAULT_MIN_MARGIN;
   return margin >= requiredMargin;
 }
 
-export function charAt(index: number): string {
-  return LABELS[index];
+export function charAt(index: number, labels: readonly string[] = LABELS): string {
+  return labels[index];
 }

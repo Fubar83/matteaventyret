@@ -1,4 +1,5 @@
 import { digitAt } from "../engine/digits";
+import { computeSubtractionPlan } from "../engine/methods/columnSub";
 import type { Cell, MethodId } from "../engine/types";
 import { classifyAdditionCarries } from "../engine/verifier";
 import { t } from "../i18n";
@@ -41,7 +42,21 @@ export function exempelPrompt(method: MethodId, cell: Cell, top: number, bottom:
   }
 
   // columnSub
-  if (cell.type === "strike") return t("exempel.sub.strike", { top: topDigit, bottom: bottomDigit });
+  if (cell.type === "strike") {
+    // "6 minus 7 går inte" is about the column that has to borrow, not the one
+    // being crossed out to lend it (regression: 36 - 17 said "3 minus 1 går
+    // inte"). That's the nearest column to the right that receives a borrowed
+    // ten - also across a run of zeros being passed through (1003 - 457).
+    // Its value is what it has left - a column that already lent a ten to its
+    // own right neighbour has one less than its printed digit (713 - 286: the
+    // tens have 0, not 1).
+    const plan = computeSubtractionPlan(top, bottom);
+    const needing = plan
+      .filter((c) => c.col < cell.col && c.receivedBorrow)
+      .reduce<(typeof plan)[number] | null>((best, c) => (best === null || c.col > best.col ? c : best), null);
+    if (!needing) return t("exempel.sub.strike", { top: topDigit, bottom: bottomDigit });
+    return t("exempel.sub.strike", { top: needing.adjustedBase, bottom: needing.bottomDigit });
+  }
   if (cell.type === "borrowTen") return t("exempel.sub.borrowTen");
   return t("exempel.sub.result");
 }

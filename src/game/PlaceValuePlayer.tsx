@@ -1,81 +1,52 @@
 import { useState } from "react";
-import { digitsOf } from "../engine/digits";
+import { digitAt, digitsOf } from "../engine/digits";
 import type { GeneratedProblem } from "../engine/generator";
 import { t } from "../i18n";
-import type { Stroke } from "../recognition/preprocess";
-import { DigitCanvas } from "./DigitCanvas";
-import { Numpad } from "./Numpad";
+import { AnswerBoard } from "./draw/AnswerBoard";
+import { HelpLadder } from "./HelpLadder";
 import { PlaceValueBoard } from "./PlaceValueBoard";
-
-export interface ProblemSummary {
-  wrongFirstAttempts: number;
-  hintUsed: boolean;
-  miniTutorialUsed: boolean;
-}
+import { BaseTenBlocks } from "./scenes/BaseTenBlocks";
+import type { QuestionOutcome } from "./questionOutcome";
 
 interface PlaceValuePlayerProps {
   problem: Extract<GeneratedProblem, { kind: "placeValue" }>;
-  inputMode?: "numpad" | "handwriting";
-  onSolved: (summary: ProblemSummary) => void;
+  onSolved: (outcome: QuestionOutcome) => void;
 }
 
-const HAND_CELL_PX = 56;
-
-/** One free-answer digit, written by hand: recognized independently, with the same "did you mean" fallback as the column boards. */
-function HandwrittenDigitCell({
-  value,
-  disabled,
-  resetToken,
-  onSettled,
-}: {
-  value: number | undefined;
-  disabled: boolean;
-  resetToken: number;
-  onSettled: (strokes: Stroke[], canvasSize: number) => void;
-}) {
-  if (value !== undefined) {
-    return (
-      <div className="w-12 h-14 flex items-center justify-center rounded-md border-2 border-emerald-400 bg-emerald-50 text-emerald-700 text-2xl font-bold">
-        {value}
-      </div>
-    );
-  }
-  return (
-    <div className={disabled ? "opacity-40 pointer-events-none" : ""}>
-      <DigitCanvas size={HAND_CELL_PX} compact resetToken={resetToken} onSettled={(strokes) => onSettled(strokes, HAND_CELL_PX)} />
-    </div>
-  );
-}
-
-export function PlaceValuePlayer({ problem, inputMode = "numpad", onSolved }: PlaceValuePlayerProps) {
+/**
+ * "What is the 3 worth in 4 339?" - read off, nothing to set up, so right the
+ * first time without help is the full ★★★ (see engine/scoring.ts).
+ */
+export function PlaceValuePlayer({ problem, onSolved }: PlaceValuePlayerProps) {
   const answerLength = digitsOf(problem.answer).length;
-  const [typed, setTyped] = useState("");
-  const [handDigits, setHandDigits] = useState<(number | undefined)[]>(() => Array(answerLength).fill(undefined));
-  const [resetTokens, setResetTokens] = useState<number[]>(() => Array(answerLength).fill(0));
-  const [pendingIndex, setPendingIndex] = useState<number | null>(null);
-  const [pendingGuesses, setPendingGuesses] = useState<[number, number] | null>(null);
+  const [answerText, setAnswerText] = useState("");
+  const [resetToken, setResetToken] = useState(0);
   const [attempts, setAttempts] = useState(0);
+  const [helpUsed, setHelpUsed] = useState(0);
   const [verdict, setVerdict] = useState<"correct" | "wrong" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
 
+  const digit = digitAt(problem.number, problem.columnAsked);
+  const place = t(`place.${problem.columnAsked}`);
+  const outcome = (finalAttempts: number, shown: boolean): QuestionOutcome => ({
+    helped: helpUsed > 0 || finalAttempts >= 2 || shown,
+    fullSetup: finalAttempts === 0,
+    wrongFirstAttempts: finalAttempts >= 1 ? 1 : 0,
+    hintUsed: finalAttempts >= 2,
+    miniTutorialUsed: finalAttempts >= 3 || shown,
+  });
+
   function resetAnswer() {
-    setTyped("");
-    setHandDigits(Array(answerLength).fill(undefined));
-    setResetTokens((r) => r.map((x) => x + 1));
-    setPendingIndex(null);
-    setPendingGuesses(null);
+    setAnswerText("");
+    setResetToken((r) => r + 1);
   }
 
   function submitValue(value: number) {
     if (value === problem.answer) {
       setVerdict("correct");
       setMessage(null);
-      onSolved({
-        wrongFirstAttempts: attempts >= 1 ? 1 : 0,
-        hintUsed: attempts >= 2,
-        miniTutorialUsed: attempts >= 3,
-      });
+      onSolved(outcome(attempts, false));
       return;
     }
     const nextAttempts = attempts + 1;
@@ -90,108 +61,39 @@ export function PlaceValuePlayer({ problem, inputMode = "numpad", onSolved }: Pl
     } else {
       setMessage(t("placeValue.reveal", { answer: problem.answer }));
       setRevealed(true);
-      setTyped(String(problem.answer));
-      setHandDigits(digitsOf(problem.answer).reverse());
+      setAnswerText(String(problem.answer));
     }
-  }
-
-  function submit() {
-    if (typed === "") return;
-    submitValue(Number(typed));
-  }
-
-  function applyHandDigit(index: number, digit: number) {
-    const next = [...handDigits];
-    next[index] = digit;
-    setHandDigits(next);
-    if (next.every((d) => d !== undefined)) {
-      submitValue(Number(next.join("")));
-    }
-  }
-
-  async function handleDigitStrokes(index: number, strokes: Stroke[], canvasSize: number) {
-    const { recognizeDigitStrokes } = await import("../recognition/recognizer");
-    const result = await recognizeDigitStrokes(strokes, canvasSize);
-    if (result.confident) {
-      applyHandDigit(index, result.digit);
-    } else {
-      setPendingIndex(index);
-      setPendingGuesses([result.topTwo.first.digit, result.topTwo.second.digit]);
-    }
-  }
-
-  function resolvePending(digit: number) {
-    if (pendingIndex === null) return;
-    const index = pendingIndex;
-    setPendingIndex(null);
-    setPendingGuesses(null);
-    applyHandDigit(index, digit);
   }
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-center gap-6 lg:gap-12">
-      <div className="flex flex-col items-center gap-6">
-        <PlaceValueBoard
-          number={problem.number}
-          columnAsked={problem.columnAsked}
-          answerText={typed}
-          verdict={verdict}
-        />
-        {inputMode === "handwriting" && !revealed && (
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex gap-1">
-              {handDigits.map((d, i) => (
-                <HandwrittenDigitCell
-                  key={i}
-                  value={d}
-                  disabled={pendingIndex !== null && pendingIndex !== i}
-                  resetToken={resetTokens[i]}
-                  onSettled={(strokes, canvasSize) => handleDigitStrokes(i, strokes, canvasSize)}
-                />
-              ))}
-            </div>
-            {pendingIndex !== null && pendingGuesses && (
-              <div className="flex flex-col items-center gap-1">
-                <p className="text-xs text-slate-500">{t("ui.didYouMean")}</p>
-                <div className="flex gap-2">
-                  {pendingGuesses.map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => resolvePending(d)}
-                      className="w-11 h-11 rounded-xl bg-sky-500 text-white text-xl font-bold"
-                    >
-                      {d}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        {message && <p className="text-slate-600 text-sm max-w-xs text-center">{message}</p>}
-        {revealed && (
-          <button
-            type="button"
-            onClick={() =>
-              onSolved({
-                wrongFirstAttempts: attempts >= 1 ? 1 : 0,
-                hintUsed: true,
-                miniTutorialUsed: true,
-              })
-            }
-            className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow"
-          >
-            {t("placeValue.next")}
-          </button>
-        )}
-      </div>
-      {inputMode === "numpad" && !revealed && (
-        <Numpad
-          onDigit={(d) => setTyped((prev) => (prev.length >= 5 ? prev : prev + d))}
-          onDelete={() => setTyped((prev) => prev.slice(0, -1))}
-          onSubmit={submit}
-        />
+    <div className="flex flex-col items-center gap-6">
+      <BaseTenBlocks number={problem.number} highlight={problem.columnAsked} />
+      <PlaceValueBoard number={problem.number} columnAsked={problem.columnAsked} answerText={answerText} verdict={verdict} />
+      <AnswerBoard
+        length={answerLength}
+        onSubmit={submitValue}
+        resetToken={resetToken}
+        revealed={revealed ? problem.answer : null}
+        verdict={verdict === "correct" ? "correct" : null}
+        onDigitsChange={(digits) => setAnswerText(digits.map((d) => d ?? "").join(""))}
+      />
+      {message && <p className="text-slate-600 text-sm max-w-xs text-center">{message}</p>}
+      {revealed ? (
+        <button type="button" onClick={() => onSolved(outcome(attempts, true))} className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow">
+          {t("placeValue.next")}
+        </button>
+      ) : (
+        verdict !== "correct" && (
+          <HelpLadder
+            used={helpUsed}
+            onUse={setHelpUsed}
+            steps={[
+              { title: t("help.tip"), content: t("placeValue.hint") },
+              { title: t("help.step"), content: t("placeValue.step", { digit, place }) },
+              { title: t("help.solution"), content: t("placeValue.solution", { digit, place, answer: problem.answer }) },
+            ]}
+          />
+        )
       )}
     </div>
   );

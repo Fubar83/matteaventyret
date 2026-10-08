@@ -39,7 +39,7 @@ describe("save/load", () => {
     localStorage.setItem("matteaventyret-save", JSON.stringify({ version: 1, settings: {} }));
     const save = loadSave();
     expect(save.settings.locale).toBe("sv");
-    expect(save.settings.inputMode).toBe("handwriting");
+    expect(save.settings.muted).toBe(false);
   });
 });
 

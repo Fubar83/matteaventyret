@@ -17,12 +17,11 @@ type ColumnProblem = Extract<GeneratedProblem, { kind: "columnAdd" } | { kind: "
 interface MiniBossScreenProps {
   stageStars: Partial<Record<StageId, 1 | 2 | 3>>;
   methodProgress: Record<PlayableMethod, MethodProgress>;
-  inputMode?: "numpad" | "handwriting";
   onDefeated: () => void;
   onExit: () => void;
 }
 
-export function MiniBossScreen({ stageStars, methodProgress, inputMode = "numpad", onDefeated, onExit }: MiniBossScreenProps) {
+export function MiniBossScreen({ stageStars, methodProgress, onDefeated, onExit }: MiniBossScreenProps) {
   const rngRef = useRef(makeRng(Date.now()));
   const [hp, setHp] = useState(BOSS_MAX_HP);
   const [hit, setHit] = useState(false);
@@ -70,7 +69,7 @@ export function MiniBossScreen({ stageStars, methodProgress, inputMode = "numpad
       </button>
       <h2 className="text-xl font-bold text-slate-800">Siffer-Slukaren</h2>
       <BossMonster hp={hp} maxHp={BOSS_MAX_HP} hit={hit} />
-      <ColumnProblemPlayer key={`${problem.top}-${problem.bottom}-${hp}`} problem={problem} phase={phase} inputMode={inputMode} onSolved={handleSolved} />
+      <ColumnProblemPlayer key={`${problem.top}-${problem.bottom}-${hp}`} problem={problem} phase={phase} onSolved={handleSolved} />
     </div>
   );
 }

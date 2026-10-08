@@ -106,3 +106,22 @@ export function exportSamplesAsBmp(samples: StoredSample[]): void {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+/**
+ * The samples as stroke data (JSON) - what scripts/importOwnSamples.mjs turns
+ * into training data for the recognizer. Anonymous: a character, its strokes,
+ * and which session drew it - no names, no images.
+ */
+export function exportSamplesAsJson(samples: StoredSample[]): void {
+  const data = {
+    format: "matteaventyret-samples/1",
+    canvasSize: DEFAULT_CANVAS_SIZE,
+    samples: samples.map((s) => ({ label: s.label, strokes: s.strokes, sessionId: s.sessionId, createdAt: s.createdAt })),
+  };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `handskrift-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}

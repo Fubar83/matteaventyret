@@ -1,9 +1,58 @@
 {
   "kind": "bootstrap-mixed",
-  "trainedAt": "2026-09-26T23:31:31.446Z",
-  "numClasses": 16,
+  "trainedAt": "2026-09-28T17:44:21.708Z",
+  "numClasses": 21,
   "samplesPerChar": 400,
-  "testAccuracy": 0.9453125,
+  "testAccuracy": 0.9380325078964233,
+  "perClassTestAccuracy": {
+    "0": 0.988,
+    "1": 0.9,
+    "2": 0.838,
+    "3": 0.925,
+    "4": 0.963,
+    "5": 0.925,
+    "6": 1,
+    "7": 0.863,
+    "8": 0.938,
+    "9": 0.925,
+    ".": 0.25,
+    "+": 0.958,
+    "-": 1,
+    "/": 0.963,
+    "=": 1,
+    "x": 0.95,
+    "(": 1,
+    ")": 1,
+    "π": 0.925,
+    "√": 0.963,
+    "⇒": 0.988
+  },
+  "toppedUpClasses": {
+    ".": {
+      "real": 21,
+      "augmentedAdded": 303
+    },
+    "+": {
+      "real": 118,
+      "augmentedAdded": 226
+    },
+    "-": {
+      "real": 147,
+      "augmentedAdded": 202
+    },
+    "=": {
+      "real": 30,
+      "augmentedAdded": 296
+    },
+    "(": {
+      "real": 72,
+      "augmentedAdded": 262
+    },
+    ")": {
+      "real": 72,
+      "augmentedAdded": 262
+    }
+  },
   "realDataClasses": [
     "0",
     "1",
@@ -20,8 +69,13 @@
     "-",
     "/",
     "=",
-    "x"
+    "x",
+    "(",
+    ")",
+    "π",
+    "√",
+    "⇒"
   ],
   "syntheticDataClasses": [],
-  "note": "All 16 classes trained on real handwriting, pooled from every source characters.json declares for each (see realDataClasses and characters.json's own \"sources\" per character for exactly which)."
+  "note": "All 21 classes trained on real handwriting, pooled from every source characters.json declares for each (see realDataClasses and characters.json's own \"sources\" per character for exactly which)."
 }

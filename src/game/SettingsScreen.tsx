@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Locale } from "../i18n";
+import { forgetHandwriting, personalSamples } from "../recognition/personal";
 import type { Settings } from "../storage/save";
 
 interface SettingsScreenProps {
@@ -24,6 +25,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 
 export function SettingsScreen({ settings, onChange, onClose }: SettingsScreenProps) {
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [learned, setLearned] = useState(() => personalSamples().length);
 
   if (showPrivacy) {
     return (
@@ -31,11 +33,13 @@ export function SettingsScreen({ settings, onChange, onClose }: SettingsScreenPr
         <h2 className="text-xl font-bold text-slate-800">Integritet</h2>
         <p>
           MatteÄventyret samlar inte in något. Det finns inga konton, inga namn (barnet väljer en avatar, inte ett
-          namn), ingen analys och inga tredjepartsanrop när du spelar. Allt sparas bara på den här enheten.
+          namn), ingen analys och inga tredjepartsanrop när du spelar. Allt sparas bara på den här enheten – även de
+          tecken barnet har förklarat ("Menade du?"), som spelet använder för att läsa just den handstilen bättre.
         </p>
         <p className="text-sm text-slate-500">
           Privacy: MatteÄventyret collects nothing. No accounts, no names, no analytics, no third-party requests
-          while playing. Everything is saved only on this device.
+          while playing. Everything is saved only on this device - including the symbols the child has explained
+          ("Did you mean?"), which the game uses to read that handwriting better.
         </p>
         <button type="button" onClick={() => setShowPrivacy(false)} className="h-12 px-6 rounded-xl bg-slate-200 text-slate-700 font-bold">
           Tillbaka
@@ -59,22 +63,6 @@ export function SettingsScreen({ settings, onChange, onClose }: SettingsScreenPr
               className={`px-4 h-9 rounded-lg font-semibold ${settings.locale === loc ? "bg-sky-500 text-white" : "bg-slate-100 text-slate-600"}`}
             >
               {loc === "sv" ? "Svenska" : "English"}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between py-2">
-        <span className="text-slate-700">Skriva med</span>
-        <div className="flex gap-2">
-          {(["numpad", "handwriting"] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => onChange({ ...settings, inputMode: mode })}
-              className={`px-3 h-9 rounded-lg font-semibold text-sm ${settings.inputMode === mode ? "bg-sky-500 text-white" : "bg-slate-100 text-slate-600"}`}
-            >
-              {mode === "numpad" ? "Knappsats" : "Handskrift"}
             </button>
           ))}
         </div>
@@ -120,6 +108,29 @@ export function SettingsScreen({ settings, onChange, onClose }: SettingsScreenPr
         checked={settings.dyslexiaFont}
         onChange={(v) => onChange({ ...settings, dyslexiaFont: v })}
       />
+
+      {/* What the game has learned of this child's handwriting (recognition/personal.ts) - on this device only, and can be forgotten. */}
+      <div className="flex flex-col gap-1 py-2">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-slate-700">Handstil</span>
+          <button
+            type="button"
+            disabled={learned === 0}
+            onClick={() => {
+              forgetHandwriting();
+              setLearned(0);
+            }}
+            className="px-4 h-9 rounded-lg bg-slate-100 text-slate-600 font-semibold text-sm disabled:opacity-40"
+          >
+            Glöm min handstil
+          </button>
+        </div>
+        <p className="text-xs text-slate-500">
+          {learned === 0
+            ? "När du svarar på \"Menade du?\" lär sig spelet hur du skriver. Det sparas bara på den här enheten."
+            : `Spelet har lärt sig ${learned} tecken av hur du skriver. Det sparas bara på den här enheten.`}
+        </p>
+      </div>
 
       <button type="button" onClick={() => setShowPrivacy(true)} className="text-sky-600 underline text-sm text-left">
         Om integritet / Privacy

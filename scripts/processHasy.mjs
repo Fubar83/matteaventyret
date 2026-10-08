@@ -35,12 +35,12 @@ const CACHE_DIR = path.join(DATA_DIR, "cache");
 const SIZE = 28;
 const SAMPLES_PER_CLASS = 500;
 
-// char -> HASYv2's own "latex" column value, straight from whichever entries
-// in characters.json declare a "hasy" source.
+// char -> every HASYv2 "latex" column value characters.json declares a "hasy"
+// source for (e.g. "⇒" pools both \Rightarrow and \Longrightarrow).
 const CHAR_TO_LATEX = new Map(
   CHARACTERS.filter((entry) => entry.sources.some((s) => s.dataset === "hasy")).map((entry) => [
     entry.char,
-    entry.sources.find((s) => s.dataset === "hasy").latex,
+    entry.sources.filter((s) => s.dataset === "hasy").map((s) => s.latex),
   ])
 );
 
@@ -112,8 +112,8 @@ function main() {
 
   mkdirSync(CACHE_DIR, { recursive: true });
   for (const char of chars) {
-    const latex = CHAR_TO_LATEX.get(char);
-    if (!latex) {
+    const latexes = CHAR_TO_LATEX.get(char);
+    if (!latexes) {
       console.warn(`Skipping "${char}": characters.json doesn't declare a "hasy" source for it - add one there first (see this file's header for known-good latex values).`);
       continue;
     }
@@ -122,15 +122,15 @@ function main() {
       console.log(`  ${char}: already cached, skipping`);
       continue;
     }
-    const allPaths = pathsByLatex.get(latex) ?? [];
+    const allPaths = latexes.flatMap((latex) => pathsByLatex.get(latex) ?? []);
     if (allPaths.length === 0) {
-      console.warn(`  ${char} (${latex}): no images found - skipping`);
+      console.warn(`  ${char} (${latexes.join(", ")}): no images found - skipping`);
       continue;
     }
     const samplePaths = pickSample(allPaths, SAMPLES_PER_CLASS);
     const grids = samplePaths.map((p) => Array.from(pngToGrid(PNG.sync.read(readFileSync(path.join(DATA_DIR, p))))));
     writeFileSync(outPath, JSON.stringify({ char, hex: hexClassFor(char), count: grids.length, size: SIZE, grids }));
-    console.log(`  ${char} (${latex}): cached ${grids.length} samples (of ${allPaths.length} available)`);
+    console.log(`  ${char} (${latexes.join(", ")}): cached ${grids.length} samples (of ${allPaths.length} available)`);
   }
   console.log("Done.");
 }

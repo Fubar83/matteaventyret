@@ -10,6 +10,7 @@
  */
 import { recognizeStrokes } from "../recognition/recognizer";
 import type { Stroke } from "../recognition/preprocess";
+import { checkGlyph } from "../mathinput/glyphChecks";
 import { segmentSymbols } from "../mathinput/segmentation";
 import { detectLine, type DetectedLine } from "./lineDetection";
 
@@ -28,7 +29,7 @@ const DIGIT_CHARS = new Set("0123456789".split(""));
 // Every math sign except "." (which gets its own "dot" type, per the brief:
 // "numbers, dots and +-*/ and other math symbols" - a dot is its own kind of
 // thing, not lumped in with the operators).
-const OPERATOR_CHARS = new Set(["+", "-", "×", "÷", "=", "<", ">", "(", ")", "/", ",", "^", "π"]);
+const OPERATOR_CHARS = new Set(["+", "-", "×", "÷", "=", "<", ">", "(", ")", "/", ",", "^", "π", "√", "⇒"]);
 
 function glyphType(char: string): GlyphType {
   if (DIGIT_CHARS.has(char)) return "digit";
@@ -46,16 +47,23 @@ export async function detectAll(strokes: Stroke[]): Promise<DetectedItem[]> {
       items.push(line);
       continue;
     }
+    const bbox = {
+      x: Math.round(symbol.box.minX),
+      y: Math.round(symbol.box.minY),
+      w: Math.round(symbol.box.width),
+      h: Math.round(symbol.box.height),
+    };
+    if (symbol.knownChar) {
+      // Settled by geometry in segmentation (e.g. paired "=" bars) - no model involved.
+      items.push({ type: glyphType(symbol.knownChar), value: symbol.knownChar, bbox, confidence: 1 });
+      continue;
+    }
     const result = await recognizeStrokes(symbol.strokes);
+    const value = checkGlyph(result.char, symbol.strokes, result.probs, result.labels);
     items.push({
-      type: glyphType(result.char),
-      value: result.char,
-      bbox: {
-        x: Math.round(symbol.box.minX),
-        y: Math.round(symbol.box.minY),
-        w: Math.round(symbol.box.width),
-        h: Math.round(symbol.box.height),
-      },
+      type: glyphType(value),
+      value,
+      bbox,
       confidence: Math.round(result.topTwo.first.prob * 100) / 100,
     });
   }

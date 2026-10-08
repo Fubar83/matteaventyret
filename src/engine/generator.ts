@@ -16,6 +16,15 @@ import {
   verifyMultiplication,
   verifySubtraction,
 } from "./verifier";
+import { ADVANCED_GENERATORS, type AdvancedProblem, type AdvancedStageId } from "./advanced";
+import { GEOMETRY_GENERATORS, type GeometryStageId } from "./geometry";
+import { TRAPPAN_GENERATORS, type TrappanProblem, type TrappanStageId } from "./trappan";
+import { MUL_GUIDED_GENERATORS, type MulGuidedProblem, type MulGuidedStageId } from "./multiply";
+import { CLOCK_GENERATORS, type ClockProblem, type ClockStageId } from "./clock";
+import { SHOP_GENERATORS, type ShopProblem, type ShopStageId } from "./shop";
+import { EXAM_GENERATORS, type ExamStageId } from "./examTopics";
+import { WORD_GENERATORS, type WordStageId } from "./wordProblems";
+import { BASIC_GENERATORS, type BasicStageId } from "./basicTopics";
 import type { Rng } from "./rng";
 import { randInt, shuffle } from "./rng";
 
@@ -41,7 +50,16 @@ export type StageId =
   | "2.7.3"
   | "2.8.1"
   | "2.8.2"
-  | "2.8.3";
+  | "2.8.3"
+  | TrappanStageId
+  | MulGuidedStageId
+  | ClockStageId
+  | ShopStageId
+  | ExamStageId
+  | WordStageId
+  | BasicStageId
+  | AdvancedStageId
+  | GeometryStageId;
 
 type AddSubStageId = "1.1.2" | "1.1.3" | "1.1.4" | "1.1.5" | "1.1.6" | "1.1.7";
 type MulStageId = "2.1.1" | "2.1.2" | "2.1.3";
@@ -70,7 +88,12 @@ export type GeneratedProblem =
       askIndex?: number;
       compareIndices?: [number, number];
       answer: number;
-    };
+    }
+  | TrappanProblem
+  | MulGuidedProblem
+  | ClockProblem
+  | ShopProblem
+  | AdvancedProblem;
 
 const MAX_ATTEMPTS = 200;
 
@@ -218,7 +241,13 @@ function chooseColumns(rng: Rng, fromCols: readonly number[], count: number): Se
 
 function makeKey(p: GeneratedProblem): string {
   if (p.kind === "placeValue") return `pv:${p.number}:${p.columnAsked}`;
+  // The worked solution too: a geometry question is all in its figure, with no display to tell two apart.
+  if (p.kind === "expression") return `adv:${p.stageId}:${p.display}:${JSON.stringify(p.promptVars ?? {})}:${p.solution.join("|")}`;
   if (p.kind === "shortDiv") return `${p.kind}:${p.dividend}:${p.divisor}`;
+  if (p.kind === "shop") return `${p.kind}:${p.mode}:${p.buy.join(",")}:${p.total}:${p.paidWith.join(",")}`;
+  if (p.kind === "clock") return `${p.kind}:${p.h}:${p.m}`;
+  if (p.kind === "mulGuided") return `${p.kind}:${p.top.digits}/${p.top.decimals}:${p.bottom.digits}/${p.bottom.decimals}`;
+  if (p.kind === "trappan") return `${p.kind}:${p.dividend.digits}/${p.dividend.decimals}:${p.divisor.digits}/${p.divisor.decimals}`;
   if (p.kind === "statistics") return `${p.kind}:${p.measure}:${p.values.join(",")}`;
   if (p.kind === "chart") return `${p.kind}:${p.questionType}:${p.values.join(",")}:${p.askIndex ?? ""}:${p.compareIndices?.join("-") ?? ""}`;
   return `${p.kind}:${p.top}:${p.bottom}`;
@@ -301,7 +330,8 @@ function generateStage6(rng: Rng): GeneratedProblem {
 }
 
 function generateStage7(rng: Rng): GeneratedProblem {
-  const isAdd = rng() < 0.5;
+  // The level is borrowing across zeros: mostly subtractions that do, some additions to keep it mixed.
+  const isAdd = rng() < 0.25;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const len = randInt(rng, 3, 4);
     const allCols = Array.from({ length: len }, (_, i) => i);
@@ -313,7 +343,7 @@ function generateStage7(rng: Rng): GeneratedProblem {
       if (isTrivial(top, bottom, "add") || hasTooManyZeros(top, bottom)) continue;
       return finalizeAdd("1.1.7", top, bottom);
     } else {
-      const zeroAcrossBorrow = rng() < 0.4 && len >= 3;
+      const zeroAcrossBorrow = rng() < 0.85 && len >= 3;
       let zeroColumns = new Set<number>();
       let borrowCols = chooseColumns(rng, nonLeadingCols, randInt(rng, 2, Math.min(3, nonLeadingCols.length)));
       if (zeroAcrossBorrow) {
@@ -628,6 +658,15 @@ const GENERATORS: Record<StageId, (rng: Rng) => GeneratedProblem> = {
   "2.8.1": generateStage281,
   "2.8.2": generateStage282,
   "2.8.3": generateStage283,
+  ...TRAPPAN_GENERATORS,
+  ...MUL_GUIDED_GENERATORS,
+  ...EXAM_GENERATORS,
+  ...WORD_GENERATORS,
+  ...BASIC_GENERATORS,
+  ...CLOCK_GENERATORS,
+  ...SHOP_GENERATORS,
+  ...ADVANCED_GENERATORS,
+  ...GEOMETRY_GENERATORS,
 };
 
 export function generateProblem(stageId: StageId, rng: Rng): GeneratedProblem {
@@ -663,6 +702,12 @@ export function generateRound(
     problems.push(problem);
   }
 
+  // Questions that know how hard they are (the clock, the shop) come easiest first: a round warms up, then stretches.
+  const difficulty = (p: GeneratedProblem) => ("difficulty" in p ? p.difficulty : undefined);
+  if (problems.every((p) => difficulty(p) !== undefined)) {
+    const order = problems.map((_, i) => i).sort((a, b) => difficulty(problems[a])! - difficulty(problems[b])!);
+    return { problems: order.map((i) => problems[i]), keys: order.map((i) => keys[i]) };
+  }
   return { problems, keys };
 }
 

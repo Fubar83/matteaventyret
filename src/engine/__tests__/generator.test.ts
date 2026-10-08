@@ -15,7 +15,8 @@ function zeroCount(n: number): number {
 }
 
 function checkCommonRules(p: GeneratedProblem, allowExtraZeros: boolean) {
-  if (p.kind === "placeValue" || p.kind === "shortDiv" || p.kind === "statistics" || p.kind === "chart") return;
+  // Only the column calculations have a top and a bottom number.
+  if (p.kind !== "columnAdd" && p.kind !== "columnSub" && p.kind !== "columnMul") return;
   expect(p.top).toBeGreaterThan(1);
   expect(p.bottom).toBeGreaterThan(1);
   expect(p.top).not.toBe(p.bottom);
@@ -117,7 +118,7 @@ describe("generator: stage 1.1.6 (3 digits, several carries/växlingar)", () => 
 });
 
 describe("generator: stage 1.1.7 (4 digits, växling across zeros)", () => {
-  it("at least 2 columns carry or borrow; add <= 19998, sub result >= 10; ~40% of subtractions cross zeros", () => {
+  it("at least 2 columns carry or borrow; add <= 19998, sub result >= 10; most subtractions cross zeros (the level is named for it)", () => {
     const rng = makeRng(7);
     let subCount = 0;
     let zeroCrossCount = 0;
@@ -137,8 +138,8 @@ describe("generator: stage 1.1.7 (4 digits, växling across zeros)", () => {
       }
     }
     const proportion = zeroCrossCount / subCount;
-    expect(proportion).toBeGreaterThan(0.25);
-    expect(proportion).toBeLessThan(0.55);
+    expect(proportion).toBeGreaterThan(0.7);
+    expect(proportion).toBeLessThan(0.95);
   });
 });
 

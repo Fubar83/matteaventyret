@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_CANVAS_SIZE, DigitCanvas } from "../game/DigitCanvas";
 import type { RecognitionResult } from "../recognition/recognizer";
-import { recognizeStrokes } from "../recognition/recognizer";
+import { keepCurrentBackend, recognizeStrokes } from "../recognition/recognizer";
+
+// Training here runs on the graphics card - recognition's switch to the CPU backend would slow it (recognizer.ts).
+keepCurrentBackend();
 import type { Stroke } from "../recognition/preprocess";
 import { CATEGORIES, type Category, LABELS } from "../recognition/labels";
-import { exportSamplesAsBmp } from "./exportImages";
+import { exportSamplesAsBmp, exportSamplesAsJson } from "./exportImages";
 import { addSample, deleteAllSamples, getAllSamples, newSessionId, type StoredSample } from "./sampleStore";
 import { trainAndDownload } from "./train";
 
@@ -187,6 +190,15 @@ export function TrainerApp() {
               className="h-10 px-4 rounded-lg bg-sky-500 text-white font-semibold text-sm disabled:opacity-40"
             >
               Exportera bilder (BMP)
+            </button>
+            <button
+              type="button"
+              onClick={() => exportSamplesAsJson(samples)}
+              disabled={samples.length === 0}
+              className="h-10 px-4 rounded-lg bg-sky-500 text-white font-semibold text-sm disabled:opacity-40"
+              title="Streckdata för scripts/importOwnSamples.mjs - blir träningsdata för tolkningen"
+            >
+              Exportera streck (JSON)
             </button>
             <button
               type="button"

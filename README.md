@@ -1,8 +1,10 @@
 # MatteÄventyret
 
-A free, mobile-first maths game for Swedish children in åk 3–9, following Lgr22. Version 1 covers level 1.1 (Positionssystemet & uppställning: written addition and subtraction), the plus/minus 0–20 speed test (Blixtrundan), and the architecture needed for later levels (multiplication, kort division, liggande stolen).
+A free maths training game for Swedish children, from åk 1 to gymnasiet, following Lgr22. Children write their answers by hand, on a tablet or with the mouse, and every method is guided step by step: column addition and subtraction, multiplication with and without decimals, division with trappan (with remainders, decimals and rounding), clocks, money, unit conversions, equations and more. The levels are grouped into training paths, by topic and for the national tests (åk 3, 6 and 9).
 
-See `MatteAventyret-build-brief.md` for the full design brief this project is built from.
+**Play it:** https://fubar83.github.io/matteaventyret/
+
+Everything runs in the browser: the handwriting recognizer is a small TensorFlow.js model, there are no accounts, no ads and no tracking, and it works offline once loaded.
 
 ## Getting started
 
@@ -10,23 +12,24 @@ See `MatteAventyret-build-brief.md` for the full design brief this project is bu
 npm install
 npm run dev       # the game, at http://localhost:5173
 npm test          # engine + UI unit tests (vitest)
-npm run build     # production build
+npm run build     # production build in dist/
 npm run trainer   # Träningsverkstan, the recognizer-training tool (never shipped to players)
 ```
 
+The gallery page `http://localhost:5173/clocks.html` shows the clocks, scenes, shop, trappan and multiplication boards on their own, for example `clocks.html?mul=2.1.6&a=0,2&b=0,03&step=0` or `clocks.html?trappan=2.5.7&a=125,25&b=12,7&round=1&step=0`.
+
 ## Project layout
 
-- `src/engine/` — pure TypeScript maths engine (column arithmetic, generator, verifier, hints, scoring). No UI code, fully unit-tested.
-- `src/game/` — React UI: the uppställning board, Teori/Exempel/Uppgift flow, gamification screens.
-- `src/recognition/` — on-device handwriting-digit recognizer (TensorFlow.js): preprocessing, confidence rules, model loading.
-- `src/trainer/` — Träningsverkstan, the maintainer-only tool for collecting samples and training an improved recognizer model.
-- `src/audio/`, `src/fx/` — code-generated sound (Tone.js/Howler) and particle effects (PixiJS).
-- `src/i18n/` — Swedish (default) and English UI strings.
-- `src/storage/` — versioned localStorage save.
-- `scripts/trainBootstrapModel.mjs` — trains the placeholder recognizer model shipped in `src/recognition/model/` on synthetic digit shapes (see that script's header for why: real samples need parental consent and come from Träningsverkstan).
+- `src/engine/` — pure TypeScript maths engine: the question generators for every level, the trappan and multiplication walks, verification, scoring. No UI code, fully unit-tested.
+- `src/game/` — React UI: the levels and training paths, the guided boards, theory slides, scenes, clocks and the shop.
+- `src/mathinput/` — the handwriting board: layout, column and trappan plans, step checking.
+- `src/recognition/` — the on-device handwriting recognizer (TensorFlow.js): preprocessing, segmentation, models.
+- `src/trainer/` — Träningsverkstan, the maintainer-only tool for collecting samples and training the recognizer.
+- `src/i18n/` — Swedish (default) and English texts.
+- `scripts/` — model training, dataset processing and the Kenney sprite build (`npm run kenney`).
 
-## Status
+## License
 
-Engine, generator/verifier, and all 7 stages of level 1.1 are implemented and tested, including the mini-boss, Blixtrundan, avatars/XP/streak, Teori/Exempel, numpad and handwriting input, Swedish/English toggle, and PWA offline support. See `CURRICULUM_REVIEW.md` for the open teacher sign-off checklist before public release, and `LICENSES.md` for every third-party library and how assets were sourced.
+The source code is MIT-licensed (see `LICENSE`). The trained recognizer models and the data derived from their training sets are licensed CC BY-NC-SA 4.0, because they are trained on Google's MathWriting dataset; the sprites are Kenney's (CC0). `LICENSES.md` lists every library, dataset and asset.
 
-The bundled recognizer model is trained on synthetic (not real) handwriting — see `src/recognition/model/report.json` after running the training script, and the Träningsverkstan workflow for replacing it with a model trained on real, consented samples.
+See `CURRICULUM_REVIEW.md` for the curriculum review checklist.

@@ -31,7 +31,7 @@
  * ~2.9GB) or the excerpt (mathwriting-2024-excerpt.tgz, ~1.5MB, for quick
  * testing) to already be extracted into data/mathwriting/.
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CHARACTERS } from "./labels.mjs";
@@ -55,12 +55,21 @@ function findDataDir() {
   process.exit(1);
 }
 
-const CHAR_TO_LATEX = new Map(
+// char -> every "mathwriting" source characters.json declares for it. A
+// character can pull from more than one MathWriting label (e.g. "(" takes
+// real "(" samples plus ")" samples mirrored - see TRANSFORMS), all pooled
+// into the one cache file for that character.
+const CHAR_TO_SOURCES = new Map(
   CHARACTERS.filter((entry) => entry.sources.some((s) => s.dataset === "mathwriting")).map((entry) => [
     entry.char,
-    entry.sources.find((s) => s.dataset === "mathwriting").latex,
+    entry.sources.filter((s) => s.dataset === "mathwriting"),
   ])
 );
+
+/** Optional per-source stroke transforms, applied to the raw ink before preprocessing. */
+const TRANSFORMS = {
+  mirrorX: (strokes) => strokes.map((s) => s.map((p) => ({ x: -p.x, y: p.y }))),
+};
 
 function hexClassFor(char) {
   return char.charCodeAt(0).toString(16);
@@ -100,17 +109,23 @@ function parseTraces(inkml) {
 function main() {
   const dataDir = findDataDir();
   const requested = process.argv.slice(2);
-  const chars = requested.length > 0 ? requested : Array.from(CHAR_TO_LATEX.keys());
+  const chars = requested.length > 0 ? requested : Array.from(CHAR_TO_SOURCES.keys());
 
   console.log(`Reading symbols.jsonl from ${dataDir}...`);
-  const lines = readFileSync(path.join(dataDir, "symbols.jsonl"), "utf8").trim().split("\n");
+  const entriesByLabel = new Map();
+  for (const line of readFileSync(path.join(dataDir, "symbols.jsonl"), "utf8").trim().split("\n")) {
+    const entry = JSON.parse(line);
+    const list = entriesByLabel.get(entry.label) ?? [];
+    list.push(entry);
+    entriesByLabel.set(entry.label, list);
+  }
 
   mkdirSync(CACHE_DIR, { recursive: true });
   const trainDir = path.join(dataDir, "train");
 
   for (const char of chars) {
-    const latex = CHAR_TO_LATEX.get(char);
-    if (!latex) {
+    const sources = CHAR_TO_SOURCES.get(char);
+    if (!sources) {
       console.warn(`Skipping "${char}": characters.json doesn't declare a "mathwriting" source for it - add one there first.`);
       continue;
     }
@@ -120,42 +135,45 @@ function main() {
       continue;
     }
 
-    // Collect every symbols.jsonl entry for this label first, then sample -
-    // scanning 6M+ lines once per character would be needlessly slow.
-    const entries = [];
-    for (const line of lines) {
-      const entry = JSON.parse(line);
-      if (entry.label === latex) entries.push(entry);
-    }
-    if (entries.length === 0) {
-      console.warn(`  ${char} (${latex}): no instances found in symbols.jsonl - skipping`);
-      continue;
-    }
-    const sampled = pickSample(entries, SAMPLES_PER_CLASS);
-
-    // Group by source file so each expression's InkML is only parsed once,
-    // even if we need several different symbol instances out of it.
-    const bySource = new Map();
-    for (const entry of sampled) {
-      const list = bySource.get(entry.sourceSampleId) ?? [];
-      list.push(entry.strokeIndices);
-      bySource.set(entry.sourceSampleId, list);
-    }
-
     const grids = [];
-    for (const [sourceId, strokeIndexLists] of bySource) {
-      const inkmlPath = path.join(trainDir, `${sourceId}.inkml`);
-      if (!existsSync(inkmlPath)) continue; // symbols.jsonl entries always reference train/, but stay defensive
-      const traces = parseTraces(readFileSync(inkmlPath, "utf8"));
-      for (const indices of strokeIndexLists) {
-        const strokes = indices.map((i) => traces.get(i)).filter(Boolean);
-        if (strokes.length === 0) continue;
-        grids.push(Array.from(preprocessStrokes(strokes)));
+    const summary = [];
+    for (const source of sources) {
+      const transform = source.transform ? TRANSFORMS[source.transform] : (strokes) => strokes;
+      if (!transform) throw new Error(`characters.json: unknown transform ${JSON.stringify(source.transform)} for ${JSON.stringify(char)}`);
+      const entries = entriesByLabel.get(source.latex) ?? [];
+      if (entries.length === 0) {
+        console.warn(`  ${char} (${source.latex}): no instances found in symbols.jsonl`);
+        continue;
       }
+      const sampled = pickSample(entries, SAMPLES_PER_CLASS);
+
+      // Group by source file so each expression's InkML is only parsed once,
+      // even if we need several different symbol instances out of it.
+      const bySource = new Map();
+      for (const entry of sampled) {
+        const list = bySource.get(entry.sourceSampleId) ?? [];
+        list.push(entry.strokeIndices);
+        bySource.set(entry.sourceSampleId, list);
+      }
+
+      let count = 0;
+      for (const [sourceId, strokeIndexLists] of bySource) {
+        const inkmlPath = path.join(trainDir, `${sourceId}.inkml`);
+        if (!existsSync(inkmlPath)) continue; // symbols.jsonl entries always reference train/, but stay defensive
+        const traces = parseTraces(readFileSync(inkmlPath, "utf8"));
+        for (const indices of strokeIndexLists) {
+          const strokes = indices.map((i) => traces.get(i)).filter(Boolean);
+          if (strokes.length === 0) continue;
+          grids.push(Array.from(preprocessStrokes(transform(strokes))));
+          count++;
+        }
+      }
+      summary.push(`${count} from ${source.latex}${source.transform ? ` (${source.transform})` : ""}`);
     }
+    if (grids.length === 0) continue;
 
     writeFileSync(outPath, JSON.stringify({ char, hex: hexClassFor(char), count: grids.length, size: 28, grids }));
-    console.log(`  ${char} (${latex}): cached ${grids.length} samples (of ${entries.length} available)`);
+    console.log(`  ${char}: cached ${grids.length} samples (${summary.join(", ")})`);
   }
   console.log("Done.");
 }

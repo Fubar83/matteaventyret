@@ -1,36 +1,44 @@
 import { describe, expect, it } from "vitest";
-import {
-  computeProblemXp,
-  computeStars,
-  INITIAL_STREAK_STATE,
-  playerLevel,
-  recordRoundCompleted,
-} from "../scoring";
+import { INITIAL_STREAK_STATE, playerLevel, questionStars, questionXp, recordRoundCompleted, roundStars } from "../scoring";
 
-describe("computeStars", () => {
-  it("gives 3 stars for a clean round", () => {
-    expect(computeStars({ wrongFirstAttempts: 0, problemsWithHint: 0, miniTutorialsUsed: 0 })).toBe(3);
-    expect(computeStars({ wrongFirstAttempts: 2, problemsWithHint: 0, miniTutorialsUsed: 0 })).toBe(3);
+describe("questionStars", () => {
+  it("★ with help - whatever else", () => {
+    expect(questionStars({ helped: true, fullSetup: true })).toBe(1);
+    expect(questionStars({ helped: true, fullSetup: false })).toBe(1);
   });
 
-  it("gives 2 stars for a few hints", () => {
-    expect(computeStars({ wrongFirstAttempts: 3, problemsWithHint: 2, miniTutorialsUsed: 1 })).toBe(2);
+  it("★★ right without help, ★★★ with the full setup too", () => {
+    expect(questionStars({ helped: false, fullSetup: false })).toBe(2);
+    expect(questionStars({ helped: false, fullSetup: true })).toBe(3);
+  });
+});
+
+describe("roundStars: what at least half the questions reached", () => {
+  it("one slip doesn't cost the round", () => {
+    expect(roundStars([3, 3, 3, 3, 3, 1])).toBe(3);
+    expect(roundStars([3, 3, 3, 1, 1, 1])).toBe(3);
   });
 
-  it("gives 1 star for merely completing the round", () => {
-    expect(computeStars({ wrongFirstAttempts: 10, problemsWithHint: 5, miniTutorialsUsed: 4 })).toBe(1);
+  it("one lucky question doesn't win it", () => {
+    expect(roundStars([3, 1, 1, 1, 1, 1])).toBe(1);
+    expect(roundStars([3, 2, 1, 1, 1, 1])).toBe(1);
   });
 
-  it("never gives fewer than 1 star", () => {
-    const stars = computeStars({ wrongFirstAttempts: 999, problemsWithHint: 999, miniTutorialsUsed: 999 });
-    expect(stars).toBeGreaterThanOrEqual(1);
+  it("★★★ and ★★ questions together make ★★", () => {
+    expect(roundStars([3, 3, 2, 2, 1, 1])).toBe(2);
+  });
+
+  it("never fewer than ★ - every question is solved in the end", () => {
+    expect(roundStars([1, 1, 1])).toBe(1);
+    expect(roundStars([])).toBe(1);
   });
 });
 
 describe("XP and level", () => {
-  it("awards more XP for an unhinted problem", () => {
-    expect(computeProblemXp(false)).toBe(15);
-    expect(computeProblemXp(true)).toBe(10);
+  it("awards more XP without help, and more for the full setup", () => {
+    expect(questionXp(1)).toBe(10);
+    expect(questionXp(2)).toBe(15);
+    expect(questionXp(3)).toBe(20);
   });
 
   it("levels up every 200 XP", () => {

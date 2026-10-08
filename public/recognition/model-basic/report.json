@@ -1,0 +1,109 @@
+{
+  "model": "basic",
+  "kind": "bootstrap-mixed",
+  "trainedAt": "2026-09-30T01:57:49.786Z",
+  "numClasses": 31,
+  "samplesPerChar": 400,
+  "config": {
+    "samplesPerChar": 400,
+    "epochs": 20,
+    "conv": [
+      8,
+      16
+    ],
+    "dense": 64,
+    "augment": {
+      "rotateDeg": 18,
+      "scaleMin": 0.8,
+      "scaleMax": 1.15,
+      "shift": 4,
+      "aspect": 0.2,
+      "shear": 0.3,
+      "strokeWeight": 0.5
+    },
+    "reaugment": 0.6
+  },
+  "testAccuracy": 0.9224174618721008,
+  "perClassTestAccuracy": {
+    "0": 0.988,
+    "1": 0.938,
+    "2": 0.913,
+    "3": 0.925,
+    "4": 0.975,
+    "5": 0.938,
+    "6": 0.95,
+    "7": 0.95,
+    "8": 0.913,
+    "9": 0.95,
+    ".": 0.825,
+    "+": 0.95,
+    "-": 0.95,
+    "/": 0.963,
+    "=": 0.738,
+    "x": 0.863,
+    ",": 0,
+    "(": 0.913,
+    ")": 0.913,
+    "<": 1,
+    ">": 0.974,
+    "%": 0.9,
+    "≈": 0.95,
+    ":": 0.6,
+    "": 0.875,
+    "": 0.913,
+    "": 0.938,
+    "": 0.938,
+    "": 0.938,
+    "": 1,
+    "": 0.875
+  },
+  "toppedUpClasses": {
+    ",": {
+      "real": 27,
+      "augmentedAdded": 298
+    },
+    ">": {
+      "real": 389,
+      "augmentedAdded": 9
+    },
+    ":": {
+      "real": 49,
+      "augmentedAdded": 281
+    }
+  },
+  "realDataClasses": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    ".",
+    "+",
+    "-",
+    "/",
+    "=",
+    "x",
+    ",",
+    "(",
+    ")",
+    "<",
+    ">",
+    "%",
+    "≈",
+    ":",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "syntheticDataClasses": [],
+  "note": "All 31 classes trained on real handwriting, pooled from every source characters.json declares for each (see realDataClasses and characters.json's own \"sources\" per character for exactly which)."
+}

@@ -1,45 +1,191 @@
 import type { StageId } from "../engine/generator";
 import type { MethodId } from "../engine/types";
+import type { WritingLevel } from "../recognition/levels";
+
+/** The areas - each runs up through the grades, and each is a training path of its own (see trainingPaths.ts). */
+export type PathId = "tal" | "plusminus" | "ganger" | "decimal" | "statistik" | "algebra" | "geometri" | "analys" | "vardag" | "problem";
+
+export const PATHS: readonly { id: PathId; nameKey: string; color: string }[] = [
+  { id: "tal", nameKey: "path.tal", color: "#fbbf24" },
+  { id: "plusminus", nameKey: "path.plusminus", color: "#38bdf8" },
+  { id: "ganger", nameKey: "path.ganger", color: "#f472b6" },
+  { id: "decimal", nameKey: "path.decimal", color: "#34d399" },
+  { id: "statistik", nameKey: "path.statistik", color: "#a78bfa" },
+  { id: "algebra", nameKey: "path.algebra", color: "#fb923c" },
+  { id: "geometri", nameKey: "path.geometri", color: "#2dd4bf" },
+  { id: "analys", nameKey: "path.analys", color: "#f87171" },
+  { id: "vardag", nameKey: "path.vardag", color: "#e879f9" },
+  { id: "problem", nameKey: "path.problem", color: "#fde68a" },
+];
+
+/** School stages, youngest first. */
+export type GradeBand = "ak1-3" | "ak4-6" | "ak7-9" | "gy";
 
 export interface StageMeta {
   id: StageId;
   /** i18n key, resolved with t() at render time (see i18n/sv.json, en.json). */
   titleKey: string;
-  /** "mixed" stages generate both columnAdd and columnSub problems within one round. "statistics" and "chart" skip Exempel, like "placeValue" - each is a single free-answer question, not a guided cell-by-cell method. */
-  method: "placeValue" | "mixed" | "statistics" | "chart" | Extract<MethodId, "columnAdd" | "columnSub" | "columnMul">;
+  /**
+   * "mixed" stages generate both columnAdd and columnSub problems within one round. "statistics" and "chart" skip Exempel, like "placeValue" - each is a single free-answer question, not a guided cell-by-cell method.
+   * "expression": åk 7-9 and gymnasiet - written on a free board, checked line by line (ExpressionPlayer).
+   * "trappan": division with trappan, guided box by box (TrappanPlayer).
+   * "mulGuided": a bigger multiplication set up in columns - two-digit multipliers, decimals - guided box by box (MulPlayer).
+   */
+  method: "placeValue" | "mixed" | "statistics" | "chart" | "expression" | "trappan" | "mulGuided" | "clock" | "shop" | Extract<MethodId, "columnAdd" | "columnSub" | "columnMul">;
   problemsPerRound: number;
+  path: PathId;
+  /** Stages that open this one: each needs at least one star. Any stage can still be taken on as a challenge (see unlocks.ts). */
+  requires: StageId[];
+  grade: GradeBand;
+  /** What the handwriting is read as (recognition/levels.ts). */
+  writingLevel: WritingLevel;
 }
 
+const s = (
+  id: StageId,
+  method: StageMeta["method"],
+  problemsPerRound: number,
+  path: PathId,
+  requires: StageId[],
+  grade: GradeBand
+): StageMeta => ({
+  id,
+  titleKey: `stage.${id}`,
+  method,
+  problemsPerRound,
+  path,
+  requires,
+  grade,
+  writingLevel: grade === "ak1-3" ? 1 : grade === "ak4-6" ? 2 : grade === "ak7-9" ? 3 : 4,
+});
+
 /**
- * All 7 stages of level 1.1, plus 2.1.1-2.1.3 (single-digit-multiplier written
- * multiplication - see columnMul.ts scope note for 2.1.4-2.1.6), 2.3.3-2.3.4
- * (decimal column addition/subtraction - see generator.ts's decimal stages;
- * 2.3.1/2.3.2, conceptual/comparison questions, and 2.2's kort division are
- * engine-complete but need their own non-ColumnBoard player, not yet built),
- * 2.7.1-2.7.3 (lägesmått: medelvärde/median/typvärde - Lgr22 "Sannolikhet
- * och statistik", the biggest åk 6 nationella prov gap the build brief's own
- * roadmap left uncovered at this level; see generator.ts's stat stages), and
- * 2.8.1-2.8.3 (tabeller och diagram: reading, comparing and summing a simple
- * bar chart - the other half of that same Lgr22 "Sannolikhet och statistik"
- * gap; see generator.ts's chart stages).
+ * Every stage, in curriculum order (which is also the order a recommendation
+ * breaks ties in). Paths branch: after Positionssystemet both addition and
+ * subtraction open, and so do the diagrams; multiplication opens after the
+ * first carry, and so on up to gymnasiet. (2.2's kort division and 2.3.1/2.3.2
+ * are engine-complete but have no player yet.)
  */
 export const STAGES: StageMeta[] = [
-  { id: "1.1.1", titleKey: "stage.1.1.1", method: "placeValue", problemsPerRound: 6 },
-  { id: "1.1.2", titleKey: "stage.1.1.2", method: "columnAdd", problemsPerRound: 6 },
-  { id: "1.1.3", titleKey: "stage.1.1.3", method: "columnSub", problemsPerRound: 6 },
-  { id: "1.1.4", titleKey: "stage.1.1.4", method: "columnAdd", problemsPerRound: 8 },
-  { id: "1.1.5", titleKey: "stage.1.1.5", method: "columnSub", problemsPerRound: 8 },
-  { id: "1.1.6", titleKey: "stage.1.1.6", method: "mixed", problemsPerRound: 8 },
-  { id: "1.1.7", titleKey: "stage.1.1.7", method: "mixed", problemsPerRound: 8 },
-  { id: "2.1.1", titleKey: "stage.2.1.1", method: "columnMul", problemsPerRound: 6 },
-  { id: "2.1.2", titleKey: "stage.2.1.2", method: "columnMul", problemsPerRound: 8 },
-  { id: "2.1.3", titleKey: "stage.2.1.3", method: "columnMul", problemsPerRound: 8 },
-  { id: "2.3.3", titleKey: "stage.2.3.3", method: "mixed", problemsPerRound: 8 },
-  { id: "2.3.4", titleKey: "stage.2.3.4", method: "mixed", problemsPerRound: 8 },
-  { id: "2.7.1", titleKey: "stage.2.7.1", method: "statistics", problemsPerRound: 6 },
-  { id: "2.7.2", titleKey: "stage.2.7.2", method: "statistics", problemsPerRound: 6 },
-  { id: "2.7.3", titleKey: "stage.2.7.3", method: "statistics", problemsPerRound: 6 },
-  { id: "2.8.1", titleKey: "stage.2.8.1", method: "chart", problemsPerRound: 6 },
-  { id: "2.8.2", titleKey: "stage.2.8.2", method: "chart", problemsPerRound: 6 },
-  { id: "2.8.3", titleKey: "stage.2.8.3", method: "chart", problemsPerRound: 6 },
+  // Åk 1-3
+  s("1.1.1", "placeValue", 6, "tal", [], "ak1-3"),
+  s("1.1.2", "columnAdd", 6, "plusminus", ["1.1.1"], "ak1-3"),
+  s("1.1.3", "columnSub", 6, "plusminus", ["1.1.1"], "ak1-3"),
+  s("1.1.4", "columnAdd", 8, "plusminus", ["1.1.2"], "ak1-3"),
+  s("1.1.5", "columnSub", 8, "plusminus", ["1.1.3"], "ak1-3"),
+  s("1.1.6", "mixed", 8, "plusminus", ["1.1.4", "1.1.5"], "ak1-3"),
+  s("1.1.7", "mixed", 8, "plusminus", ["1.1.5"], "ak1-3"),
+  s("2.8.1", "chart", 6, "statistik", ["1.1.1"], "ak1-3"),
+  s("1.2.1", "expression", 6, "geometri", ["1.1.2"], "ak1-3"),
+  // Åk 4-6
+  s("2.1.1", "columnMul", 6, "ganger", ["1.1.4"], "ak4-6"),
+  s("2.1.2", "columnMul", 8, "ganger", ["2.1.1"], "ak4-6"),
+  s("2.1.3", "columnMul", 8, "ganger", ["2.1.2"], "ak4-6"),
+  s("2.1.4", "mulGuided", 5, "ganger", ["2.1.3"], "ak4-6"),
+  s("2.1.5", "mulGuided", 5, "ganger", ["2.1.3"], "ak4-6"),
+  s("2.1.6", "mulGuided", 5, "ganger", ["2.1.5"], "ak4-6"),
+  // Division with trappan: from 2-digit ÷ 1-digit down to decimal ÷ decimal, rounded.
+  s("2.5.1", "trappan", 5, "ganger", ["2.1.1"], "ak4-6"),
+  s("2.5.2", "trappan", 5, "ganger", ["2.5.1"], "ak4-6"),
+  s("2.5.8", "trappan", 5, "ganger", ["2.5.2"], "ak4-6"),
+  s("2.5.3", "trappan", 5, "ganger", ["2.5.2"], "ak4-6"),
+  s("2.5.4", "trappan", 5, "ganger", ["2.5.3"], "ak4-6"),
+  s("2.5.5", "trappan", 5, "ganger", ["2.5.4"], "ak4-6"),
+  s("2.5.6", "trappan", 4, "ganger", ["2.5.5"], "ak7-9"),
+  s("2.5.7", "trappan", 4, "ganger", ["2.5.6"], "ak7-9"),
+  s("2.3.3", "mixed", 8, "decimal", ["1.1.6"], "ak4-6"),
+  s("2.3.4", "mixed", 8, "decimal", ["2.3.3"], "ak4-6"),
+  s("2.8.2", "chart", 6, "statistik", ["2.8.1", "1.1.3"], "ak4-6"),
+  s("2.8.3", "chart", 6, "statistik", ["2.8.1", "1.1.2"], "ak4-6"),
+  s("2.7.2", "statistics", 6, "statistik", ["2.8.1"], "ak4-6"),
+  s("2.7.3", "statistics", 6, "statistik", ["2.8.1"], "ak4-6"),
+  s("2.7.1", "statistics", 6, "statistik", ["2.8.3", "2.1.1"], "ak4-6"),
+  // Geometry, from one shape at a time to shapes put together.
+  s("2.4.1", "expression", 6, "geometri", ["1.2.1", "2.1.1"], "ak4-6"),
+  s("2.4.2", "expression", 6, "geometri", ["2.4.1"], "ak4-6"),
+  s("2.4.3", "expression", 6, "geometri", ["2.4.2"], "ak4-6"),
+  s("2.4.4", "expression", 6, "geometri", ["2.4.2"], "ak4-6"),
+  // Åk 7-9
+  s("3.1.1", "expression", 6, "tal", ["1.1.7"], "ak7-9"),
+  s("3.1.2", "expression", 6, "tal", ["2.1.2"], "ak7-9"),
+  s("3.1.3", "expression", 6, "tal", ["3.1.2", "2.3.4"], "ak7-9"),
+  s("3.2.1", "expression", 6, "decimal", ["2.3.4", "2.1.2"], "ak7-9"),
+  s("3.2.2", "expression", 6, "decimal", ["3.2.1"], "ak7-9"),
+  s("3.3.1", "expression", 6, "algebra", ["3.1.1"], "ak7-9"),
+  s("3.3.2", "expression", 6, "algebra", ["3.3.1"], "ak7-9"),
+  s("3.3.3", "expression", 6, "algebra", ["3.3.2"], "ak7-9"),
+  s("3.3.4", "expression", 6, "algebra", ["3.3.1", "3.1.2"], "ak7-9"),
+  s("3.3.5", "expression", 6, "algebra", ["3.3.4"], "ak7-9"),
+  s("3.3.6", "expression", 6, "algebra", ["3.3.3", "3.3.4"], "ak7-9"),
+  s("3.4.1", "expression", 6, "geometri", ["3.1.2"], "ak7-9"),
+  s("3.4.2", "expression", 6, "geometri", ["3.3.2"], "ak7-9"),
+  s("3.4.3", "expression", 6, "geometri", ["2.4.1", "2.3.4"], "ak7-9"),
+  s("3.4.4", "expression", 6, "geometri", ["2.4.3"], "ak7-9"),
+  s("3.4.5", "expression", 6, "geometri", ["3.4.3", "2.4.4"], "ak7-9"),
+  s("3.4.6", "expression", 6, "geometri", ["3.4.5", "3.3.2"], "ak7-9"),
+  // Gymnasiet
+  s("4.1.2", "expression", 6, "tal", ["3.1.3"], "gy"),
+  s("4.1.1", "expression", 6, "algebra", ["3.3.3", "3.4.1"], "gy"),
+  s("4.2.1", "expression", 6, "geometri", ["3.4.1"], "gy"),
+  s("4.2.2", "expression", 6, "geometri", ["3.4.5"], "gy"),
+  s("4.2.3", "expression", 6, "geometri", ["4.2.1", "3.4.4"], "gy"),
+  s("4.3.1", "expression", 6, "analys", ["3.4.2", "3.1.2"], "gy"),
+  s("4.3.2", "expression", 6, "analys", ["4.3.1"], "gy"),
+  // The national tests' other topics, along the bottom of the sky.
+  s("2.6.1", "expression", 6, "decimal", ["2.5.5"], "ak4-6"),
+  s("2.6.2", "expression", 6, "decimal", ["2.6.1"], "ak4-6"),
+  s("2.6.3", "expression", 6, "decimal", ["2.6.2"], "ak4-6"),
+  s("2.6.4", "expression", 6, "decimal", ["2.6.3"], "ak4-6"),
+  s("2.9.1", "expression", 6, "vardag", ["2.4.1"], "ak4-6"),
+  s("2.9.2", "expression", 6, "vardag", ["2.9.1"], "ak4-6"),
+  s("2.9.3", "expression", 6, "vardag", ["2.9.1"], "ak4-6"),
+  s("2.10.1", "expression", 6, "tal", ["2.9.1"], "ak4-6"),
+  s("2.10.2", "expression", 6, "tal", ["2.10.1"], "ak4-6"),
+  s("3.5.1", "expression", 6, "decimal", ["2.6.3"], "ak7-9"),
+  s("3.6.1", "expression", 6, "vardag", ["2.9.3"], "ak7-9"),
+  s("3.6.2", "expression", 6, "vardag", ["3.6.1"], "ak7-9"),
+  s("3.7.1", "expression", 6, "statistik", ["2.6.4"], "ak7-9"),
+  s("3.7.2", "expression", 6, "statistik", ["3.7.1"], "ak7-9"),
+  s("3.3.7", "expression", 6, "algebra", ["2.10.1"], "ak7-9"),
+  s("3.4.7", "expression", 6, "geometri", ["2.9.2"], "ak7-9"),
+  s("3.4.8", "expression", 6, "geometri", ["3.4.7"], "ak7-9"),
+  s("4.1.3", "expression", 6, "algebra", ["3.3.3"], "gy"),
+  // The rest of åk 1-6: tables, the clock, money, shapes; angles, coordinates, equations, primes, estimation.
+  s("1.4.1", "expression", 8, "ganger", ["1.1.2"], "ak1-3"),
+  s("1.4.2", "expression", 8, "ganger", ["1.4.1"], "ak1-3"),
+  s("1.4.3", "expression", 8, "plusminus", ["1.1.3"], "ak1-3"),
+  // The clock, a step at a time: reading and setting it mixed in every step.
+  s("1.5.1", "clock", 6, "vardag", ["1.1.1"], "ak1-3"),
+  s("1.5.3", "clock", 6, "vardag", ["1.5.1"], "ak1-3"),
+  s("1.5.4", "clock", 8, "vardag", ["1.5.3"], "ak1-3"),
+  s("1.5.5", "clock", 8, "vardag", ["1.5.4"], "ak1-3"),
+  s("1.5.6", "clock", 8, "vardag", ["1.5.5"], "ak1-3"),
+  s("1.5.7", "clock", 8, "vardag", ["1.5.6"], "ak1-3"),
+  s("1.5.2", "expression", 6, "vardag", ["1.5.4"], "ak1-3"),
+  s("1.6.1", "expression", 6, "vardag", ["1.1.2"], "ak1-3"),
+  // Affären: pay, give change, shop from a list - and the till with bigger notes.
+  s("1.6.2", "shop", 6, "vardag", ["1.6.1"], "ak1-3"),
+  s("1.6.3", "shop", 6, "vardag", ["1.6.2"], "ak1-3"),
+  s("1.6.4", "shop", 6, "vardag", ["1.6.3"], "ak1-3"),
+  s("2.9.6", "shop", 6, "vardag", ["1.6.4"], "ak4-6"),
+  s("1.2.2", "expression", 6, "geometri", ["1.1.1"], "ak1-3"),
+  s("2.12.1", "expression", 6, "geometri", ["2.4.2"], "ak4-6"),
+  s("2.13.1", "expression", 6, "algebra", ["1.1.1"], "ak4-6"),
+  s("2.14.1", "expression", 6, "algebra", ["1.4.3"], "ak4-6"),
+  s("2.15.1", "expression", 6, "tal", ["2.1.1"], "ak4-6"),
+  s("2.10.3", "expression", 6, "tal", ["2.1.1"], "ak4-6"),
+  s("2.9.4", "expression", 6, "vardag", ["2.4.1"], "ak4-6"),
+  s("2.9.5", "expression", 6, "vardag", ["1.5.2"], "ak4-6"),
+  // Textuppgifter, from the first stories to an equation from the words.
+  s("1.3.1", "expression", 6, "problem", ["1.2.1"], "ak1-3"),
+  s("1.3.2", "expression", 6, "problem", ["1.3.1"], "ak1-3"),
+  s("2.11.1", "expression", 6, "problem", ["1.3.2"], "ak4-6"),
+  s("2.11.2", "expression", 6, "problem", ["2.11.1"], "ak4-6"),
+  s("3.8.1", "expression", 6, "problem", ["2.11.2"], "ak7-9"),
+  s("3.8.2", "expression", 6, "problem", ["3.8.1"], "ak7-9"),
 ];
+
+export function stageById(id: StageId): StageMeta | undefined {
+  return STAGES.find((st) => st.id === id);
+}
+

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { preloadRecognizer } from "../recognition/recognizer";
 import type { Stroke } from "../recognition/preprocess";
-import { InkCanvas, type InkCanvasHandle } from "../mathinput/InkCanvas";
+import { InkCanvas, InkToolPicker, type InkCanvasHandle, type InkTool } from "../mathinput/InkCanvas";
 import { detectAll, type DetectedItem, type GlyphType } from "./detectSymbols";
 
 const DEFAULT_DEBOUNCE_MS = 700;
@@ -25,9 +25,16 @@ export function DetectApp() {
   const [debounceMs, setDebounceMs] = useState(DEFAULT_DEBOUNCE_MS);
   const [items, setItems] = useState<DetectedItem[]>([]);
   const [busy, setBusy] = useState(false);
+  const [tool, setTool] = useState<InkTool>("pen");
+  const [selectionCount, setSelectionCount] = useState(0);
+
+  function handleToolChange(next: InkTool) {
+    setTool(next);
+    setSelectionCount(0); // the canvas drops its selection on a tool switch
+  }
 
   useEffect(() => {
-    preloadRecognizer();
+    preloadRecognizer(["full"]);
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
@@ -74,9 +81,18 @@ export function DetectApp() {
         </p>
       </div>
 
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <InkToolPicker tool={tool} onChange={handleToolChange} />
+        {tool === "select" && selectionCount > 0 && (
+          <button type="button" onClick={() => inkRef.current?.deleteSelected()} className="px-4 h-10 rounded-lg bg-rose-500 text-white font-semibold text-sm">
+            Ta bort markerade
+          </button>
+        )}
+      </div>
+
       {/* InkCanvas itself renders at a fixed CANVAS_H px tall (only its width is responsive), so the wrapper gets that same fixed height - an aspect-ratio-computed height here would drift from it as the wrapper's width changes, misaligning the overlay below. */}
       <div className="relative w-full max-w-3xl" style={{ height: CANVAS_H }}>
-        <InkCanvas ref={inkRef} width={CANVAS_W} height={CANVAS_H} onStrokesChange={handleStrokesChange} />
+        <InkCanvas ref={inkRef} width={CANVAS_W} height={CANVAS_H} tool={tool} onSelectionChange={setSelectionCount} onStrokesChange={handleStrokesChange} />
         <svg viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`} preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none">
           {items.map((item, i) =>
             item.type === "line" ? (

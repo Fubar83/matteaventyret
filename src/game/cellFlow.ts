@@ -1,4 +1,23 @@
-import type { CellGraph, WrittenMap } from "../engine/types";
+import type { Cell, CellGraph, WrittenMap } from "../engine/types";
+
+/**
+ * Where the tens digit goes when a child writes a whole column sum into a
+ * result box - "15" for 7 + 8, which is how most children think it ("fifteen:
+ * write the 5, carry the 1") rather than as two separate steps.
+ *
+ * For addition and multiplication that's the column's minnessiffra (shown
+ * above the next column), or, in the last column - which has no minnessiffra
+ * - the overflow result digit to its left. Null where a two-digit answer in
+ * one column never makes sense (subtraction, or a column with neither).
+ */
+export function tensCellFor(graph: CellGraph, cell: Cell): Cell | null {
+  if (cell.type !== "result") return null;
+  const m = /^(add|mul)-r(\d+)$/.exec(cell.id);
+  if (!m) return null;
+  const [, prefix, colText] = m;
+  const col = Number(colText);
+  return graph.cells.find((c) => c.id === `${prefix}-c${col}`) ?? graph.cells.find((c) => c.id === `${prefix}-r${col + 1}`) ?? null;
+}
 
 /**
  * A cell graph never needs the child to write a not-required cell (e.g. a

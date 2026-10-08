@@ -1,0 +1,1 @@
+The actual model files served at runtime live in `public/recognition/model-full/` (Vite only serves static assets from `public/`). This directory keeps the training report for reference. See `scripts/trainBootstrapModel.mjs`.

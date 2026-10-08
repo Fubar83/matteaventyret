@@ -5,6 +5,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // GitHub Pages serves the game under /<repo>/ - the deploy workflow sets BASE_PATH; locally it is /.
+  base: process.env.BASE_PATH ?? '/',
   // data/ holds the raw training datasets (~800k small files - see
   // scripts/process*.mjs). Left to Vite's defaults, the dev server's file
   // watcher and its dependency scanner (which globs **/*.html across the
@@ -13,7 +15,7 @@ export default defineConfig({
     watch: { ignored: ['**/data/**'] },
   },
   optimizeDeps: {
-    entries: ['index.html', 'trainer.html', 'mathinput.html', 'detect.html'],
+    entries: ['index.html', 'trainer.html', 'mathinput.html', 'detect.html', 'clocks.html'],
   },
   plugins: [
     react(),
@@ -29,7 +31,9 @@ export default defineConfig({
         background_color: '#f8fafc',
         display: 'fullscreen',
         orientation: 'any',
-        start_url: '/',
+        // Relative, so the installed app opens wherever it is served from.
+        start_url: '.',
+        scope: '.',
         icons: [
           { src: 'icon.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'any' },
           { src: 'icon.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any' },
@@ -40,6 +44,8 @@ export default defineConfig({
         // Everything (including the digit-recognizer model, once added) is
         // precached so the game works fully offline after the first visit.
         globPatterns: ['**/*.{js,css,html,svg,png,json,bin}'],
+        // The game bundle (KaTeX, tfjs and all) is over the 2 MiB default.
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
       },
     }),
   ],

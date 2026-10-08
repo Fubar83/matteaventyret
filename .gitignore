@@ -25,3 +25,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Downloaded asset packs (scripts/kenney/build.mjs)
+.cache/
+
+# Screenshots taken while developing (the gallery page, clocks.html, makes them)
+/screenshots

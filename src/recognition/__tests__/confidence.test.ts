@@ -71,6 +71,21 @@ describe("isConfident", () => {
     expect(isConfident(p, DIGIT_INDICES)).toBe(false); // among digits only, 0 doesn't clear the bar
   });
 
+  it("judges a digits-only read among the digits alone - a '1' the model also finds ')'-like is still a confident 1 (regression: '1' was almost never confident)", () => {
+    const p = new Array(LABELS.length).fill(0.001);
+    p[d(1)] = 0.6;
+    p[charToIndex(")")] = 0.35;
+    expect(isConfident(p)).toBe(false); // across every class: 0.6 isn't enough
+    expect(isConfident(p, DIGIT_INDICES)).toBe(true); // among digits: ~0.99, no digit anywhere near
+  });
+
+  it("is never confident about a digit when the ink doesn't look like a digit at all", () => {
+    const p = new Array(LABELS.length).fill(0.0005);
+    p[charToIndex("+")] = 0.9;
+    p[d(4)] = 0.08; // the best digit, but digits only get ~0.08 of the model's belief
+    expect(isConfident(p, DIGIT_INDICES)).toBe(false);
+  });
+
   it("skips confusable-pair entries for characters outside the currently active label set", () => {
     // These pairs are defined in confidence.ts for when letters are re-enabled; while
     // disabled, charToIndex would throw if the pair-building code didn't skip them.

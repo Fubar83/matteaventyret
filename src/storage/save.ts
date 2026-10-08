@@ -19,12 +19,13 @@ export interface Settings {
   reducedMotion: boolean;
   highContrast: boolean;
   dyslexiaFont: boolean;
-  inputMode: "numpad" | "handwriting";
 }
 
 export interface SaveDataV1 {
   version: 1;
   stageStars: Partial<Record<StageId, 1 | 2 | 3>>;
+  /** When each stage was last played ("YYYY-MM-DD") - for the map's "time to repeat" suggestion. */
+  stageLastPlayed: Partial<Record<StageId, string>>;
   methodProgress: Record<PlayableMethod, MethodProgress>;
   totalXp: number;
   streak: StreakState;
@@ -45,13 +46,13 @@ export const DEFAULT_SETTINGS: Settings = {
   reducedMotion: false,
   highContrast: false,
   dyslexiaFont: false,
-  inputMode: "handwriting",
 };
 
 export function createDefaultSave(): SaveDataV1 {
   return {
     version: 1,
     stageStars: {},
+    stageLastPlayed: {},
     methodProgress: {
       columnAdd: INITIAL_METHOD_PROGRESS,
       columnSub: INITIAL_METHOD_PROGRESS,

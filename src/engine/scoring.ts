@@ -4,31 +4,51 @@
  * compute a reward from what the child *did* accomplish.
  */
 
-export interface RoundStats {
-  /** Steps wrong on the first attempt, across the whole round. */
-  wrongFirstAttempts: number;
-  /** Number of distinct problems in the round that needed a hint (2nd wrong attempt) or worse. */
-  problemsWithHint: number;
-  /** Number of steps solved via the mini-tutorial (3rd wrong attempt). */
-  miniTutorialsUsed: number;
-}
-
 export type Stars = 1 | 2 | 3;
 
-/** A stage keeps its best star score, so this is never applied retroactively downward by the caller. */
-export function computeStars(stats: RoundStats): Stars {
-  if (stats.miniTutorialsUsed === 0 && stats.problemsWithHint === 0 && stats.wrongFirstAttempts <= 2) {
-    return 3;
-  }
-  if (stats.problemsWithHint <= 2 && stats.miniTutorialsUsed <= 1) {
-    return 2;
+/** How one question went - every question is solved in the end, help is always there. */
+export interface QuestionResult {
+  /**
+   * Any help at all: the help button (tip, next step, worked example), the
+   * automatic hint after wrong tries, a guided mode that shows the order,
+   * or the answer shown. "Menade du?" (unclear handwriting) is not help.
+   */
+  helped: boolean;
+  /**
+   * The whole setup, right: the column calculation with its carries and
+   * borrowing without an original error, or a correct written calculation
+   * ("Visa hur du tänkte") leading to the answer. A question with nothing to
+   * set up (reading a digit's value off a number) counts as set up when
+   * answered right the first time.
+   */
+  fullSetup: boolean;
+}
+
+/**
+ * ★ solved with help, ★★ solved without help, ★★★ solved without help with
+ * the full setup. Help is never refused - it just caps the question at ★.
+ */
+export function questionStars(result: QuestionResult): Stars {
+  if (result.helped) return 1;
+  return result.fullSetup ? 3 : 2;
+}
+
+/**
+ * A round's stars: the level at least half its questions reached - one slip
+ * doesn't cost the round, and one lucky question doesn't win it. A stage
+ * keeps its best round, so this is never applied downward by the caller.
+ */
+export function roundStars(questions: readonly Stars[]): Stars {
+  if (questions.length === 0) return 1;
+  for (const level of [3, 2] as const) {
+    if (questions.filter((s) => s >= level).length * 2 >= questions.length) return level;
   }
   return 1;
 }
 
-/** 10 XP for a completed problem, +5 more if it needed no hint. */
-export function computeProblemXp(neededHint: boolean): number {
-  return neededHint ? 10 : 15;
+/** XP for a solved question: 10, +5 without help, +5 more for the full setup. */
+export function questionXp(stars: Stars): number {
+  return stars === 3 ? 20 : stars === 2 ? 15 : 10;
 }
 
 export function playerLevel(totalXp: number): number {
