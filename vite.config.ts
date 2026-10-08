@@ -1,12 +1,24 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { execSync } from 'node:child_process'
 import { VitePWA } from 'vite-plugin-pwa'
+
+/** The version shown in Settings: the commit and the day it was built - the game is cached on a device, and this says which one it has. */
+function appVersion(): string {
+  const day = new Date().toISOString().slice(0, 10)
+  try {
+    return `${execSync('git rev-parse --short HEAD').toString().trim()} · ${day}`
+  } catch {
+    return day
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
   // GitHub Pages serves the game under /<repo>/ - the deploy workflow sets BASE_PATH; locally it is /.
   base: process.env.BASE_PATH ?? '/',
+  define: { __APP_VERSION__: JSON.stringify(appVersion()) },
   // data/ holds the raw training datasets (~800k small files - see
   // scripts/process*.mjs). Left to Vite's defaults, the dev server's file
   // watcher and its dependency scanner (which globs **/*.html across the

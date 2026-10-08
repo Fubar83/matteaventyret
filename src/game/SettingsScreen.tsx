@@ -139,6 +139,9 @@ export function SettingsScreen({ settings, onChange, onClose }: SettingsScreenPr
       <button type="button" onClick={onClose} className="h-12 px-6 rounded-xl bg-sky-500 text-white font-bold shadow mt-2">
         Klar
       </button>
+
+      {/* Which version is running - the game is cached on the device, so this says whether an update has arrived. */}
+      <p className="text-xs text-slate-400 text-center">Version {__APP_VERSION__}</p>
     </div>
   );
 }
