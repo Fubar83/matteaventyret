@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CLOCK_GENERATORS, checkHands, hourAngle, minuteAngle, spokenTime, type ClockStageId } from "../clock";
+import { CLOCK_GENERATORS, checkHands, hourAngle, minuteAngle, readOptions, spokenTime, type ClockStageId } from "../clock";
 import { generateRound } from "../generator";
 import { makeRng } from "../rng";
 
@@ -39,37 +39,51 @@ describe("the clock levels", () => {
     const rng = makeRng(5);
     return Array.from({ length: n }, () => CLOCK_GENERATORS[stage](rng));
   };
-  const minutes = (p: ReturnType<(typeof CLOCK_GENERATORS)["1.5.1"]>) => (p.kind === "clock" ? p.m : p.clock!.m);
+  const tasks = (stage: ClockStageId) => new Set(sample(stage).map((p) => `${p.task}:${p.given}`));
 
   it("moves one dial at a time: hel och halv, then kvart, then fives, then any minute", () => {
-    expect(new Set(sample("1.5.1").map(minutes))).toEqual(new Set([0, 30]));
-    expect(new Set(sample("1.5.3").map(minutes))).toEqual(new Set([0, 15, 30, 45]));
-    expect(sample("1.5.4").every((p) => minutes(p) % 5 === 0)).toBe(true);
-    expect(sample("1.5.7").every((p) => minutes(p) % 5 !== 0)).toBe(true);
+    expect(new Set(sample("1.5.1").map((p) => p.m))).toEqual(new Set([0, 30]));
+    expect(new Set(sample("1.5.3").map((p) => p.m))).toEqual(new Set([0, 15, 30, 45]));
+    expect(sample("1.5.4").every((p) => p.m % 5 === 0)).toBe(true);
+    expect(sample("1.5.7").every((p) => p.m % 5 !== 0)).toBe(true);
   });
 
   it("keeps the first steps to faces with every number, and brings in Roman and numberless faces later", () => {
-    const numerals = (stage: ClockStageId) => new Set(sample(stage).map((p) => (p.kind === "clock" ? p.face.numerals : p.clock!.kind === "analog" ? p.clock!.face.numerals : "digital")));
+    const numerals = (stage: ClockStageId) => new Set(sample(stage).map((p) => p.face.numerals));
     expect(numerals("1.5.1")).toEqual(new Set(["arabic"]));
     expect(numerals("1.5.4").has("roman")).toBe(false);
     expect(numerals("1.5.6").has("roman")).toBe(true);
     expect(numerals("1.5.7").has("none")).toBe(true);
   });
 
-  it("mixes reading the clock with setting it in every step", () => {
-    for (const stage of Object.keys(CLOCK_GENERATORS) as ClockStageId[]) {
-      const kinds = new Set(sample(stage).map((p) => p.kind));
-      expect(kinds, stage).toEqual(new Set(["clock", "expression"]));
+  it("one kind of clock at a time: reading and setting the hands first, digital only from 1.5.5", () => {
+    for (const stage of ["1.5.1", "1.5.3", "1.5.4"] as const) expect(tasks(stage), stage).toEqual(new Set(["read:analog", "setAnalog:words"]));
+    expect(tasks("1.5.5")).toEqual(new Set(["read:analog", "setAnalog:words", "setAnalog:digital", "setDigital:analog"]));
+    for (const stage of ["1.5.6", "1.5.7"] as const) expect(tasks(stage), stage).toEqual(new Set(["setAnalog:digital", "setDigital:analog"]));
+  });
+
+  it("a reading question offers the right time and three of the usual mistakes, all of the level's kind", () => {
+    for (const [stage, ok] of [["1.5.1", (m: number) => m === 0 || m === 30], ["1.5.3", (m: number) => m % 15 === 0], ["1.5.4", (m: number) => m % 5 === 0]] as const) {
+      for (const p of sample(stage).filter((q) => q.task === "read")) {
+        const options = p.options!;
+        expect(options, stage).toHaveLength(4);
+        expect(new Set(options.map((o) => `${o.h}:${o.m}`)).size).toBe(4);
+        expect(options[p.correct!]).toEqual({ h: p.h, m: p.m });
+        expect(options.every((o) => ok(o.m) && o.h >= 1 && o.h <= 12), stage).toBe(true);
+      }
     }
   });
 
-  it("asks the 24-hour clock on its own step: afternoons and evenings, from a digital clock", () => {
-    for (const p of sample("1.5.6")) {
-      if (p.kind === "clock") {
-        expect(p.given).toBe("digital");
-        expect(p.h).toBeGreaterThanOrEqual(13);
-      } else if (p.answer.kind === "value") expect(p.answer.value).toBeGreaterThanOrEqual(13);
-    }
+  it("the mistakes are the classic ones: halv 1 for halv 2, kvart i for kvart över, halv 3 for 3", () => {
+    const five = (m: number) => m % 5 === 0;
+    expect(readOptions({ h: 1, m: 30 }, five)[0]).toEqual({ h: 12, m: 30 });
+    expect(readOptions({ h: 3, m: 15 }, five)).toContainEqual({ h: 3, m: 45 });
+    expect(readOptions({ h: 5, m: 25 }, five)).toEqual(expect.arrayContaining([{ h: 4, m: 25 }, { h: 5, m: 35 }]));
+    expect(readOptions({ h: 3, m: 0 }, (m) => m === 0 || m === 30)).toContainEqual({ h: 2, m: 30 });
+  });
+
+  it("asks the 24-hour clock on its own step: afternoons and evenings", () => {
+    for (const p of sample("1.5.6")) expect(p.h).toBeGreaterThanOrEqual(13);
   });
 
   it("puts a round's questions easiest first", () => {
@@ -81,14 +95,13 @@ describe("the clock levels", () => {
   });
 
   it("lets beginners' hour hand stop only on whole and half hours", () => {
-    const set = sample("1.5.1").find((p) => p.kind === "clock");
-    expect(set?.kind === "clock" && set.hourSnap).toBe(15);
+    const set = sample("1.5.1").find((p) => p.task === "setAnalog");
+    expect(set?.hourSnap).toBe(15);
   });
 
   it("starts the hands somewhere else than the answer", () => {
     for (const stage of Object.keys(CLOCK_GENERATORS) as ClockStageId[]) {
       for (const p of sample(stage, 100)) {
-        if (p.kind !== "clock") continue;
         expect(p.start.m).not.toBe(p.m);
         expect(p.start.h % 12).not.toBe(p.h % 12);
       }

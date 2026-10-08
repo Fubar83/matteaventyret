@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { BottomSheet } from "../game/BottomSheet";
 import { revealedAt, type BoxReading, type BoxStatus } from "../game/draw/boardTypes";
 import { DrawBoard, type DrawBoardHandle } from "../game/draw/DrawBoard";
 import { PendingChoice } from "../game/draw/PendingChoice";
@@ -24,9 +25,9 @@ const NONE: ReadonlySet<string> = new Set();
  * child (amber) and the walk goes on.
  */
 /**
- * `onExit`: the test page's "Nya tal". `onDone`: a game round's - once the
- * last box is right, a "Nästa" button reports how it went (and there's no
- * starting over: the round moves on).
+ * `onExit`: the test page's "Nya tal". `onDone`: a game round's - called with
+ * how it went as soon as the last box is right (the round celebrates, then
+ * moves on; there's no starting over).
  */
 /**
  * `trace`: start with each box's digit shown dashed, to trace over - help
@@ -55,6 +56,14 @@ export function GuidedColumn({ plan, onExit, onDone, trace = false, startAt = 0 
   // Only what's needed so far: a box, line or comma a later step needs turns up then.
   const layout = useMemo(() => revealedAt(plan.layout, stepIndex), [plan.layout, stepIndex]);
   const done = !step;
+  // A game round's board reports as soon as the last box is right - the round celebrates it and moves on.
+  const reported = useRef(false);
+  useEffect(() => {
+    if (!done || !onDone || reported.current) return;
+    reported.current = true;
+    onDone({ wrong: wrongTotal, shown: shownTotal, traced: tracedTotal });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done]);
   // A step to pick (where the comma goes) has no box to write in.
   const active = step && !step.choice ? new Set([step.boxId]) : NONE;
   // The numbers this step works with light up on the board, not just in the words.
@@ -200,16 +209,23 @@ export function GuidedColumn({ plan, onExit, onDone, trace = false, startAt = 0 
       />
 
       <div className="min-h-[3rem] flex flex-col items-center gap-2">
+        {/* A step to pick (where the comma goes): the question and its options in a sheet at the bottom, in view on a phone. */}
         {step?.choice && (
-          <div className="flex flex-wrap justify-center gap-3" role="group" aria-label={step.prompt}>
-            {step.choice.options.map((option, i) => (
-              <button key={option} type="button" onClick={() => pick(i)} className="min-w-[6rem] h-14 px-5 rounded-xl border-2 border-sky-300 bg-white text-2xl font-bold text-slate-800 shadow-sm tabular-nums active:translate-y-0.5">
-                {option}
-              </button>
-            ))}
-          </div>
+          <BottomSheet label={step.prompt}>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm text-slate-700 text-center">{step.prompt}</p>
+              <div className="flex flex-wrap justify-center gap-3" role="group" aria-label={step.prompt}>
+                {step.choice.options.map((option, i) => (
+                  <button key={option} type="button" onClick={() => pick(i)} className="min-w-[5.5rem] h-14 px-4 rounded-xl border-2 border-violet-300 bg-white text-2xl font-bold text-slate-800 shadow-sm tabular-nums active:translate-y-0.5">
+                    {option}
+                  </button>
+                ))}
+              </div>
+              {message && <p className="text-sm text-rose-700 text-center">{message}</p>}
+            </div>
+          </BottomSheet>
         )}
-        {message && <p className="text-sm text-slate-600 text-center max-w-md">{message}</p>}
+        {message && !step?.choice && <p className="text-sm text-slate-600 text-center max-w-md">{message}</p>}
         {done && plan.doneNote && <p className="text-sm text-sky-900 bg-sky-50 rounded-lg px-3 py-2 text-center max-w-md">{plan.doneNote}</p>}
         {question && <PendingChoice guesses={question.guesses} onPick={pickPending} onRewrite={rewritePending} />}
         {done && (
@@ -268,11 +284,6 @@ export function GuidedColumn({ plan, onExit, onDone, trace = false, startAt = 0 
         {onExit && (
           <button type="button" onClick={onExit} className="px-4 h-10 rounded-lg bg-sky-600 text-white font-semibold text-sm">
             Nya tal
-          </button>
-        )}
-        {onDone && done && (
-          <button type="button" onClick={() => onDone({ wrong: wrongTotal, shown: shownTotal, traced: tracedTotal })} className="h-12 px-8 rounded-xl bg-emerald-600 text-white font-bold shadow">
-            Nästa
           </button>
         )}
       </div>

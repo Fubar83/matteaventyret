@@ -5,25 +5,10 @@ import { EXAM_GENERATORS } from "../examTopics";
 import { WORD_GENERATORS } from "../wordProblems";
 import { GEOMETRY_GENERATORS } from "../geometry";
 import { BASIC_GENERATORS } from "../basicTopics";
-import { CLOCK_GENERATORS } from "../clock";
 import type { AdvancedProblem } from "../advanced";
-import type { Rng } from "../rng";
 import { makeRng } from "../rng";
 
-/** The clock levels' written questions ("Vad är klockan?") - the dragging ones have no steps. */
-const CLOCK_READING = Object.fromEntries(
-  Object.entries(CLOCK_GENERATORS).map(([stage, gen]) => [
-    stage,
-    (rng: Rng): AdvancedProblem => {
-      for (;;) {
-        const p = gen(rng);
-        if (p.kind === "expression") return p;
-      }
-    },
-  ])
-);
-
-const GENERATORS = { ...ADVANCED_GENERATORS, ...GEOMETRY_GENERATORS, ...EXAM_GENERATORS, ...WORD_GENERATORS, ...BASIC_GENERATORS, ...CLOCK_READING };
+const GENERATORS = { ...ADVANCED_GENERATORS, ...GEOMETRY_GENERATORS, ...EXAM_GENERATORS, ...WORD_GENERATORS, ...BASIC_GENERATORS };
 
 describe("guided solution steps", () => {
   it("every question's steps, written in order, each check out - and the last one solves it", () => {

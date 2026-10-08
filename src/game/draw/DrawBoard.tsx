@@ -240,6 +240,14 @@ export const DrawBoard = forwardRef<DrawBoardHandle, DrawBoardProps>(function Dr
     if (stuckOn) onAsk?.(stuckOn.id);
   }, [stuckOn, onAsk]);
 
+  // "Menade du?" opens at the bottom of the screen: bring the box it asks about into view above it.
+  const boardArea = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (asking === null) return;
+    const frame = requestAnimationFrame(() => boardArea.current?.querySelector(`[data-box-id="${asking}"]`)?.scrollIntoView?.({ block: "center", behavior: "smooth" }));
+    return () => cancelAnimationFrame(frame);
+  }, [asking]);
+
   const inkColors = new Map<Stroke, string>();
   for (const [stroke, id] of strokeBoxes) {
     const status = statuses[id];
@@ -267,7 +275,7 @@ export const DrawBoard = forwardRef<DrawBoardHandle, DrawBoardProps>(function Dr
           </button>
         ))}
       </div>
-      <div className={`relative w-full ${disabled ? "pointer-events-none opacity-60" : ""}`}>
+      <div ref={boardArea} className={`relative w-full ${disabled ? "pointer-events-none opacity-60" : ""}`}>
         <InkCanvas
           ref={inkRef}
           width={layout.width}
@@ -285,6 +293,7 @@ export const DrawBoard = forwardRef<DrawBoardHandle, DrawBoardProps>(function Dr
           <button
             key={b.id}
             type="button"
+            data-box-id={b.id}
             aria-label={t("ui.didYouMean")}
             onClick={() => onAsk?.(b.id)}
             className="absolute -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full text-white text-lg font-bold shadow-md"

@@ -103,6 +103,11 @@ body {
   30% { transform: translateY(-14px) rotate(-6deg); }
   60% { transform: translateY(0) rotate(4deg); }
 }
+/* A small rise, not a slide in from off screen: should the animation not run, the sheet is still in view. */
+@keyframes sheet-up {
+  from { transform: translateY(14px); opacity: 0.5; }
+  to { transform: translateY(0); opacity: 1; }
+}
 @keyframes confetti-fall {
   0% { transform: translateY(-20px) rotate(0); opacity: 1; }
   100% { transform: translateY(260px) rotate(540deg); opacity: 0; }
@@ -113,12 +118,14 @@ body {
 .anim-coin-pop { animation: coin-pop 0.45s cubic-bezier(.3,1.4,.5,1) both; }
 .anim-happy-hop { animation: happy-hop 0.7s ease-in-out 2; }
 .anim-confetti { animation: confetti-fall 1.6s ease-in forwards; }
+.anim-sheet-up { animation: sheet-up 0.25s ease-out both; }
 [data-reduced-motion="true"] .anim-drift,
 [data-reduced-motion="true"] .anim-spin-slow,
 [data-reduced-motion="true"] .anim-bob,
 [data-reduced-motion="true"] .anim-coin-pop,
 [data-reduced-motion="true"] .anim-happy-hop,
 [data-reduced-motion="true"] .anim-confetti,
+[data-reduced-motion="true"] .anim-sheet-up,
 [data-reduced-motion="true"] .anim-star-pop,
 [data-reduced-motion="true"] .anim-float-up,
 [data-reduced-motion="true"] .anim-twinkle,

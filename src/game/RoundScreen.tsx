@@ -5,6 +5,7 @@ import { makeRng } from "../engine/rng";
 import { questionStars, questionXp, roundStars, type Stars } from "../engine/scoring";
 import type { MethodId } from "../engine/types";
 import { t } from "../i18n";
+import { Celebration } from "./Celebration";
 import { ChartPlayer } from "./ChartPlayer";
 import type { ColumnProblemSummary } from "./ColumnProblemPlayer";
 import { ColumnProblemPlayer } from "./ColumnProblemPlayer";
@@ -20,7 +21,6 @@ import { TrappanPlayer } from "./TrappanPlayer";
 import { MulPlayer } from "./MulPlayer";
 import { ClockPlayer } from "./ClockPlayer";
 import { ShopPlayer } from "./shop/ShopPlayer";
-import { ThemeBanner, themeForStage } from "./scenes/ThemeBanner";
 import type { StageMeta } from "./stages";
 import { TeoriScreen } from "./TeoriScreen";
 import { topicForStage } from "./teoriContent";
@@ -43,7 +43,7 @@ interface RoundScreenProps {
 
 type Intro = "teori" | "exempel" | "uppgift";
 
-/** A question's stars as it flies up after it's solved. */
+/** A solved question's stars, celebrated before the next question. */
 interface Pop {
   key: number;
   stars: Stars;
@@ -77,11 +77,17 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
     problem && (problem.kind === "columnAdd" || problem.kind === "columnSub" || problem.kind === "columnMul") ? problem.kind : null;
   const xp = results.reduce((sum, s) => sum + questionXp(s), 0);
 
+  /** A question solved: its stars count at once, but the next question waits for the celebration (Celebration.tsx). */
   function record(outcome: QuestionOutcome) {
+    if (pop) return; // already celebrating this one
     const stars = questionStars(outcome);
     setResults((r) => [...r, stars]);
     setPop({ key: Date.now(), stars, xp: questionXp(stars) });
     playEffect("star");
+  }
+
+  function nextQuestion() {
+    setPop(null);
     setIndex((i) => i + 1);
   }
 
@@ -137,9 +143,6 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
     return <ResultScreen stars={stars} questionStars={results} xp={xp} totalXpBefore={xpAtStart} onPlayAgain={playAgain} onBack={onExit} backLabel={exitLabel} />;
   }
 
-  // The younger levels' rounds play in a little world; the clock and the shop bring their own scenes.
-  const showWorld = (stage.grade === "ak1-3" || stage.grade === "ak4-6") && stage.method !== "clock" && stage.method !== "shop";
-
   return (
     <div className="flex flex-col items-center gap-5 py-6 px-4">
       <div className="w-full max-w-2xl flex items-center gap-3 rounded-2xl bg-slate-900 text-white px-4 py-2 shadow">
@@ -165,16 +168,8 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
         </button>
       </div>
 
-      {showWorld && <ThemeBanner theme={themeForStage(stage)} />}
-
-      {pop && (
-        <div key={pop.key} className="anim-float-up pointer-events-none fixed top-24 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center" onAnimationEnd={() => setPop(null)}>
-          <span className="text-4xl drop-shadow" style={{ color: STAR_COLOR[pop.stars] }}>
-            {"★".repeat(pop.stars)}
-          </span>
-          <span className="text-sm font-bold text-amber-600">+{pop.xp} XP</span>
-        </div>
-      )}
+      {/* "Rätt!" - the answer stays in view while the child takes in that it was right; then the next question. */}
+      {pop && <Celebration key={pop.key} stars={pop.stars} xp={pop.xp} onNext={nextQuestion} />}
 
       {demotionPrompt && currentMethod && (
         <div className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4 text-center max-w-xs">

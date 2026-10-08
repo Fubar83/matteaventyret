@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { playEffect } from "../audio/sound";
 import { tex, type AdvancedProblem } from "../engine/advanced";
 import { questionStars } from "../engine/scoring";
@@ -98,6 +98,11 @@ export function FreeSolver({ problem, level, onSolved }: FreeSolverProps) {
   }
 
   const stars = solved ? questionStars(solved) : null;
+  // Solved: report it at once - the round celebrates it (Celebration.tsx), the work stays in view meanwhile.
+  useEffect(() => {
+    if (solved) onSolved(solved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [solved]);
   return (
     <div className="flex flex-col items-center gap-3 w-full max-w-2xl">
       <WorkPad level={level} profile={profileForStage(problem.stageId)} title={t("expr.writeHere")} rows={4} onChange={handleWork} disabled={!!solved} highlight={suspects} />
@@ -107,9 +112,6 @@ export function FreeSolver({ problem, level, onSolved }: FreeSolverProps) {
         <div className="flex flex-col items-center gap-2">
           <p className="text-emerald-700 font-bold">{solved.fullSetup && !solved.helped ? t("expr.correctSetup") : t("expr.correct")}</p>
           {stars && <p className="text-amber-500 font-semibold">{t(`stars.q${stars}`)}</p>}
-          <button type="button" onClick={() => onSolved(solved)} className="h-12 px-8 rounded-xl bg-emerald-600 text-white font-bold shadow">
-            {t("expr.next")}
-          </button>
         </div>
       ) : (
         <div className="flex flex-wrap justify-center gap-2">

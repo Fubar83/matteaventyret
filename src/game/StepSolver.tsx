@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { playEffect } from "../audio/sound";
 import { stepsOf, tex, type AdvancedProblem } from "../engine/advanced";
 import { questionStars } from "../engine/scoring";
@@ -146,6 +146,11 @@ export function StepSolver({ problem, level, onSolved, trace = false }: StepSolv
   }
 
   const stars = solved ? questionStars(solved) : null;
+  // Solved: report it at once - the round celebrates it (Celebration.tsx), the work stays in view meanwhile.
+  useEffect(() => {
+    if (solved) onSolved(solved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [solved]);
   const ladder = [
     { title: t("help.tip"), content: t(problem.tipKey) },
     {
@@ -187,9 +192,6 @@ export function StepSolver({ problem, level, onSolved, trace = false }: StepSolv
         <div className="flex flex-col items-center gap-2">
           <p className="text-emerald-700 font-bold">{solved.fullSetup && !solved.helped ? t("expr.correctSetup") : t("expr.correct")}</p>
           {stars && <p className="text-amber-500 font-semibold">{t(`stars.q${stars}`)}</p>}
-          <button type="button" onClick={() => onSolved(solved)} className="h-12 px-8 rounded-xl bg-emerald-600 text-white font-bold shadow">
-            {t("expr.next")}
-          </button>
         </div>
       ) : (
         <>

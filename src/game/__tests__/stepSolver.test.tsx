@@ -76,7 +76,7 @@ describe("the step-by-step solver", () => {
     press(host, /Nästa steg/);
     write(host, third.line);
     press(host, /Nästa steg/);
-    press(host, /^Nästa$/);
+    // Solved: reported at once - the round celebrates and moves on.
     expect(outcome).not.toBeNull();
     expect(outcome!.fullSetup).toBe(true);
     expect(outcome!.helped).toBe(false);
@@ -102,7 +102,6 @@ describe("the step-by-step solver", () => {
       write(host, s.line);
       press(host, /Nästa steg/);
     }
-    press(host, /^Nästa$/);
     expect(outcome!.helped).toBe(true);
   });
 
@@ -137,7 +136,6 @@ describe("the step-by-step solver", () => {
       write(host, s.line);
       press(host, /Nästa steg/);
     }
-    press(host, /^Nästa$/);
     expect(outcome!.helped).toBe(true);
   });
 
