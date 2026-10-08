@@ -7,6 +7,7 @@ import { DigitalClockSetter } from "./DigitalClockSetter";
 import { HelpLadder } from "./HelpLadder";
 import { SkyScene } from "./SkyScene";
 import type { QuestionOutcome } from "./questionOutcome";
+import { NextSheet } from "./NextSheet";
 
 /** "halv 6", "fem i halv 3" - the time in words, the hours as digits, in the current language. */
 export function timeInWords(h: number, m: number): string {
@@ -138,9 +139,7 @@ function ReadClock({ problem, onSolved }: { problem: ClockProblem; onSolved: (ou
         />
       )}
       {state === "shown" && (
-        <button type="button" onClick={() => onSolved(outcomeOf(wrongPicks.length, helpUsed, true))} className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow">
-          {t("placeValue.next")}
-        </button>
+        <NextSheet note={message} onNext={() => onSolved(outcomeOf(wrongPicks.length, helpUsed, true))} />
       )}
     </div>
   );
@@ -233,9 +232,7 @@ function SetDigital({ problem, onSolved }: { problem: ClockProblem; onSolved: (o
         </>
       )}
       {state === "shown" && (
-        <button type="button" onClick={() => onSolved(outcomeOf(attempts, helpUsed, true))} className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow">
-          {t("placeValue.next")}
-        </button>
+        <NextSheet note={message?.text} onNext={() => onSolved(outcomeOf(attempts, helpUsed, true))} />
       )}
     </div>
   );
@@ -357,9 +354,7 @@ function SetHands({ problem, onSolved }: { problem: ClockProblem; onSolved: (out
         </>
       )}
       {state === "shown" && (
-        <button type="button" onClick={() => onSolved(outcomeOf(attempts, helpUsed, true))} className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow">
-          {t("placeValue.next")}
-        </button>
+        <NextSheet note={message?.text} onNext={() => onSolved(outcomeOf(attempts, helpUsed, true))} />
       )}
     </div>
   );

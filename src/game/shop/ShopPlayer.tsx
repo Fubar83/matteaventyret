@@ -5,6 +5,7 @@ import { Avatar } from "../Avatar";
 import { HelpLadder } from "../HelpLadder";
 import type { QuestionOutcome } from "../questionOutcome";
 import { MoneyPiece } from "./Money";
+import { NextSheet } from "../NextSheet";
 
 /** Each shop's colours: the awning's stripes, the wallpaper, the sign. */
 const THEME: Record<ShopKind, { stripeA: string; stripeB: string; wall: string; wallLine: string; keeper: string; customer: string }> = {
@@ -360,9 +361,7 @@ export function ShopPlayer({ problem, onSolved }: { problem: ShopProblem; onSolv
         </>
       )}
       {state === "shown" && (
-        <button type="button" onClick={() => onSolved(outcome(true))} className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow">
-          {t("placeValue.next")}
-        </button>
+        <NextSheet note={bubble.text} onNext={() => onSolved(outcome(true))} />
       )}
     </div>
   );

@@ -7,6 +7,7 @@ import { HelpLadder } from "./HelpLadder";
 import { PlaceValueBoard } from "./PlaceValueBoard";
 import { BaseTenBlocks } from "./scenes/BaseTenBlocks";
 import type { QuestionOutcome } from "./questionOutcome";
+import { NextSheet } from "./NextSheet";
 
 interface PlaceValuePlayerProps {
   problem: Extract<GeneratedProblem, { kind: "placeValue" }>;
@@ -79,9 +80,7 @@ export function PlaceValuePlayer({ problem, onSolved }: PlaceValuePlayerProps) {
       />
       {message && <p className="text-slate-600 text-sm max-w-xs text-center">{message}</p>}
       {revealed ? (
-        <button type="button" onClick={() => onSolved(outcome(attempts, true))} className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow">
-          {t("placeValue.next")}
-        </button>
+        <NextSheet note={message} onNext={() => onSolved(outcome(attempts, true))} />
       ) : (
         verdict !== "correct" && (
           <HelpLadder

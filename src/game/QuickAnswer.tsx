@@ -3,6 +3,7 @@ import { t } from "../i18n";
 import type { WritingLevel } from "../recognition/levels";
 import { AnswerBoard } from "./draw/AnswerBoard";
 import type { QuestionOutcome } from "./questionOutcome";
+import { NextSheet } from "./NextSheet";
 
 type Mode = "choose" | "write";
 const MODE_KEY = "matteaventyret-quickmode";
@@ -130,9 +131,7 @@ export function QuickAnswer({ answer, choices, onSolved }: { answer: number; cho
         </p>
       )}
       {state === "shown" && (
-        <button type="button" onClick={() => onSolved(outcomeOf(wrong, true))} className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow">
-          {t("placeValue.next")}
-        </button>
+        <NextSheet note={message} onNext={() => onSolved(outcomeOf(wrong, true))} />
       )}
     </div>
   );

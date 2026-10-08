@@ -9,6 +9,7 @@ import { AnswerBoard } from "./draw/AnswerBoard";
 import { WorkPad } from "./draw/WorkPad";
 import { HelpLadder } from "./HelpLadder";
 import type { QuestionOutcome } from "./questionOutcome";
+import { NextSheet } from "./NextSheet";
 
 interface StatisticsPlayerProps {
   problem: Extract<GeneratedProblem, { kind: "statistics" }>;
@@ -105,9 +106,7 @@ export function StatisticsPlayer({ problem, level = 2, onSolved }: StatisticsPla
       />
       {message && <p className="text-slate-600 text-sm max-w-xs text-center">{message}</p>}
       {revealed ? (
-        <button type="button" onClick={() => onSolved(outcome(attempts, true))} className="h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow">
-          {t("placeValue.next")}
-        </button>
+        <NextSheet note={message} onNext={() => onSolved(outcome(attempts, true))} />
       ) : (
         verdict !== "correct" && (
           <HelpLadder

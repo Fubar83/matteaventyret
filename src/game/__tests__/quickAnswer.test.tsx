@@ -23,8 +23,9 @@ function mount(answer: number, choices: number[], onSolved: (o: unknown) => void
   act(() => root!.render(<QuickAnswer answer={answer} choices={choices} level={1} onSolved={onSolved} />));
   return host;
 }
-const press = (host: HTMLElement, text: string) =>
-  act(() => [...host.querySelectorAll("button")].find((b) => b.textContent?.trim() === text)!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+// Buttons in the question - or in the sheet at the bottom of the screen ("Nästa →").
+const press = (_host: HTMLElement, text: string) =>
+  act(() => [...document.body.querySelectorAll("button")].find((b) => b.textContent?.trim() === text || b.textContent?.trim() === `${text} →`)!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
 
 describe("the times tables: just the answer", () => {
   it("every question offers the answer and three slips - all different", () => {

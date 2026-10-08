@@ -79,7 +79,8 @@ describe("the shop", () => {
       const help = [...host.querySelectorAll("button")].find((b) => /hjälp/i.test(b.textContent ?? ""));
       if (help) click(help);
     }
-    const next = buttons(host, "Nästa")[0];
+    // "Nästa" is in the sheet at the bottom of the screen, outside the question itself.
+    const next = [...document.body.querySelectorAll("button")].find((b) => b.textContent?.trim().startsWith("Nästa"))!;
     expect(next).toBeTruthy();
     click(next);
     expect(onSolved).toHaveBeenCalledWith(expect.objectContaining({ helped: true, miniTutorialUsed: true }));
