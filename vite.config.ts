@@ -21,7 +21,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      // A new version takes over and the page reloads into it (main.tsx registers the worker).
       registerType: 'autoUpdate',
+      injectRegister: false,
       includeAssets: ['icon.svg'],
       manifest: {
         name: 'MatteÄventyret',
