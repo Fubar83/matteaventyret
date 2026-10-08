@@ -41,10 +41,11 @@ describe("comparison and other signs", () => {
     expect(layoutSymbols([s("8", 0, 50), s(".", 35, 36, 5, 5), s("-", 35, 50, 24, 3), s(".", 35, 64, 5, 5), s("2", 70, 50)])).toBe("8 \\div 2");
   });
 
-  it("a dot halfway up is multiplication, a dot on the line a decimal point - whatever the classifier called it", () => {
+  it("a dot is multiplication - halfway up or on the line, whatever the classifier called it", () => {
     expect(layoutSymbols([s("3", 0, 50), s(".", 22, 50, 5, 5), s("4", 44, 50)])).toBe("3 \\cdot 4");
     expect(layoutSymbols([s("3", 0, 50), s("+", 22, 50, 4, 4), s("4", 44, 50)])).toBe("3 \\cdot 4");
-    expect(layoutSymbols([s("3", 0, 50), s(".", 22, 66, 5, 5), s("4", 44, 50)])).toBe("3 {,} 4");
+    // Low on the line too: in Swedish a dot is the times sign - decimals take a comma.
+    expect(layoutSymbols([s("3", 0, 50), s(".", 22, 66, 5, 5), s("4", 44, 50)])).toBe("3 \\cdot 4");
   });
 
   it("a degree sign is raised onto the number before it", () => {

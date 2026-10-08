@@ -261,9 +261,9 @@ export function layoutSymbols(symbols: ClassifiedSymbol[], opts: LayoutOptions =
     const gapToPrev = prev ? s.box.minX - prev.box.maxX : Infinity;
     const closeEnoughToPrev = gapToPrev < hMed * HORIZONTAL_GAP_RATIO;
 
-    // Swedish decimal comma: a small mark low between two digits of a number -
+    // Swedish decimal comma: a small tick low between two digits of a number -
     // whatever the classifier called it (scaled up on its own, a comma is a
-    // "1"). A dot there is one too - both are accepted, a comma is written.
+    // "1"). A round dot isn't one: in Swedish a dot is the times sign (below).
     const next = i + 1 < remaining.length ? remaining[i + 1] : null;
     if (prev && next && !lastWasScript && isDigit(prev) && isDigit(next) && isDecimalMark(s, prev, next, hMed)) {
       tokens.push({ cx: s.box.cx, latex: "{,}", openScript: null });
@@ -295,15 +295,15 @@ export function layoutSymbols(symbols: ClassifiedSymbol[], opts: LayoutOptions =
       continue;
     }
 
-    // A dot on the line is a decimal point; one halfway up is multiplication.
-    // The classifier can't tell them apart - it sees each dot scaled on its own
-    // (and a dot tiny enough, scaled up, can come back as anything - a "+").
+    // A dot is the times sign - halfway up or down on the line (4 . 3 is 4 · 3):
+    // Swedish decimals are written with a comma, a tick with a tail (above).
+    // The classifier can't tell a dot by its look - it sees each dot scaled on
+    // its own (and a dot tiny enough, scaled up, can come back as anything - a "+").
     // A dash stays a minus, however short next to tall writing (2 - a fraction's 6/4 makes the line tall).
     const dash = s.char === "-" && s.box.width >= s.box.height * 3 && s.box.width >= hMed * 0.1;
     const tinyMark = !dash && Math.max(s.box.width, s.box.height) < hMed * 0.2;
     if ((s.char === "." || s.char === "·" || tinyMark) && !s.latex && !s.struck) {
-      const raisedDot = s.box.cy < baseline + hMed * 0.25;
-      tokens.push({ cx: s.box.cx, latex: raisedDot ? "\\cdot" : ".", openScript: null });
+      tokens.push({ cx: s.box.cx, latex: "\\cdot", openScript: null });
       lastWasScript = false;
       i++;
       continue;
@@ -481,7 +481,7 @@ const NOT_DECIMAL = new Set(["-", "=", "≈", "≠", "<", ">", "≤", "≥", "+"
 
 /** Small, low on the line, and tight between two digits - a decimal comma (or point). */
 function isDecimalMark(s: ClassifiedSymbol, prev: ClassifiedSymbol, next: ClassifiedSymbol, hMed: number): boolean {
-  if (s.latex || NOT_DECIMAL.has(s.char)) return false;
+  if (s.latex || NOT_DECIMAL.has(s.char) || isRoundDot(s, hMed)) return false;
   const digitHeight = Math.min(prev.box.height, next.box.height);
   const lineMiddle = (prev.box.cy + next.box.cy) / 2;
   return (
@@ -541,6 +541,11 @@ function isThousandsGap(remaining: ClassifiedSymbol[], i: number, hMed: number):
   let before = 1;
   while (i - 1 - before >= 0 && tight(remaining[i - 1 - before], remaining[i - before])) before++;
   return after === 3 && before <= 3;
+}
+
+/** A round dot: small, and about as tall as it is wide - not a comma's tick, which hangs down. A tap is a dot too. */
+function isRoundDot(s: ClassifiedSymbol, hMed: number): boolean {
+  return Math.max(s.box.width, s.box.height) < hMed * 0.22 && s.box.height <= Math.max(s.box.width, hMed * 0.03) * 1.8;
 }
 
 /** A mark much smaller than the page's writing in both directions - a dot, however the classifier read it. */

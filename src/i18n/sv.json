@@ -802,7 +802,7 @@
   "step.basic.clock24Write": "Skriv tiden: timmarna, en punkt, och minuterna med två siffror.",
   "step.clock.minutesExact": "Den långa visaren har gått förbi {n}: det är {n} · 5 minuter, och sedan {k} små streck till.",
   "work.sortedHint": "Skriv talen i ordning, minst först.",
-  "expr.writeHere": "Skriv lösningen här – en rad per steg, svaret sist.",
+  "expr.writeHere": "Skriv lösningen här – gärna på en rad: 4 · 3 + 5 · 2 = 12 + 10 = 22. Gånger skriver du med en punkt.",
   "expr.check": "Kontrollera",
   "expr.correct": "Rätt!",
   "expr.correctSetup": "Rätt – med hela uträkningen!",

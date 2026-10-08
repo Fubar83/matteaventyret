@@ -12,10 +12,14 @@ const low = (char: string, cx: number) => s(char, cx, 55, 20, 26);
 const bar = (x1: number, x2: number, y: number) => s("-", (x1 + x2) / 2, y, x2 - x1, 3);
 
 describe("Swedish numbers", () => {
-  it("a small mark low between two digits is a decimal comma - a comma, a dot, or a comma the classifier took for a 1", () => {
+  it("a tick low between two digits is a decimal comma - a comma, or a comma the classifier took for a 1", () => {
     expect(layoutSymbols([s("3", 0), s(",", 22, 64, 5, 10), s("5", 44)])).toBe("3 {,} 5");
-    expect(layoutSymbols([s("3", 0), s(".", 22, 66, 5, 5), s("5", 44)])).toBe("3 {,} 5");
     expect(layoutSymbols([s("3", 0), s("1", 22, 63, 5, 12), s("5", 44)])).toBe("3 {,} 5");
+  });
+
+  it("but a round dot there is the times sign: 4 . 3 + 5 . 2 is 4 · 3 + 5 · 2", () => {
+    expect(layoutSymbols([s("3", 0), s(".", 22, 66, 5, 5), s("5", 44)])).toBe("3 \\cdot 5");
+    expect(layoutSymbols([s("4", 0), s(".", 22, 64, 4, 4), s("3", 44), s("+", 70), s("5", 96), s(".", 118, 64, 4, 4), s("2", 140)])).toBe("4 \\cdot 3 + 5 \\cdot 2");
   });
 
   it("a comma with space after it separates, as in coordinates (2, 3)", () => {
