@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Point, Stroke } from "../recognition/preprocess";
+import { useBlockTouchGestures } from "../mathinput/blockTouchGestures";
 
 const SETTLE_MS = 800; // waits for a second stroke (open 4, crossed 7) before reading the cell
 
@@ -26,6 +27,8 @@ export function DigitCanvas({ onSettled, disabled, resetToken, size = DEFAULT_CA
   const drawingRef = useRef(false);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isEmpty, setIsEmpty] = useState(true);
+  // A finger draws here instead of scrolling the page (iOS Safari needs more than touch-action: none).
+  useBlockTouchGestures(canvasRef, !disabled);
 
   function getCtx() {
     return canvasRef.current?.getContext("2d") ?? null;

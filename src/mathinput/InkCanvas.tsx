@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState, type ReactNode } from "react";
 import getStroke from "perfect-freehand";
 import type { Point, Stroke } from "../recognition/preprocess";
+import { useBlockTouchGestures } from "./blockTouchGestures";
 import { INK_CURSORS } from "./inkCursors";
 
 /** perfect-freehand returns an outline polygon; this is its own docs' standard helper to turn that into a smooth closed SVG path. */
@@ -133,6 +134,9 @@ export const InkCanvas = forwardRef<InkCanvasHandle, InkCanvasProps>(function In
   const gestureRef = useRef<Gesture | null>(null);
   const [gesture, setGesture] = useState<Gesture | null>(null);
   const [selected, setSelectedState] = useState<ReadonlySet<number>>(EMPTY);
+  const svgRef = useRef<SVGSVGElement>(null);
+  // A finger draws here instead of scrolling the page (iOS Safari needs more than touch-action: none).
+  useBlockTouchGestures(svgRef, !disabled);
 
   // Switching tools drops the selection (see React docs: "Adjusting state when a prop changes").
   const [prevTool, setPrevTool] = useState(tool);
@@ -318,6 +322,7 @@ export const InkCanvas = forwardRef<InkCanvasHandle, InkCanvasProps>(function In
 
   return (
     <svg
+      ref={svgRef}
       viewBox={`0 0 ${width} ${height}`}
       // Without this, the SVG letterboxes to preserve the viewBox's aspect
       // ratio whenever the rendered box's ratio doesn't match it exactly

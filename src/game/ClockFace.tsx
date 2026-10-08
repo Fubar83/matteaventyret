@@ -1,5 +1,6 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent, type ReactElement } from "react";
 import type { ClockFaceStyle, ClockLook } from "../engine/clock";
+import { useBlockTouchGestures } from "../mathinput/blockTouchGestures";
 
 const ROMAN = ["XII", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI"];
 
@@ -60,6 +61,8 @@ export interface ClockFaceProps {
 export function ClockFace({ face, hourDeg, minuteDeg, size = 260, interactive, label }: ClockFaceProps) {
   const look = LOOKS[face.look];
   const svg = useRef<SVGSVGElement>(null);
+  // A finger drags the hands instead of scrolling the page (iOS Safari needs more than touch-action: none).
+  useBlockTouchGestures(svg, !!interactive);
   const [dragging, setDragging] = useState<"hour" | "minute" | null>(null);
 
   const snap = (hand: "hour" | "minute", deg: number) => {
