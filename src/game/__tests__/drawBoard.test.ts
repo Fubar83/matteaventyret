@@ -5,6 +5,7 @@ import type { Stroke } from "../../recognition/preprocess";
 import type { DrawBox } from "../draw/boardTypes";
 import { activeBoxes, boxForCell, boxStatuses, boxValues, buildColumnBoard } from "../draw/columnBoardLayout";
 import { boxForStroke, isStrikeLine, splitDigits } from "../draw/readBox";
+import { segmentSymbols } from "../../mathinput/segmentation";
 
 const line = (...pts: [number, number][]): Stroke => pts.map(([x, y]) => ({ x, y }));
 
@@ -106,6 +107,33 @@ describe("reading boxes", () => {
     const five = line([60, 5], [40, 5], [38, 30], [60, 35], [58, 60], [36, 58]);
     expect(splitDigits([five, one], 2)).toEqual([[one], [five]]);
     expect(splitDigits([one, five], 1)).toEqual([[one, five]]);
+  });
+
+  it("a 5 written in two strokes - body, then the flag on top - is one digit, not two", () => {
+    // As on a phone: the body down and round, then the flag across its top - a little to the right and above,
+    // which the segmenter on its own takes for two symbols.
+    const body = line([14, 14], [13, 30], [12, 42], [30, 38], [46, 46], [50, 62], [42, 74], [26, 76], [14, 72]);
+    const flag = line([22, 8], [39, 7], [56, 6]);
+    expect(segmentSymbols([body, flag])).toHaveLength(2);
+    expect(splitDigits([body, flag], 2)).toEqual([[body, flag]]);
+    // A 4 whose crossbar is its own stroke, the same.
+    const down = line([30, 6], [30, 76]);
+    const bar = line([8, 50], [44, 50]);
+    const slant = line([28, 8], [8, 50]);
+    expect(splitDigits([slant, bar, down], 2)).toHaveLength(1);
+  });
+
+  it("two digits side by side still come apart - 15, a 4 and a 7", () => {
+    const one = line([12, 6], [12, 74]);
+    const fiveBody = line([40, 10], [38, 40], [54, 36], [70, 46], [70, 64], [60, 74], [40, 72]);
+    const fiveFlag = line([42, 8], [72, 6]);
+    const groups = splitDigits([one, fiveBody, fiveFlag], 2);
+    expect(groups).toHaveLength(2);
+    expect(groups[0]).toEqual([one]);
+    expect(groups[1]).toHaveLength(2);
+    const four = [line([18, 8], [4, 46], [30, 46]), line([24, 20], [24, 74])];
+    const seven = [line([44, 8], [72, 8], [52, 74])];
+    expect(splitDigits([...four, ...seven], 2)).toHaveLength(2);
   });
 
   it("cuts ink that falls into more pieces than the box's digits at the widest gap", () => {

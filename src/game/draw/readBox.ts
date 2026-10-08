@@ -99,10 +99,39 @@ function crossing(p: Point, q: Point, r: Point, s: Point): { t: number; u: numbe
   return t >= 0 && t <= 1 && u >= 0 && u <= 1 ? { t, u } : null;
 }
 
+/** Ink pieces with their extent across the box. */
+interface Piece {
+  strokes: Stroke[];
+  box: { minX: number; maxX: number };
+}
+
+/**
+ * Two digits in a box are written side by side, so pieces stacked over one
+ * another are one digit: a 5's flag above its body, a 4's or 7's crossbar.
+ * Merges neighbours (sorted left to right) whose spans across overlap by at
+ * least half of the narrower one.
+ */
+function mergeStacked(pieces: Piece[]): Piece[] {
+  const out: Piece[] = [];
+  for (const p of pieces) {
+    const last = out[out.length - 1];
+    if (last) {
+      const overlap = Math.min(last.box.maxX, p.box.maxX) - Math.max(last.box.minX, p.box.minX);
+      const narrower = Math.min(last.box.maxX - last.box.minX, p.box.maxX - p.box.minX);
+      if (overlap >= narrower * 0.5) {
+        out[out.length - 1] = { strokes: [...last.strokes, ...p.strokes], box: { minX: Math.min(last.box.minX, p.box.minX), maxX: Math.max(last.box.maxX, p.box.maxX) } };
+        continue;
+      }
+    }
+    out.push(p);
+  }
+  return out;
+}
+
 /** Splits a box's ink into up to `maxDigits` digits, left to right - by the widest gaps if the ink falls into more pieces than that. */
 export function splitDigits(strokes: Stroke[], maxDigits: number): Stroke[][] {
   if (maxDigits <= 1 || strokes.length <= 1) return [strokes];
-  const symbols = segmentSymbols(strokes).sort((a, b) => a.box.cx - b.box.cx);
+  const symbols = mergeStacked(segmentSymbols(strokes).sort((a, b) => a.box.cx - b.box.cx));
   if (symbols.length <= maxDigits) return symbols.map((s) => s.strokes);
   // Cut at the (maxDigits - 1) widest horizontal gaps between neighboring pieces.
   const gaps = symbols.slice(1).map((s, i) => ({ i, gap: s.box.minX - symbols[i].box.maxX }));
