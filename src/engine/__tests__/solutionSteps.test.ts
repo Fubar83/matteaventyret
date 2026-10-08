@@ -5,7 +5,6 @@ import { EXAM_GENERATORS } from "../examTopics";
 import { WORD_GENERATORS } from "../wordProblems";
 import { GEOMETRY_GENERATORS } from "../geometry";
 import { BASIC_GENERATORS } from "../basicTopics";
-import type { AdvancedProblem } from "../advanced";
 import { makeRng } from "../rng";
 
 const GENERATORS = { ...ADVANCED_GENERATORS, ...GEOMETRY_GENERATORS, ...EXAM_GENERATORS, ...WORD_GENERATORS, ...BASIC_GENERATORS };
