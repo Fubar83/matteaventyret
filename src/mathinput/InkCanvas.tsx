@@ -54,6 +54,8 @@ interface InkCanvasProps {
   guides?: ReactNode;
   /** Ruled paper lines in the background (default on); a template brings its own guides instead. */
   lined?: boolean;
+  /** How far apart the ruled lines are, in screen pixels (default 40). */
+  lineGap?: number;
   /**
    * "fixed" (default): `height` px tall, width stretching to fit.
    * "aspect": keeps the viewBox's shape at any width - the drawing area (and
@@ -123,7 +125,7 @@ function rectFrom(a: Point, b: Point) {
 
 /** A free-form, multi-symbol, multi-stroke ink surface - unlike DigitCanvas, strokes stay on the page until cleared, so a whole expression can be built up. */
 export const InkCanvas = forwardRef<InkCanvasHandle, InkCanvasProps>(function InkCanvas(
-  { width = 900, height = 320, onStrokesChange, disabled, tool = "pen", onSelectionChange, guides, lined = true, fit = "fixed", inkColors },
+  { width = 900, height = 320, onStrokesChange, disabled, tool = "pen", onSelectionChange, guides, lined = true, lineGap = 40, fit = "fixed", inkColors },
   ref
 ) {
   const [strokes, setStrokesState] = useState<Stroke[]>([]);
@@ -335,7 +337,7 @@ export const InkCanvas = forwardRef<InkCanvasHandle, InkCanvasProps>(function In
       tabIndex={0}
       className={`block rounded-xl border-2 bg-white touch-none outline-none ${disabled ? "opacity-50 border-slate-200" : "border-sky-400"}`}
       style={{
-        backgroundImage: lined ? "repeating-linear-gradient(0deg, transparent, transparent 39px, #e2e8f0 40px)" : undefined,
+        backgroundImage: lined ? `repeating-linear-gradient(0deg, transparent, transparent ${lineGap - 1}px, #e2e8f0 ${lineGap}px)` : undefined,
         aspectRatio: fit === "aspect" ? `${width} / ${height}` : undefined,
         cursor,
       }}

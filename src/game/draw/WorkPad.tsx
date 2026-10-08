@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { t } from "../../i18n";
 import { highlightInLatex, strokesOfNumbers, SUSPECT_COLOR } from "../../mathinput/highlightNumbers";
 import { InkCanvas, type InkCanvasHandle, type InkTool } from "../../mathinput/InkCanvas";
@@ -8,6 +8,30 @@ import type { WritingLevel } from "../../recognition/levels";
 import type { RecognitionProfile } from "../../recognition/profiles";
 import { StrokeOrderDemo } from "../StrokeOrderDemo";
 import { Tex } from "../Tex";
+
+/** A writing line's height on the board, in screen pixels - room for a child's finger-sized digits. */
+const ROW = 70;
+/** The board's width in screen pixels: the room there is, but not a sliver nor a banner. */
+const MIN_WIDTH = 280;
+const MAX_WIDTH = 800;
+
+/** The width of `ref`'s element, kept up to date (a phone turned on its side). Falls back to the widest board where it can't be measured. */
+function useWidth(ref: React.RefObject<HTMLElement | null>): number {
+  const [width, setWidth] = useState(MAX_WIDTH);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      if (el.clientWidth > 0) setWidth(el.clientWidth);
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+  return width;
+}
 
 /** How long after the last stroke the writing is read. */
 const READ_AFTER_MS = 700;
@@ -44,6 +68,8 @@ interface WorkPadProps {
  */
 export function WorkPad({ level, title, subtitle, rows = 3, onChange, resetToken = 0, disabled, highlight = NONE, profile, trace }: WorkPadProps) {
   const inkRef = useRef<InkCanvasHandle>(null);
+  const boardBox = useRef<HTMLDivElement>(null);
+  const boardWidth = useWidth(boardBox);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef(0);
   const [tool, setTool] = useState<InkTool>("pen");
@@ -84,15 +110,19 @@ export function WorkPad({ level, title, subtitle, rows = 3, onChange, resetToken
     }, READ_AFTER_MS);
   }
 
-  const height = 70 + rows * 70;
+  // The board in screen pixels: as wide as there's room for, ROW px a line. Scaled from a fixed
+  // 800-wide drawing it came out a strip of thin lines on a phone (800 × 350 into 310 px wide).
+  const height = ROW + rows * ROW;
+  const width = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Math.round(boardWidth)));
   return (
     <div className={`w-full max-w-2xl flex flex-col gap-2 ${disabled ? "pointer-events-none opacity-60" : ""}`}>
-      <div className="flex items-end justify-between gap-3">
+      {/* On a phone the words take the width and the tools go under them; side by side when there's room. */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
         <div>
           <div className="font-semibold text-slate-700">{title}</div>
           {subtitle && <div className="text-xs text-slate-500">{subtitle}</div>}
         </div>
-        <div className="flex gap-1 rounded-lg bg-slate-200 p-1" role="radiogroup" aria-label="Verktyg">
+        <div className="flex gap-1 self-end rounded-lg bg-slate-200 p-1 shrink-0" role="radiogroup" aria-label="Verktyg">
           {(["pen", "erase"] as const).map((tl) => (
             <button
               key={tl}
@@ -110,18 +140,20 @@ export function WorkPad({ level, title, subtitle, rows = 3, onChange, resetToken
           </button>
         </div>
       </div>
+      <div ref={boardBox} className="w-full">
       <InkCanvas
         ref={inkRef}
-        width={800}
+        width={width}
         height={height}
         fit="aspect"
+        lineGap={ROW}
         tool={tool}
         onStrokesChange={handleStrokes}
         inkColors={inkColors}
         guides={
           trace ? (
             // Written-size and faint, on the first line - to trace over, not to read off.
-            <foreignObject x={24} y={8} width={760} height={Math.min(height - 16, 120)} pointerEvents="none">
+            <foreignObject x={24} y={8} width={width - 40} height={Math.min(height - 16, 120)} pointerEvents="none">
               <div style={{ fontSize: 54, color: "#94a3b8", opacity: 0.6, lineHeight: 1.5 }}>
                 <Tex latex={trace} />
               </div>
@@ -129,6 +161,7 @@ export function WorkPad({ level, title, subtitle, rows = 3, onChange, resetToken
           ) : undefined
         }
       />
+      </div>
       <OrderHint symbols={symbols} />
       <div className="min-h-[2.5rem] text-slate-600 text-sm flex items-center gap-2">
         {latex && (

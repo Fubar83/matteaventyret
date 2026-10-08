@@ -802,7 +802,7 @@
   "step.basic.clock24Write": "Write the time: the hours, a point, and the minutes with two digits.",
   "step.clock.minutesExact": "The long hand has passed {n}: that's {n} · 5 minutes, and then {k} small ticks more.",
   "work.sortedHint": "Write the numbers in order, smallest first.",
-  "expr.writeHere": "Write your solution here – one line is fine: 4 · 3 + 5 · 2 = 12 + 10 = 22. Write times as a dot.",
+  "expr.writeHere": "Write your solution here – one line is fine: 4 · 3 + 5 · 2 = 12 + 10 = 22. Write times as a dot.",
   "expr.check": "Check",
   "expr.correct": "Correct!",
   "expr.correctSetup": "Correct – with the full working!",
