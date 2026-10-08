@@ -79,6 +79,12 @@ export interface AdvancedProblem {
   unit?: string;
   /** The solution as guided steps (training mode: one box per step) - without, stepsOf makes them from `solution`. */
   steps?: SolutionStep[];
+  /**
+   * Only the result counts - a fact to know, like the times tables: no steps
+   * to write, just the answer, picked among `choices` (the right one and the
+   * usual slips) or written (QuickAnswer.tsx).
+   */
+  answerOnly?: { choices: number[] };
 }
 
 /** One step of a guided solution: what to do in it (i18n "step.*" and its values), and the step written out - what its help shows. */

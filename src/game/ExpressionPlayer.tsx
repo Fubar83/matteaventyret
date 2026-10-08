@@ -3,6 +3,7 @@ import type { AdvancedProblem } from "../engine/advanced";
 import { t } from "../i18n";
 import type { WritingLevel } from "../recognition/levels";
 import { FreeSolver } from "./FreeSolver";
+import { QuickAnswer } from "./QuickAnswer";
 import { GeometryFigure } from "./GeometryFigure";
 import { ClockFace } from "./ClockFace";
 import { DigitalClock } from "./DigitalClock";
@@ -78,6 +79,10 @@ export function ExpressionPlayer({ problem, level, onSolved, first = false }: Ex
           <Tex latex={problem.display} block />
         </div>
       )}
+      {problem.answerOnly && problem.answer.kind === "value" ? (
+        <QuickAnswer key={key} answer={problem.answer.value} choices={problem.answerOnly.choices} level={level} onSolved={onSolved} />
+      ) : (
+        <>
       <div className="flex rounded-xl bg-slate-200 p-1" role="radiogroup" aria-label={t("solve.mode")}>
         {(["guided", "free"] as const).map((m) => (
           <button
@@ -96,6 +101,8 @@ export function ExpressionPlayer({ problem, level, onSolved, first = false }: Ex
         <StepSolver key={key} problem={problem} level={level} onSolved={onSolved} trace={first} />
       ) : (
         <FreeSolver key={key} problem={problem} level={level} onSolved={onSolved} />
+      )}
+        </>
       )}
     </div>
   );

@@ -14,7 +14,6 @@ import { PathScreen } from "./game/PathScreen";
 import { STAGES } from "./game/stages";
 import { trainingPathById } from "./game/trainingPaths";
 import { recommendNext } from "./game/unlocks";
-import { topicForStage } from "./game/teoriContent";
 import { bestStageStars, loadSave, totalStars, writeSave, type SaveDataV1 } from "./storage/save";
 
 type Screen = "stages" | "round" | "blixtrunda" | "boss" | "avatars" | "settings" | "skrivskolan";
@@ -169,10 +168,6 @@ function App() {
           onProgressChange={(method, next) => update((s) => ({ ...s, methodProgress: { ...s.methodProgress, [method]: next } }))}
           onRoundComplete={handleRoundComplete}
           totalXp={save.totalXp}
-          seenTeori={save.seenTeori.includes(topicForStage(stage.id))}
-          onTeoriSeen={() =>
-            update((s) => ({ ...s, seenTeori: Array.from(new Set([...s.seenTeori, topicForStage(stage.id)])) }))
-          }
           onExit={() => setScreen("stages")}
           exitLabel={path ? t(path.nameKey) : t("paths.home")}
         />

@@ -51,6 +51,7 @@ interface Spec {
   clock?: ClockSpec;
   scene?: QuestionScene;
   unit?: string;
+  answerOnly?: { choices: number[] };
 }
 
 function make(stageId: BasicStageId, s: Spec): AdvancedProblem {
@@ -69,6 +70,7 @@ function make(stageId: BasicStageId, s: Spec): AdvancedProblem {
     ...(s.clock ? { clock: s.clock } : {}),
     ...(s.scene ? { scene: s.scene } : {}),
     ...(s.unit ? { unit: s.unit } : {}),
+    ...(s.answerOnly ? { answerOnly: s.answerOnly } : {}),
   };
 }
 
@@ -77,9 +79,29 @@ const value = (v: number): AnswerSpec => ({ kind: "value", value: v });
 // --- Åk 1-3: tabeller och saknade tal -----------------------------------------------
 
 /** 7 · 8: a fact from the tables 2-10. */
+/**
+ * What a times-table question offers besides a · b: the slips children make -
+ * the next or the previous fact in either table (7 · 9 or 6 · 8 for 7 · 8),
+ * then the sum. Three of them, all different, shuffled in with the answer.
+ */
+export function tableChoices(rng: Rng, a: number, b: number): number[] {
+  const right = a * b;
+  const slips = [a * (b + 1), (a + 1) * b, a * (b - 1), (a - 1) * b, a + b, right + 10, right - 10, right + 1, right - 1];
+  const wrong: number[] = [];
+  for (const n of slips) if (wrong.length < 3 && n > 0 && n !== right && !wrong.includes(n)) wrong.push(n);
+  const all = [right, ...wrong];
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = randInt(rng, 0, i);
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  return all;
+}
+
+/** Gångertabellen: just the answer - picked or written (see answerOnly); the groups picture is there to count on. */
 function timesTables(rng: Rng): AdvancedProblem {
   const a = randInt(rng, 2, 10);
   const b = randInt(rng, 2, 10);
+  const answerOnly = { choices: tableChoices(rng, a, b) };
   if (rng() < 0.3) {
     // In words: groups of things.
     return make("1.4.1", {
@@ -88,6 +110,7 @@ function timesTables(rng: Rng): AdvancedProblem {
       answer: value(a * b),
       scene: { kind: "groups", groups: a, each: b, thing: "cookies" },
       steps: [st("step.basic.groups", `${a} \\cdot ${b} = ${a * b}`, { a, b })],
+      answerOnly,
     });
   }
   return make("1.4.1", {
@@ -96,6 +119,7 @@ function timesTables(rng: Rng): AdvancedProblem {
     answer: value(a * b),
     scene: { kind: "groups", groups: a, each: b, thing: pick(rng, GROUP_THINGS) },
     steps: [st("step.basic.table", `${a} \\cdot ${b} = ${a * b}`, { a, b })],
+    answerOnly,
   });
 }
 

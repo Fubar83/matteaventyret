@@ -9,7 +9,6 @@ import { Celebration } from "./Celebration";
 import { ChartPlayer } from "./ChartPlayer";
 import type { ColumnProblemSummary } from "./ColumnProblemPlayer";
 import { ColumnProblemPlayer } from "./ColumnProblemPlayer";
-import { ExempelPlayer } from "./ExempelPlayer";
 import { ExpressionPlayer } from "./ExpressionPlayer";
 import type { MethodProgress } from "./phaseProgress";
 import { applyOutcome, demoteToEgenOrdning } from "./phaseProgress";
@@ -22,8 +21,6 @@ import { MulPlayer } from "./MulPlayer";
 import { ClockPlayer } from "./ClockPlayer";
 import { ShopPlayer } from "./shop/ShopPlayer";
 import type { StageMeta } from "./stages";
-import { TeoriScreen } from "./TeoriScreen";
-import { topicForStage } from "./teoriContent";
 
 type ColumnMethod = Extract<MethodId, "columnAdd" | "columnSub" | "columnMul">;
 
@@ -34,14 +31,10 @@ interface RoundScreenProps {
   onRoundComplete: (stars: Stars, xp: number) => void;
   /** XP before this round - for the result screen's level bar. */
   totalXp: number;
-  seenTeori: boolean;
-  onTeoriSeen: () => void;
   onExit: () => void;
   /** What the back button returns to: the training path the round was started from, or the start screen. */
   exitLabel: string;
 }
-
-type Intro = "teori" | "exempel" | "uppgift";
 
 /** A solved question's stars, celebrated before the next question. */
 interface Pop {
@@ -53,8 +46,8 @@ interface Pop {
 const STAR_COLOR: Record<Stars, string> = { 1: "#d97706", 2: "#94a3b8", 3: "#fbbf24" };
 
 /** One round of a stage: its questions one after the other, each earning its stars (engine/scoring.ts), then the result. */
-export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete, totalXp, seenTeori, onTeoriSeen, onExit, exitLabel }: RoundScreenProps) {
-  const [intro, setIntro] = useState<Intro>(seenTeori ? "uppgift" : "teori");
+/** Straight to the questions - no theory slides or worked example first; help is in each question's own help ladder. */
+export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete, totalXp, onExit, exitLabel }: RoundScreenProps) {
   const [roundKey, setRoundKey] = useState(0);
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState<Stars[]>([]);
@@ -118,27 +111,6 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [done, problem]);
 
-  const topic = topicForStage(stage.id);
-  const isColumnStage = stage.method === "columnAdd" || stage.method === "columnSub" || stage.method === "columnMul" || stage.method === "mixed";
-  const exempelMethod: ColumnMethod = topic.startsWith("subtraction") ? "columnSub" : topic.startsWith("multiplication") ? "columnMul" : "columnAdd";
-
-  if (intro === "teori") {
-    return (
-      <TeoriScreen
-        topic={topic}
-        title={t(stage.titleKey).replace(/^\d+\.\s*/, "")}
-        onDone={() => {
-          onTeoriSeen();
-          setIntro(isColumnStage ? "exempel" : "uppgift");
-        }}
-      />
-    );
-  }
-
-  if (intro === "exempel") {
-    return <ExempelPlayer stageId={stage.id} method={exempelMethod} onDone={() => setIntro("uppgift")} />;
-  }
-
   if (done || !problem) {
     return <ResultScreen stars={stars} questionStars={results} xp={xp} totalXpBefore={xpAtStart} onPlayAgain={playAgain} onBack={onExit} backLabel={exitLabel} />;
   }
@@ -163,9 +135,6 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
           })}
         </div>
         <span className="text-sm font-bold text-amber-300 tabular-nums">{xp} XP</span>
-        <button type="button" onClick={() => setIntro("teori")} aria-label={t("ui.theory")} className="w-7 h-7 rounded-full bg-slate-700 text-slate-200 font-bold">
-          {t("ui.replayTeori")}
-        </button>
       </div>
 
       {/* "Rätt!" - the answer stays in view while the child takes in that it was right; then the next question. */}
