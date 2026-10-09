@@ -58,6 +58,10 @@ export default defineConfig({
         // Everything (including the digit-recognizer model, once added) is
         // precached so the game works fully offline after the first visit.
         globPatterns: ['**/*.{js,css,html,svg,png,json,bin}'],
+        // A new version takes over at once instead of waiting for every tab to close. The plugin only
+        // sets these itself when it injects the registration - main.tsx does that here.
+        skipWaiting: true,
+        clientsClaim: true,
         // The game bundle (KaTeX, tfjs and all) is over the 2 MiB default.
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         // Storybook is published beside the game (storybook/, see deploy.yml) - inside the worker's

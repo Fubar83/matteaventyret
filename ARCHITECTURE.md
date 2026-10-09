@@ -253,8 +253,10 @@ npm run build-storybook  # static Storybook into storybook-static/
   game's worker is told to leave `storybook/` alone (`navigateFallbackDenylist` in
   `vite.config.ts`) - otherwise it would answer a visit there with the game.
 - **Offline and updates:** `vite-plugin-pwa` precaches everything, models
-  included. `main.tsx` registers the worker with `immediate: true`, so a new
-  version reloads into place at once.
+  included. `main.tsx` registers the worker with `immediate: true`, and the
+  worker skips waiting and claims its pages (`skipWaiting`, `clientsClaim` in
+  `vite.config.ts` - set by hand, because the plugin only sets them when it
+  injects the registration itself), so a new version reloads into place at once.
 - **Version:** `__APP_VERSION__` (the commit and build day) is set at build time
   and shown in Settings.
 - **Storybook** uses the game's Vite config minus the PWA plugin, and keeps
