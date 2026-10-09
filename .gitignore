@@ -31,3 +31,6 @@ dist-ssr
 
 # Screenshots taken while developing (the gallery page, clocks.html, makes them)
 /screenshots
+
+# Storybook build
+storybook-static

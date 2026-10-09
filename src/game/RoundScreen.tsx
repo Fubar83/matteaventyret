@@ -6,20 +6,12 @@ import { questionStars, questionXp, roundStars, type Stars } from "../engine/sco
 import type { MethodId } from "../engine/types";
 import { t } from "../i18n";
 import { Celebration } from "./Celebration";
-import { ChartPlayer } from "./ChartPlayer";
 import type { ColumnProblemSummary } from "./ColumnProblemPlayer";
-import { ColumnProblemPlayer } from "./ColumnProblemPlayer";
-import { ExpressionPlayer } from "./ExpressionPlayer";
 import type { MethodProgress } from "./phaseProgress";
 import { applyOutcome, demoteToEgenOrdning } from "./phaseProgress";
-import { PlaceValuePlayer } from "./PlaceValuePlayer";
 import type { QuestionOutcome } from "./questionOutcome";
+import { QuestionPlayer } from "./QuestionPlayer";
 import { ResultScreen } from "./ResultScreen";
-import { StatisticsPlayer } from "./StatisticsPlayer";
-import { TrappanPlayer } from "./TrappanPlayer";
-import { MulPlayer } from "./MulPlayer";
-import { ClockPlayer } from "./ClockPlayer";
-import { ShopPlayer } from "./shop/ShopPlayer";
 import type { StageMeta } from "./stages";
 
 type ColumnMethod = Extract<MethodId, "columnAdd" | "columnSub" | "columnMul">;
@@ -161,29 +153,15 @@ export function RoundScreen({ stage, progress, onProgressChange, onRoundComplete
         </div>
       )}
 
-      {problem.kind === "placeValue" ? (
-        <PlaceValuePlayer key={index} problem={problem} onSolved={record} />
-      ) : problem.kind === "statistics" ? (
-        <StatisticsPlayer key={index} problem={problem} level={stage.writingLevel} onSolved={record} />
-      ) : problem.kind === "chart" ? (
-        <ChartPlayer key={index} problem={problem} level={stage.writingLevel} onSolved={record} />
-      ) : problem.kind === "expression" ? (
-        <ExpressionPlayer key={`${roundKey}-${index}`} problem={problem} level={stage.writingLevel} onSolved={record} first={index === 0} />
-      ) : problem.kind === "shop" ? (
-        <ShopPlayer key={`${roundKey}-${index}`} problem={problem} onSolved={record} />
-      ) : problem.kind === "clock" ? (
-        <ClockPlayer key={`${roundKey}-${index}`} problem={problem} onSolved={record} />
-      ) : problem.kind === "mulGuided" ? (
-        <MulPlayer key={`${roundKey}-${index}`} problem={problem} onSolved={record} first={index === 0} />
-      ) : problem.kind === "trappan" ? (
-        <TrappanPlayer key={`${roundKey}-${index}`} problem={problem} onSolved={record} first={index === 0} />
-      ) : problem.kind === "shortDiv" ? (
-        // shortDiv has its own board layout (kort division), not yet wired into a
-        // player component - not reachable yet since no StageMeta uses it (see stages.ts).
-        null
-      ) : (
-        <ColumnProblemPlayer key={index} problem={problem} phase={currentMethod ? progress[currentMethod].phase : "fritt"} onSolved={handleColumnSolved} />
-      )}
+      <QuestionPlayer
+        key={`${roundKey}-${index}`}
+        problem={problem}
+        level={stage.writingLevel}
+        phase={currentMethod ? progress[currentMethod].phase : "fritt"}
+        first={index === 0}
+        onSolved={record}
+        onColumnSolved={handleColumnSolved}
+      />
     </div>
   );
 }

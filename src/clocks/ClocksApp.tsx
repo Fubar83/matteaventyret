@@ -110,7 +110,7 @@ function SkyPreview({ hour }: { hour: number }) {
 /** "125,25" as written: its digits and how many come after the comma. */
 const asDecimal = (text: string): Decimal => {
   const [whole, frac = ""] = text.split(/[,.]/);
-  return { digits: (whole + frac).replace(/^0+(?=d)/, ""), decimals: frac.length };
+  return { digits: (whole + frac).replace(/^0+(?=\d)/, ""), decimals: frac.length };
 };
 
 /** `&a=125,25&b=12,7&round=1` (or `&rest`): a division of your own instead of a generated one. */

@@ -6,7 +6,7 @@ import type { QuestionOutcome } from "./questionOutcome";
 import { NextSheet } from "./NextSheet";
 
 type Mode = "choose" | "write";
-const MODE_KEY = "matteaventyret-quickmode";
+export const MODE_KEY = "matteaventyret-quickmode";
 
 function loadMode(): Mode {
   try {

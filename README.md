@@ -14,9 +14,12 @@ npm run dev       # the game, at http://localhost:5173
 npm test          # engine + UI unit tests (vitest)
 npm run build     # production build in dist/
 npm run trainer   # Träningsverkstan, the recognizer-training tool (never shipped to players)
+npm run storybook # every kind of question in Storybook, at http://localhost:6006
 ```
 
 The gallery page `http://localhost:5173/clocks.html` shows the clocks, scenes, shop, trappan and multiplication boards on their own, for example `clocks.html?mul=2.1.6&a=0,2&b=0,03&step=0` or `clocks.html?trappan=2.5.7&a=125,25&b=12,7&round=1&step=0`.
+
+Storybook (`src/stories/`) has a story file per kind of question, with every level in its Nivå setting and the variants as stories of their own (a clock to read, change to give, your own trappan division...). A new kind of question or a new level method needs a story: `src/stories/storyCoverage.test.ts` fails until `src/stories/catalog.ts` lists it.
 
 ## Project layout
 
