@@ -6,12 +6,12 @@
  * still has a level that makes it.
  */
 import type { GeneratedProblem } from "../engine/generator";
-import type { AdvancedProblem } from "../engine/advanced";
-import type { ClockProblem } from "../engine/clock";
-import type { ShopProblem } from "../engine/shop";
-import type { TrappanProblem } from "../engine/trappan";
-import type { MulGuidedProblem } from "../engine/multiply";
-import type { QuestionScene } from "../engine/questionScene";
+import type { AdvancedProblem } from "../engine/questions/written/problem";
+import type { ClockProblem } from "../engine/questions/clock";
+import type { ShopProblem } from "../engine/questions/shop";
+import type { TrappanProblem } from "../engine/questions/trappan";
+import type { MulGuidedProblem } from "../engine/questions/multiply";
+import type { QuestionScene } from "../engine/questions/written/questionScene";
 
 export type Match = (p: GeneratedProblem) => boolean;
 

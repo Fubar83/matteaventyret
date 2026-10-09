@@ -1,6 +1,6 @@
 /** Questions of your own, for the stories: a division for trappan, a multiplication for the guided board. */
-import type { MulGuidedProblem, MulGuidedStageId } from "../engine/multiply";
-import { roundTo, valueOf, walkOf, type Decimal, type TrappanProblem, type TrappanStageId } from "../engine/trappan";
+import type { MulGuidedProblem, MulGuidedStageId } from "../engine/questions/multiply";
+import { roundTo, valueOf, walkOf, type Decimal, type TrappanProblem, type TrappanStageId } from "../engine/questions/trappan";
 
 /** "125,25" (or "125.25") as written: its digits and how many come after the comma. */
 export function asDecimal(text: string): Decimal {

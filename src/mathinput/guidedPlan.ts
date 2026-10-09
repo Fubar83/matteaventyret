@@ -64,7 +64,7 @@ export interface GuidedStep {
   choice?: { options: string[]; correct: number; whyNot: string[] };
 }
 
-/** Any guided board - a column calculation (planGuided), a trappan division (game/trappanPlan.ts): what GuidedColumn walks through. */
+/** Any guided board - a column calculation (planGuided), a trappan division (game/questions/trappan/trappanPlan.ts): what GuidedColumn walks through. */
 export interface GuidedBoardPlan {
   /** e.g. "123 · 567" */
   title: string;

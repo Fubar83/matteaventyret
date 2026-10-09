@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildGraph } from "../../engine/methods/columnAdd";
 import { buildGraph as buildSubGraph } from "../../engine/methods/columnSub";
-import { exempelPrompt } from "../exempelPrompts";
+import { exempelPrompt } from "../questions/column/exempelPrompts";
 
 describe("exempelPrompt", () => {
   it("asks about just the two digits when the column has no incoming carry", () => {

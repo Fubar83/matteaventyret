@@ -3,7 +3,7 @@ import { answerOf } from "../../mathinput/stepCheck";
 import { checkWrittenAnswer, withoutUnits } from "../../mathinput/workCheck";
 import { generateRound } from "../generator";
 import { makeRng } from "../rng";
-import { TEMPLATES, WORD_GENERATORS, wordTexts } from "../wordProblems";
+import { TEMPLATES, WORD_GENERATORS, wordTexts } from "../questions/written/wordProblems";
 
 describe("word problems", () => {
   it("has a hundred stories, each with a wording in both languages", () => {

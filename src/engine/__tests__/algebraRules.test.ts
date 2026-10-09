@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { parseExpression } from "../../mathinput/evaluate";
 import { checkWrittenAnswer, type Answer } from "../../mathinput/workCheck";
-import { ADVANCED_GENERATORS, type AdvancedProblem } from "../advanced";
+import { ADVANCED_GENERATORS } from "../questions/written/advanced";
+import { type AdvancedProblem } from "../questions/written/problem";
 import { makeRng } from "../rng";
 
 /** The problem's answer in the checker's form - as ExpressionPlayer builds it. */

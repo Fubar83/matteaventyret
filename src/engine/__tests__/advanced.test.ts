@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { parseExpression } from "../../mathinput/evaluate";
 import { checkWrittenAnswer, type Answer } from "../../mathinput/workCheck";
-import { ADVANCED_GENERATORS, tex, type AdvancedProblem, type AdvancedStageId } from "../advanced";
+import { ADVANCED_GENERATORS, type AdvancedStageId } from "../questions/written/advanced";
+import { tex, type AdvancedProblem } from "../questions/written/problem";
 import { generateRound } from "../generator";
 import { makeRng } from "../rng";
 

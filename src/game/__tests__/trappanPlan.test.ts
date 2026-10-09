@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { makeRng } from "../../engine/rng";
-import { decimalText, TRAPPAN_GENERATORS, walkOf, type TrappanProblem } from "../../engine/trappan";
+import { decimalText, TRAPPAN_QUESTIONS, walkOf, type TrappanProblem } from "../../engine/questions/trappan";
 import { revealedAt } from "../draw/boardTypes";
-import { trappanPlan } from "../trappanPlan";
+import { trappanPlan } from "../questions/trappan/trappanPlan";
 
 describe("the trappan board", () => {
   it("has a box for every step, each used once, and the quotient boxes spell the answer", () => {
     const rng = makeRng(23);
-    for (const [stage, gen] of Object.entries(TRAPPAN_GENERATORS)) {
+    for (const [stage, gen] of Object.entries(TRAPPAN_QUESTIONS.levels)) {
       for (let i = 0; i < 100; i++) {
         const p = gen(rng);
         const plan = trappanPlan(p);

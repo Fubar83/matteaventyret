@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { answerOf, checkStep } from "../../mathinput/stepCheck";
-import { ADVANCED_GENERATORS, stepsOf } from "../advanced";
-import { EXAM_GENERATORS } from "../examTopics";
-import { WORD_GENERATORS } from "../wordProblems";
-import { GEOMETRY_GENERATORS } from "../geometry";
-import { BASIC_GENERATORS } from "../basicTopics";
+import { ADVANCED_GENERATORS } from "../questions/written/advanced";
+import { stepsOf } from "../questions/written/problem";
+import { EXAM_GENERATORS } from "../questions/written/examTopics";
+import { WORD_GENERATORS } from "../questions/written/wordProblems";
+import { GEOMETRY_GENERATORS } from "../questions/written/geometry";
+import { BASIC_GENERATORS } from "../questions/written/basicTopics";
 import { makeRng } from "../rng";
 
 const GENERATORS = { ...ADVANCED_GENERATORS, ...GEOMETRY_GENERATORS, ...EXAM_GENERATORS, ...WORD_GENERATORS, ...BASIC_GENERATORS };

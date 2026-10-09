@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { GroupThing, QuestionScene as Scene, ScaleTerm } from "../../engine/questionScene";
+import type { GroupThing, QuestionScene as Scene, ScaleTerm } from "../../engine/questions/written/questionScene";
 import { t } from "../../i18n";
 import { Sprite } from "./Sprite";
 import { UnitStairs } from "./UnitStairs";

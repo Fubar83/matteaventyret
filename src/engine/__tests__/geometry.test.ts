@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { checkWrittenAnswer, withoutUnits } from "../../mathinput/workCheck";
-import type { AdvancedProblem } from "../advanced";
-import { GEOMETRY_GENERATORS } from "../geometry";
+import type { AdvancedProblem } from "../questions/written/problem";
+import { GEOMETRY_GENERATORS } from "../questions/written/geometry";
 import { generateRound } from "../generator";
 import { makeRng } from "../rng";
 

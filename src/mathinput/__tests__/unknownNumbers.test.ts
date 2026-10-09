@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { givenNumbers } from "../../engine/advanced";
-import { GEOMETRY_GENERATORS } from "../../engine/geometry";
+import { givenNumbers } from "../../engine/questions/written/problem";
+import { GEOMETRY_GENERATORS } from "../../engine/questions/written/geometry";
 import { makeRng } from "../../engine/rng";
 import { highlightInLatex, inkNumbers } from "../highlightNumbers";
 import type { BoundingBox } from "../segmentation";

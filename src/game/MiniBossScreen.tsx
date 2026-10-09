@@ -5,8 +5,8 @@ import { makeRng } from "../engine/rng";
 import type { MethodId } from "../engine/types";
 import { BOSS_MAX_HP, pickBossStage } from "./boss";
 import { BossMonster } from "./BossMonster";
-import type { ColumnProblemSummary } from "./ColumnProblemPlayer";
-import { ColumnProblemPlayer } from "./ColumnProblemPlayer";
+import type { ColumnProblemSummary } from "./questions/column/ColumnProblemPlayer";
+import { ColumnProblemPlayer } from "./questions/column/ColumnProblemPlayer";
 import type { MethodProgress } from "./phaseProgress";
 
 const Confetti = lazy(() => import("../fx/Confetti").then((m) => ({ default: m.Confetti })));

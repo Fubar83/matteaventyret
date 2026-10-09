@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeRng } from "../rng";
-import { decimalText, roundTo, shifted, TRAPPAN_GENERATORS, valueOf, walk, walkOf, type TrappanProblem } from "../trappan";
+import { decimalText, roundTo, shifted, TRAPPAN_QUESTIONS, valueOf, walk, walkOf, type TrappanProblem } from "../questions/trappan";
 
 const whole = (n: number) => ({ digits: String(n), decimals: 0 });
 
@@ -54,7 +54,7 @@ describe("trappan", () => {
 
   it("every question ends in a result: it comes out even, or the rest left is rounded away", () => {
     const rng = makeRng(29);
-    for (const [stage, gen] of Object.entries(TRAPPAN_GENERATORS)) {
+    for (const [stage, gen] of Object.entries(TRAPPAN_QUESTIONS.levels)) {
       for (let i = 0; i < 500; i++) {
         const p = gen(rng);
         const w = walkOf(p);
@@ -74,7 +74,7 @@ describe("trappan", () => {
 
   it("every level's questions work out: the answer is the division, exact where it should be", () => {
     const rng = makeRng(17);
-    for (const [stage, gen] of Object.entries(TRAPPAN_GENERATORS)) {
+    for (const [stage, gen] of Object.entries(TRAPPAN_QUESTIONS.levels)) {
       for (let i = 0; i < 300; i++) {
         const p = gen(rng);
         const w = walkOf(p);
@@ -99,15 +99,15 @@ describe("trappan", () => {
   it("keeps each level to its kind of numbers", () => {
     const rng = makeRng(3);
     for (let i = 0; i < 100; i++) {
-      const p1 = TRAPPAN_GENERATORS["2.5.1"](rng);
+      const p1 = TRAPPAN_QUESTIONS.levels["2.5.1"](rng);
       expect(p1.dividend.digits).toHaveLength(2);
       expect(p1.divisor.digits).toHaveLength(1);
-      expect(TRAPPAN_GENERATORS["2.5.2"](rng).dividend.digits).toHaveLength(3);
-      expect(TRAPPAN_GENERATORS["2.5.3"](rng).answer % 1).not.toBe(0);
-      expect(TRAPPAN_GENERATORS["2.5.4"](rng).divisor.digits).toHaveLength(2);
-      expect(TRAPPAN_GENERATORS["2.5.5"](rng).dividend.decimals).toBeGreaterThan(0);
-      expect(TRAPPAN_GENERATORS["2.5.6"](rng).divisor.decimals).toBeGreaterThan(0);
-      const p7 = TRAPPAN_GENERATORS["2.5.7"](rng);
+      expect(TRAPPAN_QUESTIONS.levels["2.5.2"](rng).dividend.digits).toHaveLength(3);
+      expect(TRAPPAN_QUESTIONS.levels["2.5.3"](rng).answer % 1).not.toBe(0);
+      expect(TRAPPAN_QUESTIONS.levels["2.5.4"](rng).divisor.digits).toHaveLength(2);
+      expect(TRAPPAN_QUESTIONS.levels["2.5.5"](rng).dividend.decimals).toBeGreaterThan(0);
+      expect(TRAPPAN_QUESTIONS.levels["2.5.6"](rng).divisor.decimals).toBeGreaterThan(0);
+      const p7 = TRAPPAN_QUESTIONS.levels["2.5.7"](rng);
       expect(p7.roundTo).toBe(1);
       expect(p7.dividend.decimals).toBeGreaterThan(0);
       expect(p7.divisor.decimals).toBe(1);

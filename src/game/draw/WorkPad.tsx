@@ -40,8 +40,6 @@ const NONE: readonly number[] = [];
 const ORDER_COLOR = "#d97706";
 
 interface WorkPadProps {
-  /** A line to trace (LaTeX), shown faint under the ink - Guidat's help from the start (StepSolver.tsx). */
-  trace?: string;
   /** Whose handwriting it is (recognition/levels.ts). */
   level: WritingLevel;
   /** The line over the pad. */
@@ -66,7 +64,7 @@ interface WorkPadProps {
  * tänkte" under an answer, and for the solution of an åk 7+ question. What
  * it reads is shown typeset underneath, so a misread is noticed right away.
  */
-export function WorkPad({ level, title, subtitle, rows = 3, onChange, resetToken = 0, disabled, highlight = NONE, profile, trace }: WorkPadProps) {
+export function WorkPad({ level, title, subtitle, rows = 3, onChange, resetToken = 0, disabled, highlight = NONE, profile }: WorkPadProps) {
   const inkRef = useRef<InkCanvasHandle>(null);
   const boardBox = useRef<HTMLDivElement>(null);
   const boardWidth = useWidth(boardBox);
@@ -150,16 +148,6 @@ export function WorkPad({ level, title, subtitle, rows = 3, onChange, resetToken
         tool={tool}
         onStrokesChange={handleStrokes}
         inkColors={inkColors}
-        guides={
-          trace ? (
-            // Written-size and faint, on the first line - to trace over, not to read off.
-            <foreignObject x={24} y={8} width={width - 40} height={Math.min(height - 16, 120)} pointerEvents="none">
-              <div style={{ fontSize: 54, color: "#94a3b8", opacity: 0.6, lineHeight: 1.5 }}>
-                <Tex latex={trace} />
-              </div>
-            </foreignObject>
-          ) : undefined
-        }
       />
       </div>
       <OrderHint symbols={symbols} />

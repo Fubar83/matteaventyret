@@ -4,7 +4,7 @@
  * solution so far (workCheck.ts): does it still hold, does it bring in a
  * number that came from nowhere - and is it the answer.
  */
-import { givenNumbers, type AdvancedProblem } from "../engine/advanced";
+import { givenNumbers, type AdvancedProblem } from "../engine/questions/written/problem";
 import { parseExpression, parseLines } from "./evaluate";
 import { checkWrittenAnswer, isSimplestFraction, isSimplified, numbersIn, withoutUnits, type Answer } from "./workCheck";
 

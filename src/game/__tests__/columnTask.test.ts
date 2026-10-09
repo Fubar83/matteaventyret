@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { planGuided } from "../../mathinput/guidedPlan";
-import { columnTaskIn, show, wholeNumberTask } from "../columnTask";
+import { columnTaskIn, show, wholeNumberTask } from "../questions/written/columnTask";
 
 describe("a calculation from a step, set up in a column", () => {
   it("finds the last product or sum written in the step, digits spaced as the reader writes them", () => {

@@ -6,11 +6,11 @@ import { questionStars, questionXp, roundStars, type Stars } from "../engine/sco
 import type { MethodId } from "../engine/types";
 import { t } from "../i18n";
 import { Celebration } from "./Celebration";
-import type { ColumnProblemSummary } from "./ColumnProblemPlayer";
+import type { ColumnProblemSummary } from "./questions/column/ColumnProblemPlayer";
 import type { MethodProgress } from "./phaseProgress";
 import { applyOutcome, demoteToEgenOrdning } from "./phaseProgress";
-import type { QuestionOutcome } from "./questionOutcome";
-import { QuestionPlayer } from "./QuestionPlayer";
+import type { QuestionOutcome } from "./questions/questionOutcome";
+import { QuestionPlayer } from "./questions/QuestionPlayer";
 import { ResultScreen } from "./ResultScreen";
 import type { StageMeta } from "./stages";
 

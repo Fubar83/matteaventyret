@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BASIC_GENERATORS } from "../basicTopics";
+import { BASIC_GENERATORS } from "../questions/written/basicTopics";
 import { generateRound } from "../generator";
 import { makeRng } from "../rng";
 

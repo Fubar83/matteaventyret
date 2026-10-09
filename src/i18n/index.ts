@@ -1,10 +1,10 @@
-import { wordTexts } from "../engine/wordProblems";
+import { wordTexts } from "../engine/questions/written/wordProblems";
 import en from "./en.json";
 import sv from "./sv.json";
 
 export type Locale = "sv" | "en";
 
-/** The word problems' stories live with their maths (engine/wordProblems.ts) and are merged in here. */
+/** The word problems' stories live with their maths (engine/questions/written/wordProblems.ts) and are merged in here. */
 const DICTS: Record<Locale, Record<string, string>> = { sv: { ...sv, ...wordTexts("sv") }, en: { ...en, ...wordTexts("en") } };
 
 // Swedish is the default and only active locale until the language toggle

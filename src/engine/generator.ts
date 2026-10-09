@@ -1,676 +1,71 @@
 /**
- * Pattern-based problem generator for level 1.1, stages 1-7 (see the build
- * brief's "Problem generation and validation" table). Every problem is built
- * column by column to match its stage's exact carry/växling pattern, then
- * independently re-verified before being handed back — a generator bug
- * should never reach a child.
+ * Every type of question (engine/questions/), and making questions and
+ * rounds from them. This file knows no type in particular: each one's levels,
+ * kinds and when two of its questions are the same live in its own module
+ * (see questions/questionType.ts) - adding a type is adding it to the list.
  */
-import { digitAt, digitsToNumber } from "./digits";
-import { computeShortDivisionPlan } from "./methods/shortDiv";
-import {
-  classifyAdditionCarries,
-  classifyMultiplicationCarries,
-  classifySubtractionBorrows,
-  verifyAddition,
-  verifyDivision,
-  verifyMultiplication,
-  verifySubtraction,
-} from "./verifier";
-import { ADVANCED_GENERATORS, type AdvancedProblem, type AdvancedStageId } from "./advanced";
-import { GEOMETRY_GENERATORS, type GeometryStageId } from "./geometry";
-import { TRAPPAN_GENERATORS, type TrappanProblem, type TrappanStageId } from "./trappan";
-import { MUL_GUIDED_GENERATORS, type MulGuidedProblem, type MulGuidedStageId } from "./multiply";
-import { CLOCK_GENERATORS, type ClockProblem, type ClockStageId } from "./clock";
-import { SHOP_GENERATORS, type ShopProblem, type ShopStageId } from "./shop";
-import { EXAM_GENERATORS, type ExamStageId } from "./examTopics";
-import { WORD_GENERATORS, type WordStageId } from "./wordProblems";
-import { BASIC_GENERATORS, type BasicStageId } from "./basicTopics";
+import { CHART_QUESTIONS } from "./questions/chart";
+import { CLOCK_QUESTIONS } from "./questions/clock";
+import { COLUMN_QUESTIONS } from "./questions/column";
+import { MUL_GUIDED_QUESTIONS } from "./questions/multiply";
+import { PLACE_VALUE_QUESTIONS } from "./questions/placeValue";
+import { MAX_ATTEMPTS } from "./questions/questionType";
+import { SHOP_QUESTIONS } from "./questions/shop";
+import { SHORT_DIVISION_QUESTIONS } from "./questions/shortDivision";
+import { STATISTICS_QUESTIONS } from "./questions/statistics";
+import { TRAPPAN_QUESTIONS } from "./questions/trappan";
+import { WRITTEN_QUESTIONS } from "./questions/written";
 import type { Rng } from "./rng";
-import { randInt, shuffle } from "./rng";
 
-export type StageId =
-  | "1.1.1"
-  | "1.1.2"
-  | "1.1.3"
-  | "1.1.4"
-  | "1.1.5"
-  | "1.1.6"
-  | "1.1.7"
-  | "2.1.1"
-  | "2.1.2"
-  | "2.1.3"
-  | "2.2.1"
-  | "2.2.2"
-  | "2.2.3"
-  | "2.2.4"
-  | "2.3.3"
-  | "2.3.4"
-  | "2.7.1"
-  | "2.7.2"
-  | "2.7.3"
-  | "2.8.1"
-  | "2.8.2"
-  | "2.8.3"
-  | TrappanStageId
-  | MulGuidedStageId
-  | ClockStageId
-  | ShopStageId
-  | ExamStageId
-  | WordStageId
-  | BasicStageId
-  | AdvancedStageId
-  | GeometryStageId;
+/** Every type of question there is. */
+export const QUESTION_TYPES = [
+  PLACE_VALUE_QUESTIONS,
+  COLUMN_QUESTIONS,
+  SHORT_DIVISION_QUESTIONS,
+  STATISTICS_QUESTIONS,
+  CHART_QUESTIONS,
+  TRAPPAN_QUESTIONS,
+  MUL_GUIDED_QUESTIONS,
+  CLOCK_QUESTIONS,
+  SHOP_QUESTIONS,
+  WRITTEN_QUESTIONS,
+] as const;
 
-type AddSubStageId = "1.1.2" | "1.1.3" | "1.1.4" | "1.1.5" | "1.1.6" | "1.1.7";
-type MulStageId = "2.1.1" | "2.1.2" | "2.1.3";
-type DivStageId = "2.2.1" | "2.2.2" | "2.2.3" | "2.2.4";
-type DecimalStageId = "2.3.3" | "2.3.4";
-type StatStageId = "2.7.1" | "2.7.2" | "2.7.3";
-export type StatMeasure = "mean" | "median" | "mode";
-type ChartStageId = "2.8.1" | "2.8.2" | "2.8.3";
-export type ChartQuestionType = "lookup" | "difference" | "sum";
-/** i18n keys (see i18n/sv.json, en.json's "chart.cat.*") - always 4 fixed fruit categories, kept short across screens. */
-export const CHART_CATEGORY_KEYS = ["chart.cat.apple", "chart.cat.banana", "chart.cat.pear", "chart.cat.orange"] as const;
+type AnyType = (typeof QUESTION_TYPES)[number];
+/** A question, of any type. */
+export type GeneratedProblem = AnyType extends infer T ? (T extends { key: (problem: infer P) => string } ? P : never) : never;
+/** A level, of any type. */
+export type StageId = AnyType extends infer T ? (T extends { levels: infer L } ? keyof L & string : never) : never;
+/** What a type of question is called (questions/questionType.ts's `id`). */
+export type QuestionTypeId = AnyType["id"];
+/** The kinds of question there are - what a player is picked by. */
+export type QuestionKind = GeneratedProblem["kind"];
 
-export type GeneratedProblem =
-  | { stageId: "1.1.1"; kind: "placeValue"; number: number; columnAsked: number; answer: number }
-  | { stageId: AddSubStageId | DecimalStageId; kind: "columnAdd"; top: number; bottom: number; answer: number; decimalPlaces?: number }
-  | { stageId: AddSubStageId | DecimalStageId; kind: "columnSub"; top: number; bottom: number; answer: number; decimalPlaces?: number }
-  | { stageId: MulStageId; kind: "columnMul"; top: number; bottom: number; answer: number }
-  | { stageId: DivStageId; kind: "shortDiv"; dividend: number; divisor: number; answer: number; remainder: number }
-  | { stageId: StatStageId; kind: "statistics"; measure: StatMeasure; values: number[]; answer: number }
-  | {
-      stageId: ChartStageId;
-      kind: "chart";
-      categoryKeys: readonly string[];
-      values: number[];
-      questionType: ChartQuestionType;
-      askIndex?: number;
-      compareIndices?: [number, number];
-      answer: number;
-    }
-  | TrappanProblem
-  | MulGuidedProblem
-  | ClockProblem
-  | ShopProblem
-  | AdvancedProblem;
+/** The type a level belongs to, by its id. */
+const TYPE_OF_LEVEL = new Map<string, AnyType>(QUESTION_TYPES.flatMap((type) => Object.keys(type.levels).map((id) => [id, type] as const)));
+/** The type a kind of question belongs to. */
+const TYPE_OF_KIND = new Map<string, AnyType>(QUESTION_TYPES.flatMap((type) => type.kinds.map((kind) => [kind, type] as const)));
 
-const MAX_ATTEMPTS = 200;
+/** Every level there is, playable or not (game/stages.ts says which are, and where). */
+export const STAGE_IDS = [...TYPE_OF_LEVEL.keys()] as StageId[];
 
-function isTrivial(top: number, bottom: number, op: "add" | "sub"): boolean {
-  if (top <= 1 || bottom <= 1) return true;
-  if (top === bottom) return true;
-  if (op === "sub" && top - bottom === 0) return true;
-  return false;
+/** The type of question a level asks. */
+export function questionTypeOf(stageId: StageId): AnyType {
+  const type = TYPE_OF_LEVEL.get(stageId);
+  if (!type) throw new Error(`No question type has level ${stageId}`);
+  return type;
 }
-
-/** Number of 0 digits in `n`. Used to enforce "at most one 0 per operand". */
-function zeroDigitCount(n: number): number {
-  return n
-    .toString()
-    .split("")
-    .filter((d) => d === "0").length;
-}
-
-/** True if either operand has more than one 0 digit (not allowed outside stage 7 zero-borrow problems). */
-function hasTooManyZeros(top: number, bottom: number): boolean {
-  return zeroDigitCount(top) > 1 || zeroDigitCount(bottom) > 1;
-}
-
-/** Builds an addition problem of `len` digits per operand with an exact carry pattern. */
-function buildAdditionWithCarryPattern(rng: Rng, len: number, carryAt: Set<number>): { top: number; bottom: number } {
-  const topDigits: number[] = new Array(len);
-  const bottomDigits: number[] = new Array(len);
-  let carryIn = 0;
-  for (let col = 0; col < len; col++) {
-    const leading = col === len - 1;
-    const wantCarry = carryAt.has(col);
-    let topDigit: number;
-    let bottomDigit: number;
-    if (wantCarry) {
-      // topDigit must be at least 1 so a bottom digit big enough to force a
-      // carry (>= 10 - carryIn - topDigit) always exists within 0-9.
-      topDigit = randInt(rng, 1, 9);
-      const minBottom = Math.max(0, 10 - carryIn - topDigit);
-      bottomDigit = randInt(rng, minBottom, 9 - carryIn);
-    } else {
-      topDigit = randInt(rng, leading ? 1 : 0, 9 - carryIn);
-      const maxBottom = 9 - carryIn - topDigit;
-      bottomDigit = randInt(rng, 0, maxBottom);
-    }
-    topDigits[col] = topDigit;
-    bottomDigits[col] = bottomDigit;
-    const sum = topDigit + bottomDigit + carryIn;
-    carryIn = sum >= 10 ? 1 : 0;
-  }
-  return { top: digitsToNumber(topDigits), bottom: digitsToNumber(bottomDigits) };
-}
-
-/** Builds a subtraction problem of `len` digits with an exact borrow pattern (top >= bottom guaranteed). */
-function buildSubtractionWithBorrowPattern(
-  rng: Rng,
-  len: number,
-  borrowAt: Set<number>,
-  zeroColumns: Set<number> = new Set()
-): { top: number; bottom: number } {
-  const topDigits: number[] = new Array(len);
-  const bottomDigits: number[] = new Array(len);
-  const adjusted: number[] = new Array(len);
-
-  for (let col = 0; col < len; col++) {
-    const leading = col === len - 1;
-    if (zeroColumns.has(col) && !leading) {
-      topDigits[col] = 0;
-    } else if (borrowAt.has(col) && !leading) {
-      // A column asked to be independently deficient must not be accidentally
-      // swept up as a zero-passthrough by another column's cascade search,
-      // and must stay below 9 so a bottom digit greater than it always exists.
-      topDigits[col] = randInt(rng, 1, 8);
-    } else {
-      topDigits[col] = randInt(rng, leading ? 1 : 0, 9);
-    }
-    adjusted[col] = topDigits[col];
-  }
-
-  // Resolve any requested borrow that would run into a zero column by lending
-  // it forward first, mirroring the engine's own cascade so the requested
-  // pattern is exactly what the child will see.
-  for (let col = 0; col < len; col++) {
-    if (!borrowAt.has(col)) continue;
-    let j = col + 1;
-    while (j < len && adjusted[j] === 0) {
-      adjusted[j] = 9;
-      j++;
-    }
-    if (j < len) adjusted[j] -= 1;
-  }
-
-  for (let col = 0; col < len; col++) {
-    const wantBorrow = borrowAt.has(col);
-    const cap = adjusted[col]; // the top value actually available at this column
-    if (wantBorrow) {
-      bottomDigits[col] = randInt(rng, cap + 1, 9);
-    } else {
-      bottomDigits[col] = randInt(rng, 0, cap);
-    }
-  }
-
-  return { top: digitsToNumber(topDigits), bottom: digitsToNumber(bottomDigits) };
-}
-
-/**
- * Builds a `top * multiplier` problem (single-digit multiplier) of `len`
- * digits with an exact carry pattern. Returns null if the requested pattern
- * is infeasible for this multiplier (caller retries with a fresh multiplier).
- */
-function buildMultiplicationWithCarryPattern(
-  rng: Rng,
-  len: number,
-  multiplier: number,
-  carryAt: Set<number>
-): { top: number } | null {
-  const topDigits: number[] = new Array(len);
-  let carryIn = 0;
-  for (let col = 0; col < len; col++) {
-    const leading = col === len - 1;
-    const minDigit = leading ? 1 : 0;
-    const wantCarry = carryAt.has(col);
-    let topDigit: number;
-    if (wantCarry) {
-      const minForCarry = Math.ceil((10 - carryIn) / multiplier);
-      if (minForCarry > 9) return null;
-      topDigit = randInt(rng, Math.max(minDigit, minForCarry), 9);
-    } else {
-      const maxForNoCarry = Math.floor((9 - carryIn) / multiplier);
-      if (maxForNoCarry < minDigit) return null;
-      topDigit = randInt(rng, minDigit, maxForNoCarry);
-    }
-    topDigits[col] = topDigit;
-    const product = topDigit * multiplier + carryIn;
-    carryIn = Math.floor(product / 10);
-  }
-  return { top: digitsToNumber(topDigits) };
-}
-
-function chooseColumns(rng: Rng, fromCols: readonly number[], count: number): Set<number> {
-  const chosen = new Set<number>();
-  const n = Math.min(count, fromCols.length);
-  while (chosen.size < n) chosen.add(fromCols[randInt(rng, 0, fromCols.length - 1)]);
-  return chosen;
-}
-
-function makeKey(p: GeneratedProblem): string {
-  if (p.kind === "placeValue") return `pv:${p.number}:${p.columnAsked}`;
-  // The worked solution too: a geometry question is all in its figure, with no display to tell two apart.
-  if (p.kind === "expression") return `adv:${p.stageId}:${p.display}:${JSON.stringify(p.promptVars ?? {})}:${p.solution.join("|")}`;
-  if (p.kind === "shortDiv") return `${p.kind}:${p.dividend}:${p.divisor}`;
-  if (p.kind === "shop") return `${p.kind}:${p.mode}:${p.buy.join(",")}:${p.total}:${p.paidWith.join(",")}`;
-  if (p.kind === "clock") return `${p.kind}:${p.h}:${p.m}`;
-  if (p.kind === "mulGuided") return `${p.kind}:${p.top.digits}/${p.top.decimals}:${p.bottom.digits}/${p.bottom.decimals}`;
-  if (p.kind === "trappan") return `${p.kind}:${p.dividend.digits}/${p.dividend.decimals}:${p.divisor.digits}/${p.divisor.decimals}`;
-  if (p.kind === "statistics") return `${p.kind}:${p.measure}:${p.values.join(",")}`;
-  if (p.kind === "chart") return `${p.kind}:${p.questionType}:${p.values.join(",")}:${p.askIndex ?? ""}:${p.compareIndices?.join("-") ?? ""}`;
-  return `${p.kind}:${p.top}:${p.bottom}`;
-}
-
-function isTrivialMul(top: number, bottom: number): boolean {
-  return top <= 1 || bottom <= 1;
-}
-
-function generateStage1(rng: Rng): GeneratedProblem {
-  const number = randInt(rng, 1000, 9999);
-  const columnAsked = randInt(rng, 0, 3);
-  const digit = digitAt(number, columnAsked);
-  const answer = digit * 10 ** columnAsked;
-  return { stageId: "1.1.1", kind: "placeValue", number, columnAsked, answer };
-}
-
-function generateStage2(rng: Rng): GeneratedProblem {
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const len = randInt(rng, 2, 3);
-    const { top, bottom } = buildAdditionWithCarryPattern(rng, len, new Set());
-    if (isTrivial(top, bottom, "add") || hasTooManyZeros(top, bottom)) continue;
-    return finalizeAdd("1.1.2", top, bottom);
-  }
-  throw new Error("generateStage2: exhausted attempts");
-}
-
-function generateStage3(rng: Rng): GeneratedProblem {
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const len = randInt(rng, 2, 3);
-    const { top, bottom } = buildSubtractionWithBorrowPattern(rng, len, new Set());
-    if (top - bottom < 10) continue;
-    if (isTrivial(top, bottom, "sub") || hasTooManyZeros(top, bottom)) continue;
-    return finalizeSub("1.1.3", top, bottom);
-  }
-  throw new Error("generateStage3: exhausted attempts");
-}
-
-function generateStage4(rng: Rng): GeneratedProblem {
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const { top, bottom } = buildAdditionWithCarryPattern(rng, 2, new Set([0]));
-    if (top + bottom < 20 || top + bottom > 99) continue;
-    if (isTrivial(top, bottom, "add")) continue;
-    return finalizeAdd("1.1.4", top, bottom);
-  }
-  throw new Error("generateStage4: exhausted attempts");
-}
-
-function generateStage5(rng: Rng): GeneratedProblem {
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const { top, bottom } = buildSubtractionWithBorrowPattern(rng, 2, new Set([0]));
-    if (top - bottom < 10 || top - bottom > 89) continue;
-    if (isTrivial(top, bottom, "sub")) continue;
-    return finalizeSub("1.1.5", top, bottom);
-  }
-  throw new Error("generateStage5: exhausted attempts");
-}
-
-function generateStage6(rng: Rng): GeneratedProblem {
-  const isAdd = rng() < 0.5;
-  const len = 3;
-  const allCols = Array.from({ length: len }, (_, i) => i);
-  const nonLeadingCols = allCols.slice(0, len - 1); // subtraction: the leading column can never borrow
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    if (isAdd) {
-      const carryCols = chooseColumns(rng, allCols, randInt(rng, 2, 3));
-      const { top, bottom } = buildAdditionWithCarryPattern(rng, len, carryCols);
-      if (top + bottom > 1998) continue;
-      if (isTrivial(top, bottom, "add") || hasTooManyZeros(top, bottom)) continue;
-      return finalizeAdd("1.1.6", top, bottom);
-    } else {
-      const borrowCols = chooseColumns(rng, nonLeadingCols, randInt(rng, 2, nonLeadingCols.length));
-      const { top, bottom } = buildSubtractionWithBorrowPattern(rng, len, borrowCols);
-      if (top - bottom < 10) continue;
-      if (isTrivial(top, bottom, "sub") || hasTooManyZeros(top, bottom)) continue;
-      return finalizeSub("1.1.6", top, bottom);
-    }
-  }
-  throw new Error("generateStage6: exhausted attempts");
-}
-
-function generateStage7(rng: Rng): GeneratedProblem {
-  // The level is borrowing across zeros: mostly subtractions that do, some additions to keep it mixed.
-  const isAdd = rng() < 0.25;
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const len = randInt(rng, 3, 4);
-    const allCols = Array.from({ length: len }, (_, i) => i);
-    const nonLeadingCols = allCols.slice(0, len - 1);
-    if (isAdd) {
-      const carryCols = chooseColumns(rng, allCols, randInt(rng, 2, Math.min(3, len)));
-      const { top, bottom } = buildAdditionWithCarryPattern(rng, len, carryCols);
-      if (top + bottom > 19998) continue;
-      if (isTrivial(top, bottom, "add") || hasTooManyZeros(top, bottom)) continue;
-      return finalizeAdd("1.1.7", top, bottom);
-    } else {
-      const zeroAcrossBorrow = rng() < 0.85 && len >= 3;
-      let zeroColumns = new Set<number>();
-      let borrowCols = chooseColumns(rng, nonLeadingCols, randInt(rng, 2, Math.min(3, nonLeadingCols.length)));
-      if (zeroAcrossBorrow) {
-        // Force the ones column's borrow to cross 1-2 zero columns.
-        const maxZeros = Math.min(2, len - 2);
-        const zerosToCross = randInt(rng, 1, maxZeros);
-        zeroColumns = new Set(Array.from({ length: zerosToCross }, (_, k) => k + 1));
-        borrowCols = new Set([0, ...borrowCols]);
-      }
-      const { top, bottom } = buildSubtractionWithBorrowPattern(rng, len, borrowCols, zeroColumns);
-      if (top - bottom < 10) continue;
-      if (isTrivial(top, bottom, "sub")) continue;
-      if (!zeroAcrossBorrow && hasTooManyZeros(top, bottom)) continue;
-      return finalizeSub("1.1.7", top, bottom);
-    }
-  }
-  throw new Error("generateStage7: exhausted attempts");
-}
-
-function generateStage201(rng: Rng): GeneratedProblem {
-  // 2-digit x 1-digit, no minnessiffra.
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const multiplier = randInt(rng, 2, 9);
-    const built = buildMultiplicationWithCarryPattern(rng, 2, multiplier, new Set());
-    if (!built) continue;
-    if (isTrivialMul(built.top, multiplier)) continue;
-    return finalizeMul("2.1.1", built.top, multiplier);
-  }
-  throw new Error("generateStage201: exhausted attempts");
-}
-
-function generateStage202(rng: Rng): GeneratedProblem {
-  // 2-digit x 1-digit, with a minnessiffra from the ones column.
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const multiplier = randInt(rng, 2, 9);
-    const built = buildMultiplicationWithCarryPattern(rng, 2, multiplier, new Set([0]));
-    if (!built) continue;
-    if (isTrivialMul(built.top, multiplier)) continue;
-    return finalizeMul("2.1.2", built.top, multiplier);
-  }
-  throw new Error("generateStage202: exhausted attempts");
-}
-
-function generateStage203(rng: Rng): GeneratedProblem {
-  // 3-digit x 1-digit, carries in one or two columns.
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const multiplier = randInt(rng, 2, 9);
-    const carryCols = chooseColumns(rng, [0, 1], randInt(rng, 1, 2));
-    const built = buildMultiplicationWithCarryPattern(rng, 3, multiplier, carryCols);
-    if (!built) continue;
-    if (isTrivialMul(built.top, multiplier)) continue;
-    return finalizeMul("2.1.3", built.top, multiplier);
-  }
-  throw new Error("generateStage203: exhausted attempts");
-}
-
-function finalizeAdd(stageId: AddSubStageId, top: number, bottom: number): GeneratedProblem {
-  const answer = top + bottom;
-  const check = verifyAddition(top, bottom, answer);
-  if (!check.valid) throw new Error(`generator/verifier mismatch for ${top}+${bottom}: ${check.reason}`);
-  return { stageId, kind: "columnAdd", top, bottom, answer };
-}
-
-function finalizeSub(stageId: AddSubStageId, top: number, bottom: number): GeneratedProblem {
-  const answer = top - bottom;
-  const check = verifySubtraction(top, bottom, answer);
-  if (!check.valid) throw new Error(`generator/verifier mismatch for ${top}-${bottom}: ${check.reason}`);
-  return { stageId, kind: "columnSub", top, bottom, answer };
-}
-
-function finalizeMul(stageId: MulStageId, top: number, bottom: number): GeneratedProblem {
-  const answer = top * bottom;
-  const check = verifyMultiplication(top, bottom, answer);
-  if (!check.valid) throw new Error(`generator/verifier mismatch for ${top}*${bottom}: ${check.reason}`);
-  return { stageId, kind: "columnMul", top, bottom, answer };
-}
-
-function finalizeDiv(stageId: DivStageId, dividend: number, divisor: number): GeneratedProblem {
-  const answer = Math.floor(dividend / divisor);
-  const remainder = dividend % divisor;
-  const check = verifyDivision(dividend, divisor, answer, remainder);
-  if (!check.valid) throw new Error(`generator/verifier mismatch for ${dividend}/${divisor}: ${check.reason}`);
-  return { stageId, kind: "shortDiv", dividend, divisor, answer, remainder };
-}
-
-/** Digits 0-9 that divide `divisor` evenly - the only digits that can appear in a no-carry kort division dividend. */
-function digitsDivisibleBy(divisor: number): number[] {
-  return Array.from({ length: 10 }, (_, d) => d).filter((d) => d % divisor === 0);
-}
-
-// Stages generate a random 3-digit dividend and single-digit divisor, then
-// independently re-derive the column-by-column plan (the same logic buildGraph
-// itself uses) to check the pattern actually matches the stage. 2.2.1 and 2.2.3
-// target patterns too rare to reliably hit by rejection-sampling a random
-// dividend within MAX_ATTEMPTS, so they construct digits directly instead.
-function generateStage221(rng: Rng): GeneratedProblem {
-  // No minnesrest: every digit must itself be an exact multiple of the divisor.
-  const divisor = randInt(rng, 2, 9);
-  const valid = digitsDivisibleBy(divisor);
-  const leadingChoices = valid.filter((d) => d > 0); // divisor itself is always one such digit
-  const leading = leadingChoices[randInt(rng, 0, leadingChoices.length - 1)];
-  const middle = valid[randInt(rng, 0, valid.length - 1)];
-  const ones = valid[randInt(rng, 0, valid.length - 1)];
-  return finalizeDiv("2.2.1", leading * 100 + middle * 10 + ones, divisor);
-}
-
-function generateStage222(rng: Rng): GeneratedProblem {
-  // With minnesrest: at least one column carries a remainder, but the division is still exact overall.
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const divisor = randInt(rng, 2, 9);
-    const dividend = randInt(rng, 100, 999);
-    if (dividend % divisor !== 0) continue;
-    const { columns } = computeShortDivisionPlan(dividend, divisor);
-    if (columns[0].quotientDigit === 0) continue;
-    if (!columns.some((c) => c.col > 0 && c.remainderOut > 0)) continue;
-    return finalizeDiv("2.2.2", dividend, divisor);
-  }
-  throw new Error("generateStage222: exhausted attempts");
-}
-
-function generateStage223(rng: Rng): GeneratedProblem {
-  // Zero in the quotient: force it at the tens column by making the hundreds
-  // column divide exactly (no carry in) and the tens digit itself < divisor
-  // (so tens' own quotient digit is 0); the ones digit is then chosen so the
-  // whole division still comes out exact.
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const divisor = randInt(rng, 2, 9);
-    const validLead = digitsDivisibleBy(divisor).filter((d) => d > 0);
-    const leading = validLead[randInt(rng, 0, validLead.length - 1)];
-    const middle = randInt(rng, 0, divisor - 1);
-    const onesCandidates: number[] = [];
-    for (let d = 0; d <= 9; d++) if ((middle * 10 + d) % divisor === 0) onesCandidates.push(d);
-    if (onesCandidates.length === 0) continue;
-    const ones = onesCandidates[randInt(rng, 0, onesCandidates.length - 1)];
-    return finalizeDiv("2.2.3", leading * 100 + middle * 10 + ones, divisor);
-  }
-  throw new Error("generateStage223: exhausted attempts");
-}
-
-function generateStage224(rng: Rng): GeneratedProblem {
-  // Division with a genuine leftover remainder.
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const divisor = randInt(rng, 2, 9);
-    const dividend = randInt(rng, 100, 999);
-    if (dividend % divisor === 0) continue;
-    const { columns } = computeShortDivisionPlan(dividend, divisor);
-    if (columns[0].quotientDigit === 0) continue;
-    return finalizeDiv("2.2.4", dividend, divisor);
-  }
-  throw new Error("generateStage224: exhausted attempts");
-}
-
-function finalizeAddDecimal(stageId: DecimalStageId, top: number, bottom: number, decimalPlaces: number): GeneratedProblem {
-  const answer = top + bottom;
-  const check = verifyAddition(top, bottom, answer);
-  if (!check.valid) throw new Error(`generator/verifier mismatch for ${top}+${bottom}: ${check.reason}`);
-  return { stageId, kind: "columnAdd", top, bottom, answer, decimalPlaces };
-}
-
-function finalizeSubDecimal(stageId: DecimalStageId, top: number, bottom: number, decimalPlaces: number): GeneratedProblem {
-  const answer = top - bottom;
-  const check = verifySubtraction(top, bottom, answer);
-  if (!check.valid) throw new Error(`generator/verifier mismatch for ${top}-${bottom}: ${check.reason}`);
-  return { stageId, kind: "columnSub", top, bottom, answer, decimalPlaces };
-}
-
-// Decimal addition/subtraction is exact integer arithmetic at a fixed scale
-// (see build brief "Decimaltal i vardagen": never floating point) - a value
-// like 4,7 is just the integer 47 with decimalPlaces=1, reusing columnAdd/
-// columnSub entirely; only the display layer (ColumnBoard) knows to draw a
-// comma. The carry/borrow mechanic itself was already taught in world 1, so
-// these stages don't force a specific pattern - only that the numbers are
-// genuinely at the stated decimal scale.
-function generateStage233(rng: Rng): GeneratedProblem {
-  // Tenths: 2-digit-scaled operands, e.g. 47 = 4,7.
-  const isAdd = rng() < 0.5;
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    if (isAdd) {
-      const { top, bottom } = buildAdditionWithCarryPattern(rng, 2, new Set());
-      if (isTrivial(top, bottom, "add")) continue;
-      return finalizeAddDecimal("2.3.3", top, bottom, 1);
-    } else {
-      const { top, bottom } = buildSubtractionWithBorrowPattern(rng, 2, new Set());
-      if (top - bottom < 10 || isTrivial(top, bottom, "sub")) continue;
-      return finalizeSubDecimal("2.3.3", top, bottom, 1);
-    }
-  }
-  throw new Error("generateStage233: exhausted attempts");
-}
-
-function generateStage234(rng: Rng): GeneratedProblem {
-  // Hundredths: 3-digit-scaled operands, e.g. 350 = 3,50. At least one operand's
-  // hundredths digit is nonzero, so the problem genuinely needs 2 decimal places.
-  const isAdd = rng() < 0.5;
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    if (isAdd) {
-      const { top, bottom } = buildAdditionWithCarryPattern(rng, 3, new Set());
-      if (isTrivial(top, bottom, "add")) continue;
-      if (digitAt(top, 0) === 0 && digitAt(bottom, 0) === 0) continue;
-      return finalizeAddDecimal("2.3.4", top, bottom, 2);
-    } else {
-      const { top, bottom } = buildSubtractionWithBorrowPattern(rng, 3, new Set());
-      if (top - bottom < 10 || isTrivial(top, bottom, "sub")) continue;
-      if (digitAt(top, 0) === 0 && digitAt(bottom, 0) === 0) continue;
-      return finalizeSubDecimal("2.3.4", top, bottom, 2);
-    }
-  }
-  throw new Error("generateStage234: exhausted attempts");
-}
-
-// Lägesmått (Lgr22 åk 4-6 "Sannolikhet och statistik"): medelvärde, median,
-// typvärde. Values are kept small (1-20) and every measure is constrained to
-// a whole-number answer - no floating point, matching the rest of the engine.
-function generateStage271(rng: Rng): GeneratedProblem {
-  // Medelvärde (mean) of 4 values, chosen so the sum divides evenly.
-  const count = 4;
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const values = Array.from({ length: count }, () => randInt(rng, 1, 20));
-    const sum = values.reduce((a, b) => a + b, 0);
-    if (sum % count !== 0) continue;
-    const answer = sum / count;
-    if (values.every((v) => v === answer)) continue; // trivial: already all the same
-    return { stageId: "2.7.1", kind: "statistics", measure: "mean", values, answer };
-  }
-  throw new Error("generateStage271: exhausted attempts");
-}
-
-function generateStage272(rng: Rng): GeneratedProblem {
-  // Median of 5 values (odd count, so it's always a single value in the list,
-  // never an average of two middle values - see module note on scope).
-  const count = 5;
-  const values = Array.from({ length: count }, () => randInt(rng, 1, 20));
-  const sorted = [...values].sort((a, b) => a - b);
-  const answer = sorted[Math.floor(count / 2)];
-  return { stageId: "2.7.2", kind: "statistics", measure: "median", values, answer };
-}
-
-function generateStage273(rng: Rng): GeneratedProblem {
-  // Typvärde (mode): one value repeated 3 times among 4 other, distinct values.
-  const mode = randInt(rng, 1, 20);
-  const others = new Set<number>();
-  while (others.size < 4) {
-    const v = randInt(rng, 1, 20);
-    if (v !== mode) others.add(v);
-  }
-  const values = shuffle(rng, [mode, mode, mode, ...others]);
-  return { stageId: "2.7.3", kind: "statistics", measure: "mode", values, answer: mode };
-}
-
-// Tabeller och diagram (Lgr22 åk 4-6 "Sannolikhet och statistik": tolka data i
-// tabeller och diagram). A simple bar chart over 4 fixed fruit categories;
-// every question has a whole-number answer read straight off the chart.
-function generateChartValues(rng: Rng): number[] {
-  return CHART_CATEGORY_KEYS.map(() => randInt(rng, 1, 15));
-}
-
-function generateStage281(rng: Rng): GeneratedProblem {
-  // Direct lookup: read one bar's value.
-  const values = generateChartValues(rng);
-  const askIndex = randInt(rng, 0, values.length - 1);
-  return { stageId: "2.8.1", kind: "chart", categoryKeys: CHART_CATEGORY_KEYS, values, questionType: "lookup", askIndex, answer: values[askIndex] };
-}
-
-function generateStage282(rng: Rng): GeneratedProblem {
-  // Difference between two distinct-valued bars (retried so the answer isn't trivially 0).
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const values = generateChartValues(rng);
-    const a = randInt(rng, 0, values.length - 1);
-    let b = randInt(rng, 0, values.length - 1);
-    while (b === a) b = randInt(rng, 0, values.length - 1);
-    if (values[a] === values[b]) continue;
-    return {
-      stageId: "2.8.2",
-      kind: "chart",
-      categoryKeys: CHART_CATEGORY_KEYS,
-      values,
-      questionType: "difference",
-      compareIndices: [a, b],
-      answer: Math.abs(values[a] - values[b]),
-    };
-  }
-  throw new Error("generateStage282: exhausted attempts");
-}
-
-function generateStage283(rng: Rng): GeneratedProblem {
-  // Total across every bar.
-  const values = generateChartValues(rng);
-  const answer = values.reduce((sum, v) => sum + v, 0);
-  return { stageId: "2.8.3", kind: "chart", categoryKeys: CHART_CATEGORY_KEYS, values, questionType: "sum", answer };
-}
-
-const GENERATORS: Record<StageId, (rng: Rng) => GeneratedProblem> = {
-  "1.1.1": generateStage1,
-  "1.1.2": generateStage2,
-  "1.1.3": generateStage3,
-  "1.1.4": generateStage4,
-  "1.1.5": generateStage5,
-  "1.1.6": generateStage6,
-  "1.1.7": generateStage7,
-  "2.1.1": generateStage201,
-  "2.1.2": generateStage202,
-  "2.1.3": generateStage203,
-  "2.2.1": generateStage221,
-  "2.2.2": generateStage222,
-  "2.2.3": generateStage223,
-  "2.2.4": generateStage224,
-  "2.3.3": generateStage233,
-  "2.3.4": generateStage234,
-  "2.7.1": generateStage271,
-  "2.7.2": generateStage272,
-  "2.7.3": generateStage273,
-  "2.8.1": generateStage281,
-  "2.8.2": generateStage282,
-  "2.8.3": generateStage283,
-  ...TRAPPAN_GENERATORS,
-  ...MUL_GUIDED_GENERATORS,
-  ...EXAM_GENERATORS,
-  ...WORD_GENERATORS,
-  ...BASIC_GENERATORS,
-  ...CLOCK_GENERATORS,
-  ...SHOP_GENERATORS,
-  ...ADVANCED_GENERATORS,
-  ...GEOMETRY_GENERATORS,
-};
 
 export function generateProblem(stageId: StageId, rng: Rng): GeneratedProblem {
-  return GENERATORS[stageId](rng);
+  const make = (questionTypeOf(stageId).levels as Record<string, (rng: Rng) => GeneratedProblem>)[stageId];
+  return make(rng);
+}
+
+/** What a question is, for telling it from others: two questions with the same key are the same one. */
+export function problemKey(problem: GeneratedProblem): string {
+  const type = TYPE_OF_KIND.get(problem.kind);
+  if (!type) throw new Error(`No question type makes ${problem.kind}`);
+  return (type.key as (p: GeneratedProblem) => string)(problem);
 }
 
 /**
@@ -691,7 +86,7 @@ export function generateRound(
     let problem: GeneratedProblem | null = null;
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       const candidate = generateProblem(stageId, rng);
-      const key = makeKey(candidate);
+      const key = problemKey(candidate);
       if (seenThisRound.has(key) || recentKeys.has(key)) continue;
       problem = candidate;
       seenThisRound.add(key);
@@ -710,5 +105,3 @@ export function generateRound(
   }
   return { problems, keys };
 }
-
-export { classifyAdditionCarries, classifyMultiplicationCarries, classifySubtractionBorrows, makeKey };

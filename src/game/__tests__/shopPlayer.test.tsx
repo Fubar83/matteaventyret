@@ -3,9 +3,9 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { makeRng } from "../../engine/rng";
-import { SHOP_GENERATORS, type ShopProblem } from "../../engine/shop";
-import type { QuestionOutcome } from "../questionOutcome";
-import { ShopPlayer } from "../shop/ShopPlayer";
+import { SHOP_QUESTIONS, type ShopProblem } from "../../engine/questions/shop";
+import type { QuestionOutcome } from "../questions/questionOutcome";
+import { ShopPlayer } from "../questions/shop/ShopPlayer";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -29,7 +29,7 @@ const bubble = (host: HTMLElement) => host.querySelector('[role="status"]')?.tex
 
 describe("the shop", () => {
   it("at the till: too little change gets a puzzled customer, the right change a thank-you and the question solved", () => {
-    const problem: ShopProblem = { ...SHOP_GENERATORS["1.6.3"](makeRng(3)) };
+    const problem: ShopProblem = { ...SHOP_QUESTIONS.levels["1.6.3"](makeRng(3)) };
     const onSolved = vi.fn();
     const host = mount(problem, onSolved);
     // The till holds every coin and note; give back one coin too few first.
@@ -48,7 +48,7 @@ describe("the shop", () => {
   });
 
   it("paying: too much is too much - and a coin tapped on the tray goes back to the wallet", () => {
-    const problem = SHOP_GENERATORS["1.6.2"](makeRng(3));
+    const problem = SHOP_QUESTIONS.levels["1.6.2"](makeRng(3));
     const onSolved = vi.fn();
     const host = mount(problem, onSolved);
     // Everything in the wallet is more than the price.
@@ -63,7 +63,7 @@ describe("the shop", () => {
   });
 
   it("from the shopping list: picking something not on it gets a word from the shopkeeper", () => {
-    const problem = SHOP_GENERATORS["1.6.4"](makeRng(5));
+    const problem = SHOP_QUESTIONS.levels["1.6.4"](makeRng(5));
     const host = mount(problem, vi.fn());
     const other = problem.shelf.find((x) => !problem.buy.includes(x.id))!;
     const shelfButton = [...host.querySelectorAll("button")].find((b) => b.getAttribute("aria-label")?.endsWith(`${other.price} kr`) && b.textContent?.includes(other.emoji))!;
@@ -72,7 +72,7 @@ describe("the shop", () => {
   });
 
   it("help to the end lays the answer out, and the question counts as helped", () => {
-    const problem = SHOP_GENERATORS["1.6.2"](makeRng(7));
+    const problem = SHOP_QUESTIONS.levels["1.6.2"](makeRng(7));
     const onSolved = vi.fn();
     const host = mount(problem, onSolved);
     for (let i = 0; i < 3; i++) {

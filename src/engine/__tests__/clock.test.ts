@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CLOCK_GENERATORS, checkHands, hourAngle, minuteAngle, readOptions, spokenTime, type ClockStageId } from "../clock";
+import { CLOCK_QUESTIONS, checkHands, hourAngle, minuteAngle, readOptions, spokenTime, type ClockStageId } from "../questions/clock";
 import { generateRound } from "../generator";
 import { makeRng } from "../rng";
 
@@ -37,7 +37,7 @@ describe("the clock", () => {
 describe("the clock levels", () => {
   const sample = (stage: ClockStageId, n = 300) => {
     const rng = makeRng(5);
-    return Array.from({ length: n }, () => CLOCK_GENERATORS[stage](rng));
+    return Array.from({ length: n }, () => CLOCK_QUESTIONS.levels[stage](rng));
   };
   const tasks = (stage: ClockStageId) => new Set(sample(stage).map((p) => `${p.task}:${p.given}`));
 
@@ -87,7 +87,7 @@ describe("the clock levels", () => {
   });
 
   it("puts a round's questions easiest first", () => {
-    for (const stage of Object.keys(CLOCK_GENERATORS) as ClockStageId[]) {
+    for (const stage of Object.keys(CLOCK_QUESTIONS.levels) as ClockStageId[]) {
       const round = generateRound(stage, 8, makeRng(9)).problems;
       const scores = round.map((p) => ("difficulty" in p ? p.difficulty! : NaN));
       expect(scores, stage).toEqual([...scores].sort((a, b) => a - b));
@@ -100,7 +100,7 @@ describe("the clock levels", () => {
   });
 
   it("starts the hands somewhere else than the answer", () => {
-    for (const stage of Object.keys(CLOCK_GENERATORS) as ClockStageId[]) {
+    for (const stage of Object.keys(CLOCK_QUESTIONS.levels) as ClockStageId[]) {
       for (const p of sample(stage, 100)) {
         expect(p.start.m).not.toBe(p.m);
         expect(p.start.h % 12).not.toBe(p.h % 12);

@@ -34,8 +34,6 @@ export interface SaveDataV1 {
   bossDefeated: boolean;
   blixtrundaBestScore: number;
   settings: Settings;
-  /** Teori topics (see game/teoriContent.ts) already shown once; Teori/Exempel can always be replayed via the "?" button regardless. */
-  seenTeori: string[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -65,7 +63,6 @@ export function createDefaultSave(): SaveDataV1 {
     bossDefeated: false,
     blixtrundaBestScore: 0,
     settings: { ...DEFAULT_SETTINGS },
-    seenTeori: [],
   };
 }
 

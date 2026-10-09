@@ -22,8 +22,8 @@ export function randInt(rng: Rng, min: number, max: number): number {
 }
 
 /** Random element of a non-empty array. */
-export function choice<T>(rng: Rng, items: readonly T[]): T {
-  if (items.length === 0) throw new Error("choice: empty array");
+export function pick<T>(rng: Rng, items: readonly T[]): T {
+  if (items.length === 0) throw new Error("pick: empty array");
   return items[randInt(rng, 0, items.length - 1)];
 }
 

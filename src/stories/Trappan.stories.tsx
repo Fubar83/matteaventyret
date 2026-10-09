@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useMemo } from "react";
 import { fn } from "storybook/test";
-import type { TrappanStageId } from "../engine/trappan";
+import type { TrappanStageId } from "../engine/questions/trappan";
 import { stageIds } from "./catalog";
 import { ownDivision } from "./ownNumbers";
 import { firstControl, firstMatching, QuestionStory, questionArgTypes, startAtControl, type QuestionStoryProps } from "./QuestionStory";

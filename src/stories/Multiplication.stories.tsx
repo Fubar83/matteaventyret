@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useMemo } from "react";
 import { fn } from "storybook/test";
-import type { MulGuidedStageId } from "../engine/multiply";
+import type { MulGuidedStageId } from "../engine/questions/multiply";
 import { stageIds } from "./catalog";
 import { ownMultiplication } from "./ownNumbers";
 import { firstControl, firstMatching, QuestionStory, questionArgTypes, startAtControl, type QuestionStoryProps } from "./QuestionStory";

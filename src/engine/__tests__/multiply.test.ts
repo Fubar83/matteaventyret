@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { MUL_GUIDED_GENERATORS, productOf } from "../multiply";
+import { MUL_GUIDED_QUESTIONS, productOf } from "../questions/multiply";
 import { makeRng } from "../rng";
 import { planGuided } from "../../mathinput/guidedPlan";
-import { decimalText } from "../trappan";
+import { decimalText } from "../questions/trappan";
 
 describe("the bigger multiplications", () => {
   it("every level's question is worked out right on the board, decimals and all", () => {
     const rng = makeRng(41);
-    for (const [stage, gen] of Object.entries(MUL_GUIDED_GENERATORS)) {
+    for (const [stage, gen] of Object.entries(MUL_GUIDED_QUESTIONS.levels)) {
       for (let i = 0; i < 300; i++) {
         const p = gen(rng);
         const where = `${stage}: ${decimalText(p.top)} · ${decimalText(p.bottom)}`;
@@ -24,12 +24,12 @@ describe("the bigger multiplications", () => {
   it("keeps each level to its kind of numbers", () => {
     const rng = makeRng(5);
     for (let i = 0; i < 100; i++) {
-      const a = MUL_GUIDED_GENERATORS["2.1.4"](rng);
+      const a = MUL_GUIDED_QUESTIONS.levels["2.1.4"](rng);
       expect([a.top.digits.length, a.bottom.digits.length, a.top.decimals + a.bottom.decimals]).toEqual([2, 2, 0]);
-      const b = MUL_GUIDED_GENERATORS["2.1.5"](rng);
+      const b = MUL_GUIDED_QUESTIONS.levels["2.1.5"](rng);
       expect(b.top.decimals).toBeGreaterThan(0);
       expect(b.bottom.decimals).toBe(0);
-      const c = MUL_GUIDED_GENERATORS["2.1.6"](rng);
+      const c = MUL_GUIDED_QUESTIONS.levels["2.1.6"](rng);
       expect(c.top.decimals).toBeGreaterThan(0);
       expect(c.bottom.decimals).toBeGreaterThan(0);
       expect(c.top.decimals + c.bottom.decimals).toBeLessThanOrEqual(3);

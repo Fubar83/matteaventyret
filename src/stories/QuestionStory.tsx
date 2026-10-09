@@ -4,8 +4,8 @@ import { makeRng } from "../engine/rng";
 import { questionStars } from "../engine/scoring";
 import type { Phase } from "../engine/types";
 import { t } from "../i18n";
-import { QuestionPlayer } from "../game/QuestionPlayer";
-import type { QuestionOutcome } from "../game/questionOutcome";
+import { QuestionPlayer } from "../game/questions/QuestionPlayer";
+import type { QuestionOutcome } from "../game/questions/questionOutcome";
 import { STAGES } from "../game/stages";
 
 export interface QuestionStoryProps {

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { generateRound } from "../generator";
 import { makeRng } from "../rng";
-import { canPay, fewestPieces, SHOP_GENERATORS, sum, type ShopStageId } from "../shop";
+import { canPay, fewestPieces, SHOP_QUESTIONS, sum, type ShopStageId } from "../questions/shop";
 
 const sample = (stage: ShopStageId, n = 300) => {
   const rng = makeRng(2);
-  return Array.from({ length: n }, () => SHOP_GENERATORS[stage](rng));
+  return Array.from({ length: n }, () => SHOP_QUESTIONS.levels[stage](rng));
 };
 
 describe("the shop", () => {
@@ -45,7 +45,7 @@ describe("the shop", () => {
   });
 
   it("puts a round's questions easiest first", () => {
-    for (const stage of Object.keys(SHOP_GENERATORS) as ShopStageId[]) {
+    for (const stage of Object.keys(SHOP_QUESTIONS.levels) as ShopStageId[]) {
       const scores = generateRound(stage, 6, makeRng(4)).problems.map((p) => ("difficulty" in p ? p.difficulty! : NaN));
       expect(scores, stage).toEqual([...scores].sort((a, b) => a - b));
     }

@@ -1,38 +1,35 @@
 /**
- * Which story file shows which questions: the stage methods it covers (every
- * level of those methods is in its "Nivå" setting) and the kinds of question
- * they make. storyCoverage.test.ts fails when a stage method or a kind of
- * question has no story - so a new question type has to get one.
+ * Which story file shows which type of question (engine/questions/) - every
+ * level of the type is in its "Nivå" setting. storyCoverage.test.ts fails
+ * when a type the game plays has no story, so a new type has to get one.
  */
-import type { GeneratedProblem, StageId } from "../engine/generator";
+import { questionTypeOf, type QuestionTypeId, type StageId } from "../engine/generator";
 import { STAGES, type StageMeta } from "../game/stages";
 
 export interface StoryFile {
   /** The file in src/stories/. */
   file: string;
-  /** The stage methods whose levels it shows. */
-  methods: readonly StageMeta["method"][];
-  /** The kinds of question those levels make. */
-  kinds: readonly GeneratedProblem["kind"][];
+  /** The types of question it shows. */
+  types: readonly QuestionTypeId[];
 }
 
 export const STORY_FILES: readonly StoryFile[] = [
-  { file: "ColumnQuestions.stories.tsx", methods: ["columnAdd", "columnSub", "columnMul", "mixed"], kinds: ["columnAdd", "columnSub", "columnMul"] },
-  { file: "PlaceValue.stories.tsx", methods: ["placeValue"], kinds: ["placeValue"] },
-  { file: "Statistics.stories.tsx", methods: ["statistics"], kinds: ["statistics"] },
-  { file: "Charts.stories.tsx", methods: ["chart"], kinds: ["chart"] },
-  { file: "WrittenQuestions.stories.tsx", methods: ["expression"], kinds: ["expression"] },
-  { file: "Clock.stories.tsx", methods: ["clock"], kinds: ["clock"] },
-  { file: "Shop.stories.tsx", methods: ["shop"], kinds: ["shop"] },
-  { file: "Trappan.stories.tsx", methods: ["trappan"], kinds: ["trappan"] },
-  { file: "Multiplication.stories.tsx", methods: ["mulGuided"], kinds: ["mulGuided"] },
+  { file: "ColumnQuestions.stories.tsx", types: ["column"] },
+  { file: "PlaceValue.stories.tsx", types: ["placeValue"] },
+  { file: "Statistics.stories.tsx", types: ["statistics"] },
+  { file: "Charts.stories.tsx", types: ["chart"] },
+  { file: "WrittenQuestions.stories.tsx", types: ["written"] },
+  { file: "Clock.stories.tsx", types: ["clock"] },
+  { file: "Shop.stories.tsx", types: ["shop"] },
+  { file: "Trappan.stories.tsx", types: ["trappan"] },
+  { file: "Multiplication.stories.tsx", types: ["mulGuided"] },
 ];
 
-/** The levels a story file shows, in the game's order. */
+/** The levels a story file shows: those of its types the game has, in the game's order. */
 export function stagesOf(file: string): StageMeta[] {
   const entry = STORY_FILES.find((f) => f.file === file);
   if (!entry) throw new Error(`No catalog entry for ${file}`);
-  return STAGES.filter((s) => entry.methods.includes(s.method));
+  return STAGES.filter((s) => entry.types.includes(questionTypeOf(s.id).id));
 }
 
 /** The levels' ids. */

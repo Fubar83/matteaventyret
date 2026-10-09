@@ -27,7 +27,7 @@ export type CellType =
 export type CellValue = number | "struck";
 
 /** Method identifiers. Only columnAdd/columnSub have real plugins in v1. */
-export type MethodId = "columnAdd" | "columnSub" | "columnMul" | "shortDiv" | "longDiv";
+export type MethodId = "columnAdd" | "columnSub" | "columnMul" | "shortDiv";
 
 export type Phase = "guidat" | "egenOrdning" | "fritt";
 

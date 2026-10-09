@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import { MODE_KEY } from "../game/QuickAnswer";
+import { MODE_KEY } from "../game/questions/written/QuickAnswer";
 import { stageIds } from "./catalog";
 import { firstMatching, QuestionStory, questionArgTypes, type QuestionStoryProps } from "./QuestionStory";
 import { WRITTEN } from "./variants";

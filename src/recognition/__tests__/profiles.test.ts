@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { questionTypeOf } from "../../engine/generator";
 import { STAGES } from "../../game/stages";
 import { layoutSymbols, type ClassifiedSymbol } from "../../mathinput/layout";
 import { WRITING_LEVELS } from "../levels";
@@ -11,7 +12,7 @@ const s = (char: string, cx: number, cy: number, h = 40, w = 24): ClassifiedSymb
 
 describe("recognition profiles", () => {
   it("every stage written freely has one, on its own level's model - or, for a young level that needs letters (units, %), the full model read in any order", () => {
-    for (const stage of STAGES.filter((st) => ["expression", "statistics", "chart"].includes(st.method))) {
+    for (const stage of STAGES.filter((st) => ["written", "statistics", "chart"].includes(questionTypeOf(st.id).id))) {
       const profile = profileForStage(stage.id);
       expect(profile, stage.id).toBeDefined();
       const ownModel = profile!.model === WRITING_LEVELS[stage.writingLevel].model;

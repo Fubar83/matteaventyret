@@ -1,20 +1,20 @@
 import { useMemo, useState } from "react";
-import { DIGITAL_LOOKS, FACES, hourAngle, minuteAngle, type ClockFaceStyle, type DigitalLook } from "../engine/clock";
-import { ClockFace } from "../game/ClockFace";
-import { DigitalClock } from "../game/DigitalClock";
-import { SkyScene } from "../game/SkyScene";
-import { ShopPlayer } from "../game/shop/ShopPlayer";
-import { SHOP_GENERATORS, type ShopStageId } from "../engine/shop";
+import { DIGITAL_LOOKS, FACES, hourAngle, minuteAngle, type ClockFaceStyle, type DigitalLook } from "../engine/questions/clock";
+import { ClockFace } from "../game/questions/clock/ClockFace";
+import { DigitalClock } from "../game/questions/clock/DigitalClock";
+import { SkyScene } from "../game/questions/clock/SkyScene";
+import { ShopPlayer } from "../game/questions/shop/ShopPlayer";
+import { SHOP_QUESTIONS, type ShopStageId } from "../engine/questions/shop";
 import { makeRng } from "../engine/rng";
 import { ThemeBanner, type ThemeId } from "../game/scenes/ThemeBanner";
 import { QuestionScene } from "../game/scenes/QuestionScene";
 import { BaseTenBlocks } from "../game/scenes/BaseTenBlocks";
-import type { QuestionScene as Scene } from "../engine/questionScene";
-import { TRAPPAN_GENERATORS, type Decimal, type TrappanProblem, type TrappanStageId } from "../engine/trappan";
-import { TrappanPlayer } from "../game/TrappanPlayer";
-import { PlanFigure, TrappanFigure } from "../game/TrappanFigure";
-import { MulPlayer } from "../game/MulPlayer";
-import { MUL_GUIDED_GENERATORS, type MulGuidedProblem, type MulGuidedStageId } from "../engine/multiply";
+import type { QuestionScene as Scene } from "../engine/questions/written/questionScene";
+import { TRAPPAN_QUESTIONS, type Decimal, type TrappanProblem, type TrappanStageId } from "../engine/questions/trappan";
+import { TrappanPlayer } from "../game/questions/trappan/TrappanPlayer";
+import { PlanFigure, TrappanFigure } from "../game/questions/trappan/TrappanFigure";
+import { MulPlayer } from "../game/questions/multiplication/MulPlayer";
+import { MUL_GUIDED_QUESTIONS, type MulGuidedProblem, type MulGuidedStageId } from "../engine/questions/multiply";
 import { planGuided } from "../mathinput/guidedPlan";
 import { t } from "../i18n";
 
@@ -126,7 +126,7 @@ function ownDivision(params: URLSearchParams): TrappanProblem | undefined {
 /** `?mul=2.1.6&seed=3` - or `&a=2,5&b=1,3` for a multiplication of your own; `&step=4` opens the board at that step. */
 function MulPreview({ stage, seed, step, a, b }: { stage: MulGuidedStageId; seed: number; step?: number; a: string | null; b: string | null }) {
   const problem = useMemo<MulGuidedProblem>(
-    () => (a && b ? { stageId: stage, kind: "mulGuided", top: asDecimal(a), bottom: asDecimal(b), answer: 0 } : MUL_GUIDED_GENERATORS[stage](makeRng(seed))),
+    () => (a && b ? { stageId: stage, kind: "mulGuided", top: asDecimal(a), bottom: asDecimal(b), answer: 0 } : MUL_GUIDED_QUESTIONS.levels[stage](makeRng(seed))),
     [stage, seed, a, b]
   );
   const plan = useMemo(() => planGuided("×", Number(problem.top.digits), Number(problem.bottom.digits), { top: problem.top.decimals, bottom: problem.bottom.decimals }), [problem]);
@@ -147,7 +147,7 @@ function MulPreview({ stage, seed, step, a, b }: { stage: MulGuidedStageId; seed
 }
 
 function TrappanPreview({ stage, seed, step, own }: { stage: TrappanStageId; seed: number; step?: number; own?: TrappanProblem }) {
-  const problem = useMemo(() => own ?? TRAPPAN_GENERATORS[stage](makeRng(seed)), [own?.dividend.digits, own?.divisor.digits, stage, seed]);
+  const problem = useMemo(() => own ?? TRAPPAN_QUESTIONS.levels[stage](makeRng(seed)), [own?.dividend.digits, own?.divisor.digits, stage, seed]);
   return (
     <div className="min-h-screen bg-slate-50 p-4 flex flex-col items-center gap-3">
       <p className="text-sm font-semibold text-slate-500">{stage} · {t(`stage.${stage}`)}</p>
@@ -165,7 +165,7 @@ function TrappanPreview({ stage, seed, step, own }: { stage: TrappanStageId; see
 }
 
 function ShopPreview({ stage, seed }: { stage: ShopStageId; seed: number }) {
-  const problem = useMemo(() => SHOP_GENERATORS[stage](makeRng(seed)), [stage, seed]);
+  const problem = useMemo(() => SHOP_QUESTIONS.levels[stage](makeRng(seed)), [stage, seed]);
   return (
     <div className="min-h-screen bg-slate-50 p-4 flex flex-col items-center">
       <ShopPlayer problem={problem} onSolved={() => {}} />

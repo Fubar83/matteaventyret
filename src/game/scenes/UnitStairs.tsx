@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { UnitFamily } from "../../engine/questionScene";
+import type { UnitFamily } from "../../engine/questions/written/questionScene";
 import { t } from "../../i18n";
 import { kenney } from "./Sprite";
 
