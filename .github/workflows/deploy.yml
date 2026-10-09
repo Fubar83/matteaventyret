@@ -1,4 +1,4 @@
-# Builds the game and publishes it on GitHub Pages on every push to main.
+# Builds the game and its Storybook and publishes them on GitHub Pages on every push to main.
 name: Deploy to GitHub Pages
 
 on:
@@ -29,6 +29,11 @@ jobs:
         env:
           # Pages serves a project site under /<repo>/.
           BASE_PATH: /${{ github.event.repository.name }}/
+      # Storybook beside the game, at /<repo>/storybook/ - after the game's build, which empties dist/.
+      # Its paths are relative, so it needs no base path; the game's worker leaves it alone (vite.config.ts).
+      - run: npm run build-storybook -- --output-dir dist/storybook --quiet
+        env:
+          STORYBOOK_DISABLE_TELEMETRY: 1
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

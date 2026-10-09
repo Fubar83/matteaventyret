@@ -60,6 +60,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,json,bin}'],
         // The game bundle (KaTeX, tfjs and all) is over the 2 MiB default.
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+        // Storybook is published beside the game (storybook/, see deploy.yml) - inside the worker's
+        // scope, so without this a visit there would be answered with the game's index.html.
+        navigateFallbackDenylist: [/\/storybook(\/|$)/],
       },
     }),
   ],

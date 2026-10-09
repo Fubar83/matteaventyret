@@ -248,7 +248,10 @@ npm run build-storybook  # static Storybook into storybook-static/
 ```
 
 - **Deploy:** every push to `main` builds and publishes to GitHub Pages
-  (`.github/workflows/deploy.yml`, served under `/matteaventyret/`).
+  (`.github/workflows/deploy.yml`): the game at `/matteaventyret/`, and Storybook
+  beside it at `/matteaventyret/storybook/`. Storybook's paths are relative, and the
+  game's worker is told to leave `storybook/` alone (`navigateFallbackDenylist` in
+  `vite.config.ts`) - otherwise it would answer a visit there with the game.
 - **Offline and updates:** `vite-plugin-pwa` precaches everything, models
   included. `main.tsx` registers the worker with `immediate: true`, so a new
   version reloads into place at once.

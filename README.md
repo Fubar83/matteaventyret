@@ -19,7 +19,7 @@ npm run storybook # every kind of question in Storybook, at http://localhost:600
 
 The gallery page `http://localhost:5173/clocks.html` shows the clocks, scenes, shop, trappan and multiplication boards on their own, for example `clocks.html?mul=2.1.6&a=0,2&b=0,03&step=0` or `clocks.html?trappan=2.5.7&a=125,25&b=12,7&round=1&step=0`.
 
-Storybook (`src/stories/`) has a story file per type of question, with every level in its Nivå setting and the variants as stories of their own (a clock to read, change to give, your own trappan division...).
+Storybook (`src/stories/`, published at https://fubar83.github.io/matteaventyret/storybook/) has a story file per type of question, with every level in its Nivå setting and the variants as stories of their own (a clock to read, change to give, your own trappan division...).
 
 ## Project layout
 
