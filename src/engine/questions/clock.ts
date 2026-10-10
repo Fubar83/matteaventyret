@@ -58,6 +58,25 @@ export function randomFace(rng: Rng, easy: boolean): ClockFaceStyle {
 export const minuteAngle = (m: number) => m * 6;
 export const hourAngle = (h: number, m: number) => ((h % 12) + m / 60) * 30;
 
+/**
+ * The hour hand goes round twice a day. Where the day is, as the hand's angle
+ * over both laps (0-720: 0 is midnight, 360 noon), after the hand turns to
+ * `handDeg` (0-360) - the short way round from where it was. So turning past
+ * 12 goes on into the next half of the day: 11.59 in the morning becomes
+ * 12.00 noon, not midnight.
+ */
+export function turnDay(dayDeg: number, handDeg: number): number {
+  const turn = ((((handDeg - dayDeg) % 360) + 540) % 360) - 180;
+  return (((dayDeg + turn) % 720) + 720) % 720;
+}
+
+/** Which lap of the day a hand at `handDeg` is on: the one nearer `nearHour` (0-24) - so a start at 9 for 13.00 is 9 in the morning. */
+export function dayDegNear(handDeg: number, nearHour: number): number {
+  const hand = ((handDeg % 360) + 360) % 360;
+  const off = (deg: number) => Math.min(Math.abs(deg - nearHour * 30), 720 - Math.abs(deg - nearHour * 30));
+  return off(hand) <= off(hand + 360) ? hand : hand + 360;
+}
+
 /** The smallest angle between two directions, 0-180. */
 export function angleBetween(a: number, b: number): number {
   const d = Math.abs((((a - b) % 360) + 360) % 360);

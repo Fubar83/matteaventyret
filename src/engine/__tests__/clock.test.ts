@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CLOCK_QUESTIONS, checkHands, hourAngle, minuteAngle, readOptions, spokenTime, type ClockStageId } from "../questions/clock";
+import { CLOCK_QUESTIONS, checkHands, dayDegNear, hourAngle, minuteAngle, readOptions, spokenTime, turnDay, type ClockStageId } from "../questions/clock";
 import { generateRound } from "../generator";
 import { makeRng } from "../rng";
 
@@ -106,5 +106,39 @@ describe("the clock levels", () => {
         expect(p.start.h % 12).not.toBe(p.h % 12);
       }
     }
+  });
+});
+
+describe("the hour hand's two laps a day (the sky behind a clock being set)", () => {
+  const hours = (dayDeg: number) => dayDeg / 30;
+  /** Turns the hand step by step from `fromDeg` (over both laps) by `byDeg`, as a drag does. */
+  const drag = (fromDeg: number, byDeg: number) => {
+    let day = fromDeg;
+    const step = Math.sign(byDeg) * 2.5;
+    for (let turned = 0; Math.abs(turned) < Math.abs(byDeg); turned += step) day = turnDay(day, (day + step) % 360);
+    return day;
+  };
+
+  it("goes on past 12 into the afternoon - not back to midnight", () => {
+    expect(hours(drag(11 * 30, 60))).toBe(13);
+  });
+
+  it("goes on past 12 at night into the next morning", () => {
+    expect(hours(drag(23 * 30, 60))).toBe(1);
+  });
+
+  it("goes back past 12 the same way", () => {
+    expect(hours(drag(13 * 30, -60))).toBe(11);
+    expect(hours(drag(1 * 30, -60))).toBe(23);
+  });
+
+  it("a whole turn of the hand is half a day", () => {
+    expect(hours(drag(9 * 30, 360))).toBe(21);
+  });
+
+  it("starts in the lap nearer the question's time", () => {
+    expect(hours(dayDegNear(hourAngle(9, 0), 13))).toBe(9);
+    expect(hours(dayDegNear(hourAngle(3, 0), 17.5))).toBe(15);
+    expect(hours(dayDegNear(hourAngle(11, 0), 0.5))).toBe(23);
   });
 });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { checkHands, hourAngle, minuteAngle, spokenTime, type ClockProblem, type ClockTime } from "../../../engine/questions/clock";
+import { checkHands, dayDegNear, hourAngle, minuteAngle, spokenTime, turnDay, type ClockProblem, type ClockTime } from "../../../engine/questions/clock";
 import { t } from "../../../i18n";
 import { ClockFace } from "./ClockFace";
 import { DigitalClock } from "./DigitalClock";
@@ -249,6 +249,8 @@ function SetDigital({ problem, onSolved }: { problem: ClockProblem; onSolved: (o
 function SetHands({ problem, onSolved }: { problem: ClockProblem; onSolved: (outcome: QuestionOutcome) => void }) {
   const [hourDeg, setHourDeg] = useState(hourAngle(problem.start.h, problem.start.m));
   const [minuteDeg, setMinuteDeg] = useState(minuteAngle(problem.start.m));
+  // The time of day the hands are at, for the sky: the hour hand over its two laps a day (0-720), starting in the lap nearer the question's time.
+  const [dayDeg, setDayDeg] = useState(() => dayDegNear(hourAngle(problem.start.h, problem.start.m), problem.sky));
   const [attempts, setAttempts] = useState(0);
   const [helpUsed, setHelpUsed] = useState(0);
   const [message, setMessage] = useState<{ text: string; tone: "good" | "bad" } | null>(null);
@@ -260,6 +262,7 @@ function SetHands({ problem, onSolved }: { problem: ClockProblem; onSolved: (out
 
   function show() {
     setHourDeg(hourAngle(h, m));
+    setDayDeg(problem.sky * 30);
     setMinuteDeg(minuteAngle(m));
     setWrongHand(null);
     setState("shown");
@@ -302,8 +305,8 @@ function SetHands({ problem, onSolved }: { problem: ClockProblem; onSolved: (out
           <p className="text-slate-700 text-center font-medium max-w-md">{t(afternoon ? "clock.setDigital24" : "clock.setDigital", { h: ((h + 11) % 12) + 1 })}</p>
         </>
       )}
-      {/* The sky follows the hands: turn the hour hand, and the sun (or the moon) moves with it - in the half of the day the question is in. */}
-      <SkyScene hour={((hourDeg / 30) % 12) + (problem.sky >= 12 ? 12 : 0)}>
+      {/* The sky follows the hands: turn the hour hand, and the sun (or the moon) moves with it - past 12 into the next half of the day. */}
+      <SkyScene hour={dayDeg / 30}>
         <div className="rounded-full bg-white/30 p-2 backdrop-blur-[2px] shadow-2xl">
           <ClockFace
             face={problem.face}
@@ -317,6 +320,7 @@ function SetHands({ problem, onSolved }: { problem: ClockProblem; onSolved: (out
                 : {
                     onHour: (d) => {
                       setHourDeg(d);
+                      setDayDeg((day) => turnDay(day, d));
                       if (wrongHand === "hour") setWrongHand(null);
                     },
                     onMinute: (d) => {
