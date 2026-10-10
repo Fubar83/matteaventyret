@@ -1,9 +1,11 @@
 import type { Decorator, Preview } from "@storybook/react-vite";
+import { useArgs } from "storybook/preview-api";
 import "@fontsource/nunito/400.css";
 import "@fontsource/nunito/600.css";
 import "@fontsource/nunito/800.css";
 import "../src/index.css";
 import { setLocale, type Locale } from "../src/i18n";
+import { SetSeedContext } from "../src/stories/QuestionStory";
 
 /** The game's page around a question: its background, and no wider than a round's column. */
 const page: Decorator = (Story, context) => {
@@ -17,8 +19,18 @@ const page: Decorator = (Story, context) => {
   );
 };
 
+/** Lets a question story step its own seed (QuestionStory's next/previous buttons): a story's settings change from here. */
+const seedSteps: Decorator = (Story, context) => {
+  const [, updateArgs] = useArgs();
+  return (
+    <SetSeedContext.Provider value={"seed" in context.args ? (seed) => updateArgs({ seed }) : null}>
+      <Story />
+    </SetSeedContext.Provider>
+  );
+};
+
 const preview: Preview = {
-  decorators: [page],
+  decorators: [seedSteps, page],
   globalTypes: {
     locale: {
       description: "Språk / language",

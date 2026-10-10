@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import { generateProblem, type GeneratedProblem, type StageId } from "../engine/generator";
 import { makeRng } from "../engine/rng";
 import { questionStars } from "../engine/scoring";
@@ -36,6 +36,19 @@ export function seedMatching(stage: StageId, seed: number, match: (p: GeneratedP
   return null;
 }
 
+/** The last seed before `seed` whose question matches - or null when there's none (down to seed 1). */
+function seedMatchingBefore(stage: StageId, seed: number, match: (p: GeneratedProblem) => boolean): number | null {
+  for (let s = seed - 1; s >= Math.max(1, seed - SEARCH); s--) if (match(generateProblem(stage, makeRng(s)))) return s;
+  return null;
+}
+
+/**
+ * Sets the story's seed. A story's settings can only be changed from
+ * Storybook's side, so the stories' decorator (.storybook/preview.tsx)
+ * provides it; without it there are no next/previous buttons.
+ */
+export const SetSeedContext = createContext<((seed: number) => void) | null>(null);
+
 /** The first level (in `stages`) and seed that make a question like this - for a story's defaults. */
 export function firstMatching(stages: readonly StageId[], match: (p: GeneratedProblem) => boolean): { stage: StageId; seed: number } {
   for (const stage of stages) {
@@ -54,35 +67,56 @@ export function QuestionStory({ stage, seed, phase = "fritt", first = false, sta
   const meta = STAGES.find((s) => s.id === stage);
   const used = useMemo(() => (given || !match ? seed : seedMatching(stage, seed, match)), [given, match, stage, seed]);
   const problem = useMemo(() => given ?? (used === null ? null : generateProblem(stage, makeRng(used))), [given, stage, used]);
-  const [solved, setSolved] = useState<QuestionOutcome | null>(null);
+  // The next and previous question like this one: the next seed that makes one (with `match`), or just the next seed.
+  const setSeed = useContext(SetSeedContext);
+  const prev = useMemo(() => (given || used === null ? null : match ? seedMatchingBefore(stage, used, match) : used > 1 ? used - 1 : null), [given, match, stage, used]);
+  const next = useMemo(() => (given || used === null ? null : match ? seedMatching(stage, used + 1, match) : used + 1), [given, match, stage, used]);
+  const playing = `${stage}|${used}|${phase}|${first}|${startAt}|${JSON.stringify(given ?? null)}`;
+  // What the question on screen earned - a new question starts unsolved.
+  const [solved, setSolved] = useState<{ playing: string; outcome: QuestionOutcome } | null>(null);
+  const outcome = solved?.playing === playing ? solved.outcome : null;
   if (!meta) return <p className="text-rose-700">Okänd nivå {stage}</p>;
   if (!problem) return <p className="text-slate-600">Nivå {stage} ({t(meta.titleKey)}) gör inte den här sortens fråga.</p>;
 
   return (
     <>
-      <p className="text-xs text-slate-500 text-center">
-        {stage} · {t(meta.titleKey)} · {given ? "egna tal" : `seed ${used}`}
-      </p>
+      <div className="flex items-center justify-center gap-3 text-xs text-slate-500">
+        {setSeed && !given && (
+          <button type="button" disabled={prev === null} onClick={() => prev !== null && setSeed(prev)} className={SEED_BUTTON}>
+            ◀ Förra
+          </button>
+        )}
+        <span className="text-center">
+          {stage} · {t(meta.titleKey)} · {given ? "egna tal" : `seed ${used}`}
+        </span>
+        {setSeed && !given && (
+          <button type="button" disabled={next === null} onClick={() => next !== null && setSeed(next)} className={SEED_BUTTON}>
+            Nästa ▶
+          </button>
+        )}
+      </div>
       <QuestionPlayer
-        key={`${stage}|${used}|${phase}|${first}|${startAt}|${JSON.stringify(given ?? null)}`}
+        key={playing}
         problem={problem}
         level={meta.writingLevel}
         phase={phase}
         first={first}
         startAt={startAt}
         onSolved={(o) => {
-          setSolved(o);
+          setSolved({ playing, outcome: o });
           onSolved?.(o);
         }}
       />
-      {solved && (
+      {outcome && (
         <p role="status" className="text-sm font-semibold text-emerald-700">
-          Löst: {"★".repeat(questionStars(solved))} {solved.helped ? "(med hjälp)" : ""}
+          Löst: {"★".repeat(questionStars(outcome))} {outcome.helped ? "(med hjälp)" : ""}
         </p>
       )}
     </>
   );
 }
+
+const SEED_BUTTON = "rounded-full border border-slate-300 bg-white px-3 py-1 font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-white";
 
 /** A setting that isn't one: left out of the controls. */
 export const hidden = { table: { disable: true } };
