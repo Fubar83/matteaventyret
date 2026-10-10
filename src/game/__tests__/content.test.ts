@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { ADVANCED_GENERATORS } from "../../engine/questions/written/advanced";
-import { GEOMETRY_GENERATORS } from "../../engine/questions/written/geometry";
+import { WRITTEN_QUESTIONS } from "../../engine/questions/written";
 import { makeRng } from "../../engine/rng";
+import { textIn } from "../../i18n";
 import en from "../../i18n/en.json";
 import sv from "../../i18n/sv.json";
 import { PATHS, STAGES } from "../stages";
@@ -22,16 +22,17 @@ describe("every text the game shows exists in Swedish and English", () => {
     for (const p of PATHS) expect(missingIn(p.nameKey), p.nameKey).toEqual([]);
   });
 
-  it("every åk 7+ question's prompt and tip", () => {
+  it("every written question's prompt and tip - word problems' stories included - with every {placeholder} filled", () => {
     const rng = makeRng(11);
-    for (const gen of [...Object.values(ADVANCED_GENERATORS), ...Object.values(GEOMETRY_GENERATORS)]) {
+    for (const [stage, gen] of Object.entries(WRITTEN_QUESTIONS.levels)) {
       for (let i = 0; i < 30; i++) {
         const p = gen(rng);
-        expect(missingIn(p.promptKey), p.promptKey).toEqual([]);
-        expect(missingIn(p.tipKey), p.tipKey).toEqual([]);
-        // Every {placeholder} in the prompt gets a value.
-        const placeholders = [...(dicts.sv[p.promptKey].matchAll(/\{(\w+)\}/g) ?? [])].map((m) => m[1]);
-        for (const name of placeholders) expect(p.promptVars ?? {}, `${p.promptKey} {${name}}`).toHaveProperty(name);
+        for (const key of [p.promptKey, p.tipKey]) {
+          const missing = (["sv", "en"] as const).filter((lang) => textIn(lang, key) === undefined);
+          expect(missing, `${stage}: ${key}`).toEqual([]);
+        }
+        const placeholders = [...textIn("sv", p.promptKey)!.matchAll(/\{(\w+)\}/g)].map((m) => m[1]);
+        for (const name of placeholders) expect(p.promptVars ?? {}, `${stage}: ${p.promptKey} {${name}}`).toHaveProperty(name);
       }
     }
   });

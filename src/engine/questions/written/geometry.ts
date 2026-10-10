@@ -22,7 +22,7 @@
  * answer is to one decimal and anything that rounds to it (π ≈ 3,14 or the
  * π key) is right - see AnswerSpec's `approx`.
  */
-import { st, tex, type AdvancedProblem, type AnswerSpec, type SolutionStep } from "./problem";
+import { st, tex, type WrittenProblem, type AnswerSpec, type SolutionStep } from "./problem";
 import type { Rng } from "../../rng";
 import { pick, randInt } from "../../rng";
 
@@ -94,7 +94,7 @@ interface Spec {
   steps: SolutionStep[];
 }
 
-function problem(s: Spec): AdvancedProblem {
+function problem(s: Spec): WrittenProblem {
   const answer: AnswerSpec = { kind: "value", value: s.value, ...(s.approx ? { approx: true } : {}), ...(s.exact !== undefined ? { exact: s.exact } : {}), ...(s.piAs314 !== undefined ? { piAs314: s.piAs314 } : {}) };
   return {
     stageId: s.stageId,
@@ -131,7 +131,7 @@ function piSteps(label: string, x: number): SolutionStep[] {
 
 // --- Åk 1-3: omkrets ---------------------------------------------------------
 
-function perimeter(rng: Rng): AdvancedProblem {
+function perimeter(rng: Rng): WrittenProblem {
   const unit = "cm";
   const shape = pick(rng, ["rectangle", "square", "triangle"] as const);
   if (shape === "triangle") {
@@ -191,7 +191,7 @@ function perimeter(rng: Rng): AdvancedProblem {
 
 // --- Åk 4-6 ------------------------------------------------------------------
 
-function rectangleArea(rng: Rng): AdvancedProblem {
+function rectangleArea(rng: Rng): WrittenProblem {
   const unit = pick(rng, ["cm", "m"]);
   const kind = pick(rng, ["area", "area", "square", "perimeter"] as const);
   const w = randInt(rng, 3, 12);
@@ -223,7 +223,7 @@ function rectangleArea(rng: Rng): AdvancedProblem {
   });
 }
 
-function triangleArea(rng: Rng): AdvancedProblem {
+function triangleArea(rng: Rng): WrittenProblem {
   const unit = pick(rng, ["cm", "m"]);
   // b · h even, so the area is whole.
   let b: number, h: number;
@@ -258,7 +258,7 @@ function triangleArea(rng: Rng): AdvancedProblem {
   });
 }
 
-function parallelogram(rng: Rng): AdvancedProblem {
+function parallelogram(rng: Rng): WrittenProblem {
   const unit = pick(rng, ["cm", "m"]);
   const b = randInt(rng, 5, 12);
   const h = randInt(rng, 3, 8);
@@ -293,7 +293,7 @@ function parallelogram(rng: Rng): AdvancedProblem {
   });
 }
 
-function compositeBasic(rng: Rng): AdvancedProblem {
+function compositeBasic(rng: Rng): WrittenProblem {
   const unit = pick(rng, ["cm", "m"]);
   const kind = pick(rng, ["lShape", "cutCorner", "house", "triangleInside"] as const);
   const W = randInt(rng, 6, 12);
@@ -446,7 +446,7 @@ function circleFigure(r: number, unit: string, show: "radius" | "diameter", fill
   };
 }
 
-function circle(rng: Rng): AdvancedProblem {
+function circle(rng: Rng): WrittenProblem {
   const unit = "cm";
   const kind = pick(rng, ["circumferenceD", "circumferenceR", "areaR", "areaD", "radius"] as const);
   const r = randInt(rng, 2, 12);
@@ -504,7 +504,7 @@ function circle(rng: Rng): AdvancedProblem {
   });
 }
 
-function trapezoid(rng: Rng): AdvancedProblem {
+function trapezoid(rng: Rng): WrittenProblem {
   const unit = pick(rng, ["cm", "m"]);
   let a: number, b: number, h: number;
   do {
@@ -545,7 +545,7 @@ function trapezoid(rng: Rng): AdvancedProblem {
   });
 }
 
-function compositeCircle(rng: Rng): AdvancedProblem {
+function compositeCircle(rng: Rng): WrittenProblem {
   const unit = "cm";
   const kind = pick(rng, ["halfCircleEnd", "squareHole", "ring", "quarter"] as const);
 
@@ -687,7 +687,7 @@ function compositeCircle(rng: Rng): AdvancedProblem {
   });
 }
 
-function inverse(rng: Rng): AdvancedProblem {
+function inverse(rng: Rng): WrittenProblem {
   const unit = "cm";
   const kind = pick(rng, ["rectangleSide", "triangleHeight", "squareSide", "diameter"] as const);
 
@@ -812,7 +812,7 @@ function partSteps(label: string, whole: number, p: number, q: number): Solution
   ];
 }
 
-function sector(rng: Rng): AdvancedProblem {
+function sector(rng: Rng): WrittenProblem {
   const unit = "cm";
   const v = pick(rng, [30, 45, 60, 72, 90, 120, 135, 150, 210, 240, 270]);
   // v/360 in lowest terms: which part of the circle - p parts of q.
@@ -875,7 +875,7 @@ function sector(rng: Rng): AdvancedProblem {
   });
 }
 
-function areaSine(rng: Rng): AdvancedProblem {
+function areaSine(rng: Rng): WrittenProblem {
   const unit = "cm";
   const C = pick(rng, [30, 150, 30, 150, 90]);
   const a = randInt(rng, 4, 12);
@@ -911,7 +911,7 @@ function areaSine(rng: Rng): AdvancedProblem {
   });
 }
 
-export const GEOMETRY_GENERATORS: Record<GeometryStageId, (rng: Rng) => AdvancedProblem> = {
+export const GEOMETRY_GENERATORS: Record<GeometryStageId, (rng: Rng) => WrittenProblem> = {
   "1.2.1": perimeter,
   "2.4.1": rectangleArea,
   "2.4.2": triangleArea,

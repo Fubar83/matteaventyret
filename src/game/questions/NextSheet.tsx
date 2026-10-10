@@ -8,11 +8,11 @@ import { BottomSheet } from "../BottomSheet";
  */
 export function NextSheet({ note, onNext }: { note?: string | null; onNext: () => void }) {
   return (
-    <BottomSheet label={t("placeValue.next")}>
+    <BottomSheet label={t("ui.next")}>
       <div className="flex items-center gap-3">
         {note && <p className="flex-1 min-w-0 text-sm text-slate-700">{note}</p>}
         <button type="button" onClick={onNext} autoFocus className="ml-auto h-12 px-6 rounded-xl bg-emerald-600 text-white font-bold shadow shrink-0">
-          {t("placeValue.next")} →
+          {t("ui.next")} →
         </button>
       </div>
     </BottomSheet>

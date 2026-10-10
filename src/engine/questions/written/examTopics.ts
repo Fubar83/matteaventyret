@@ -13,7 +13,7 @@
  *           3.3.7 mönster och talföljder
  *   gy      4.1.3 ekvationssystem
  */
-import { coef, signed, st, tex, type AdvancedProblem, type AnswerSpec, type SolutionStep } from "./problem";
+import { coef, signed, st, tex, type WrittenProblem, type AnswerSpec, type SolutionStep } from "./problem";
 import type { QuestionScene, UnitFamily } from "./questionScene";
 import { pick, randInt, type Rng } from "../../rng";
 
@@ -59,7 +59,7 @@ interface Spec {
   scene?: QuestionScene;
 }
 
-function make(stageId: ExamStageId, s: Spec): AdvancedProblem {
+function make(stageId: ExamStageId, s: Spec): WrittenProblem {
   return {
     stageId,
     kind: "expression",
@@ -79,7 +79,7 @@ function make(stageId: ExamStageId, s: Spec): AdvancedProblem {
 // --- Bråk (åk 4-6) -----------------------------------------------------------
 
 /** 3/4 av 20: one part first (20 / 4), then as many parts as the numerator says. */
-function fractionOf(rng: Rng): AdvancedProblem {
+function fractionOf(rng: Rng): WrittenProblem {
   const d = pick(rng, [2, 3, 4, 5, 6, 8, 10]);
   const n = randInt(rng, 1, d - 1);
   const part = randInt(rng, 2, 12);
@@ -90,7 +90,7 @@ function fractionOf(rng: Rng): AdvancedProblem {
 }
 
 /** Förkorta 12/18: by the greatest common factor - the answer in lowest terms. */
-function simplifyFraction(rng: Rng): AdvancedProblem {
+function simplifyFraction(rng: Rng): WrittenProblem {
   for (;;) {
     const q = randInt(rng, 3, 9);
     const p = randInt(rng, 1, q - 1);
@@ -107,7 +107,7 @@ function simplifyFraction(rng: Rng): AdvancedProblem {
 }
 
 /** 1/3 + 1/4: to a common denominator, then add the numerators - and simplify. */
-function addFractions(rng: Rng): AdvancedProblem {
+function addFractions(rng: Rng): WrittenProblem {
   for (;;) {
     const [d1, d2] = [pick(rng, [2, 3, 4, 5, 6, 8, 10, 12]), pick(rng, [2, 3, 4, 5, 6, 8, 10, 12])];
     if (d1 === d2) continue;
@@ -130,7 +130,7 @@ function addFractions(rng: Rng): AdvancedProblem {
 }
 
 /** Bråk, decimaltal och procent: one written as another. */
-function convertFraction(rng: Rng): AdvancedProblem {
+function convertFraction(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["toDecimal", "toPercent", "percentToFraction"] as const);
   if (kind === "toDecimal") {
     const d = pick(rng, [2, 4, 5, 10, 20, 25, 50]);
@@ -180,7 +180,7 @@ const VOLUME: Unit[] = [
 ];
 
 /** A value, a unit to change it to - nice numbers both ways (at most two decimals). */
-function conversion(rng: Rng, family: Unit[], stageId: ExamStageId, extraNames?: Record<string, string>): AdvancedProblem {
+function conversion(rng: Rng, family: Unit[], stageId: ExamStageId, extraNames?: Record<string, string>): WrittenProblem {
   const familyName: UnitFamily = family === LENGTH ? "length" : family === MASS ? "mass" : "volume";
   for (;;) {
     const [from, to] = [pick(rng, family), pick(rng, family)];
@@ -210,7 +210,7 @@ function conversion(rng: Rng, family: Unit[], stageId: ExamStageId, extraNames?:
 
 const lengthMass = (rng: Rng) => conversion(rng, rng() < 0.6 ? LENGTH : MASS, "2.9.1");
 
-function volumeUnits(rng: Rng): AdvancedProblem {
+function volumeUnits(rng: Rng): WrittenProblem {
   // 1 l = 1 dm³ and 1 ml = 1 cm³: the same family, two names.
   const kind = pick(rng, ["liter", "liter", "liter", "same", "cubicMeter", "aquarium"] as const);
   if (kind === "same") {
@@ -255,7 +255,7 @@ function volumeUnits(rng: Rng): AdvancedProblem {
 }
 
 /** Tid: hours and minutes - 2,5 h in minutes, 1 h 45 min in minutes, 150 min in hours. */
-function timeUnits(rng: Rng): AdvancedProblem {
+function timeUnits(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["decimalHours", "hoursMinutes", "minutesToHours", "minutesToSeconds", "days"] as const);
   if (kind === "days") {
     const toHours = rng() < 0.6;
@@ -295,7 +295,7 @@ function timeUnits(rng: Rng): AdvancedProblem {
 // --- Räkneordning och avrundning (åk 4-6) --------------------------------------
 
 /** Multiplication and division before addition and subtraction; brackets before everything. */
-function orderOfOperations(rng: Rng): AdvancedProblem {
+function orderOfOperations(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["plusTimes", "bracket", "minusDivide", "twoProducts"] as const);
   const [a, b, c] = [randInt(rng, 2, 9), randInt(rng, 2, 9), randInt(rng, 2, 9)];
   if (kind === "plusTimes") {
@@ -324,7 +324,7 @@ function orderOfOperations(rng: Rng): AdvancedProblem {
 }
 
 /** Avrunda: to tens, hundreds, a whole number, one decimal. */
-function rounding(rng: Rng): AdvancedProblem {
+function rounding(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["tens", "hundreds", "whole", "oneDecimal", "twoDecimals"] as const);
   const n =
     kind === "tens" ? randInt(rng, 101, 999) : kind === "hundreds" ? randInt(rng, 1001, 9999) : kind === "whole" ? randInt(rng, 101, 999) / 10 : kind === "oneDecimal" ? randInt(rng, 1001, 9999) / 1000 : randInt(rng, 10001, 99999) / 10000;
@@ -335,7 +335,7 @@ function rounding(rng: Rng): AdvancedProblem {
 
 // --- Bråk (åk 7-9) -------------------------------------------------------------
 
-function mulDivFractions(rng: Rng): AdvancedProblem {
+function mulDivFractions(rng: Rng): WrittenProblem {
   for (;;) {
     const [d1, d2] = [randInt(rng, 2, 9), randInt(rng, 2, 9)];
     const [n1, n2] = [randInt(rng, 1, d1 - 1), randInt(rng, 1, d2 - 1)];
@@ -355,7 +355,7 @@ function mulDivFractions(rng: Rng): AdvancedProblem {
 // --- Hastighet och skala (åk 7-9) -------------------------------------------------
 
 /** s = v · t, v = s / t, t = s / v. */
-function speed(rng: Rng): AdvancedProblem {
+function speed(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["distance", "speed", "time"] as const);
   const v = 5 * randInt(rng, 6, 22);
   const t = pick(rng, [0.5, 1.5, 2, 2.5, 3, 4, 1.25]);
@@ -380,7 +380,7 @@ function speed(rng: Rng): AdvancedProblem {
 }
 
 /** Skala: on the map to real life (1:k), back again, and an enlargement (k:1). */
-function scale(rng: Rng): AdvancedProblem {
+function scale(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["mapToReal", "realToMap", "enlargement"] as const);
   if (kind === "enlargement") {
     const k = pick(rng, [2, 4, 5, 10]);
@@ -424,7 +424,7 @@ function probabilityLine(fav: number, total: number): string {
 }
 
 /** One event: a bag of marbles, a die. Any form of the probability is right (3/8, 0,375, 37,5 %). */
-function probability(rng: Rng): AdvancedProblem {
+function probability(rng: Rng): WrittenProblem {
   if (rng() < 0.5) {
     const [r, b, g] = [randInt(rng, 2, 8), randInt(rng, 2, 8), pick(rng, [0, 2, 3, 4, 5])];
     const total = r + b + g;
@@ -443,7 +443,7 @@ function probability(rng: Rng): AdvancedProblem {
 }
 
 /** Two events: two coins, two dice - multiplied, or counted among the 36 outcomes. */
-function probabilityTwo(rng: Rng): AdvancedProblem {
+function probabilityTwo(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["twoHeads", "twoSixes", "sumSeven", "atLeastOneSix", "sameNumber", "sumK", "sumK", "twoDraws", "twoDraws", "coinAndDie"] as const);
   if (kind === "sumK") {
     const k = pick(rng, [3, 4, 5, 6, 8, 9, 10, 11]);
@@ -483,7 +483,7 @@ function probabilityTwo(rng: Rng): AdvancedProblem {
 // --- Volym (åk 7-9) ---------------------------------------------------------------------
 
 /** Rätblock, kub and a prism with a triangle for its base. */
-function volumePrism(rng: Rng): AdvancedProblem {
+function volumePrism(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["box", "cube", "prism"] as const);
   if (kind === "cube") {
     const s = randInt(rng, 2, 9);
@@ -510,7 +510,7 @@ function volumePrism(rng: Rng): AdvancedProblem {
  * numbers first (r² · h, and the third or the 4/3 coming out even), so π
  * meets one whole number at the end - 3,14 · 150, in a column.
  */
-function volumeRound(rng: Rng): AdvancedProblem {
+function volumeRound(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["cylinder", "cone", "sphere"] as const);
   const round1 = (n: number) => Math.round(n * 10) / 10;
   const dec = (n: number) => Math.round(n * 1e6) / 1e6;
@@ -561,7 +561,7 @@ function volumeRound(rng: Rng): AdvancedProblem {
 // --- Mönster och talföljder (åk 7-9) --------------------------------------------------------
 
 /** An arithmetic sequence: the number at a place, or a formula for the n:th. */
-function sequences(rng: Rng): AdvancedProblem {
+function sequences(rng: Rng): WrittenProblem {
   const a1 = randInt(rng, 1, 12);
   const d = randInt(rng, 2, 9);
   const terms = [0, 1, 2, 3].map((k) => a1 + k * d);
@@ -589,7 +589,7 @@ function sequences(rng: Rng): AdvancedProblem {
 // --- Ekvationssystem (gy) -----------------------------------------------------------------
 
 /** Two lines y = kx + m crossing at whole numbers (substitution), or two equations to add (addition method). */
-function systems(rng: Rng): AdvancedProblem {
+function systems(rng: Rng): WrittenProblem {
   const x = randInt(rng, -5, 6);
   const y = randInt(rng, -5, 8);
   if (rng() < 0.5) {
@@ -628,7 +628,7 @@ function systems(rng: Rng): AdvancedProblem {
   });
 }
 
-export const EXAM_GENERATORS: Record<ExamStageId, (rng: Rng) => AdvancedProblem> = {
+export const EXAM_GENERATORS: Record<ExamStageId, (rng: Rng) => WrittenProblem> = {
   "2.6.1": fractionOf,
   "2.6.2": simplifyFraction,
   "2.6.3": addFractions,

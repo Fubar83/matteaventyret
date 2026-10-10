@@ -1,8 +1,9 @@
 # Working on MatteÄventyret (for coding agents)
 
 Read [ARCHITECTURE.md](ARCHITECTURE.md) first: it maps the code, defines level /
-question type / kind, and lists the rules the code keeps. This file is the
-practical side.
+question type / kind, and lists the rules the code keeps. Before changing a
+type of question, read its document in [docs/question-types/](docs/question-types/README.md),
+and update that document in the same change. This file is the practical side.
 
 ## Before you say it's done
 
@@ -27,7 +28,10 @@ practical side.
 - **Texts** go in both `src/i18n/sv.json` and `en.json`.
 - **Never let the recognizer see the expected answer** (ARCHITECTURE.md, "Rules").
 - **Keep generation stable.** Changing a generator's use of the rng changes
-  every seed's question, in stories and in tests alike. Do it only on purpose.
+  every seed's question, in stories and in tests alike. Do it only on purpose,
+  and say so in the type's document.
+- **Stars come from the shared helpers**: `triedOutcome` / `guidedOutcome` in
+  `game/questions/questionOutcome.ts`. Don't build a `QuestionOutcome` by hand.
 
 ## Environment gotchas
 

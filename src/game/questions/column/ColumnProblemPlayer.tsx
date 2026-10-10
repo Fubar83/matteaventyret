@@ -32,6 +32,11 @@ export function ColumnProblemPlayer({ problem, phase, onSolved }: ColumnProblemP
   const method = problem.kind;
   const operands = { top: problem.top, bottom: problem.bottom };
   const decimalPlaces = problem.kind === "columnMul" ? 0 : (problem.decimalPlaces ?? 0);
+  // 3,5 + 1,25: the 3,5's missing hundredth is shown as a faint 0.
+  const operandDecimals = useMemo(
+    () => (problem.kind === "columnMul" ? {} : { top: problem.topDecimals, bottom: problem.bottomDecimals }),
+    [problem]
+  );
   const graph = useMemo(() => buildGraph(method, operands), [method, problem.top, problem.bottom]);
   const boardRef = useRef<DrawBoardHandle>(null);
 
@@ -76,8 +81,8 @@ export function ColumnProblemPlayer({ problem, phase, onSolved }: ColumnProblemP
   }, [fritt, ready, graph]);
 
   const board = useMemo(
-    () => buildColumnBoard(graph, problem.top, problem.bottom, operatorFor(method), written, decimalPlaces),
-    [graph, problem.top, problem.bottom, method, written, decimalPlaces]
+    () => buildColumnBoard(graph, problem.top, problem.bottom, operatorFor(method), written, decimalPlaces, operandDecimals),
+    [graph, problem.top, problem.bottom, method, written, decimalPlaces, operandDecimals]
   );
   const active = useMemo(() => activeBoxes(board, activeCellIds, written, fritt), [board, activeCellIds, written, fritt]);
 

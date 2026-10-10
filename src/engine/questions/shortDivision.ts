@@ -7,6 +7,8 @@
  * by column plan (the same one buildGraph uses) to check it has the level's
  * pattern. 2.2.1 and 2.2.3's patterns are too rare to hit by chance, so they
  * build the digits directly instead.
+ *
+ * How it works, and what must stay true: docs/question-types/shortDivision.md.
  */
 import { computeShortDivisionPlan } from "../methods/shortDiv";
 import { randInt, type Rng } from "../rng";

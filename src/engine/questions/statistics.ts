@@ -1,6 +1,8 @@
 /**
  * Lägesmått (Lgr22 åk 4-6 "Sannolikhet och statistik"): medelvärde, median
  * and typvärde of a few small numbers (1-20) - each always a whole number.
+ *
+ * How it works, and what must stay true: docs/question-types/statistics.md.
  */
 import { randInt, shuffle, type Rng } from "../rng";
 import { questionType, retry } from "./questionType";

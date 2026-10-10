@@ -4,12 +4,12 @@
  * solution so far (workCheck.ts): does it still hold, does it bring in a
  * number that came from nowhere - and is it the answer.
  */
-import { givenNumbers, type AdvancedProblem } from "../engine/questions/written/problem";
+import { givenNumbers, type WrittenProblem } from "../engine/questions/written/problem";
 import { parseExpression, parseLines } from "./evaluate";
 import { checkWrittenAnswer, isSimplestFraction, isSimplified, numbersIn, withoutUnits, type Answer } from "./workCheck";
 
 /** A question's answer in the checker's form. */
-export function answerOf(p: AdvancedProblem): Answer {
+export function answerOf(p: WrittenProblem): Answer {
   const a = p.answer;
   if (a.kind === "value") return { ...a, givens: givenNumbers(p) }; // approx (π, sin) travels along
   if (a.kind === "solutions") return { kind: "solutions", variable: a.variable, values: a.values, given: [] };

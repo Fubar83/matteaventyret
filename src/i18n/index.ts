@@ -30,3 +30,8 @@ export function t(key: string, vars?: Record<string, string | number>): string {
   if (!vars) return template;
   return Object.entries(vars).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, typeof v === "string" && v.startsWith("@") ? t(v.slice(1)) : String(v)), template);
 }
+
+/** A text as written for one language, without falling back to Swedish - for checking that both have it. */
+export function textIn(locale: Locale, key: string): string | undefined {
+  return DICTS[locale][key];
+}

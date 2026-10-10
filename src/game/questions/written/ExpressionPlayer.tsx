@@ -1,4 +1,4 @@
-import type { AdvancedProblem } from "../../../engine/questions/written/problem";
+import type { WrittenProblem } from "../../../engine/questions/written/problem";
 import { t } from "../../../i18n";
 import type { WritingLevel } from "../../../recognition/levels";
 import { FreeSolver } from "./FreeSolver";
@@ -9,7 +9,7 @@ import type { QuestionOutcome } from "../questionOutcome";
 import { Tex } from "../../Tex";
 
 interface ExpressionPlayerProps {
-  problem: AdvancedProblem;
+  problem: WrittenProblem;
   level: WritingLevel;
   onSolved: (outcome: QuestionOutcome) => void;
 }

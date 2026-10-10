@@ -13,7 +13,7 @@
  * Times are written the Swedish way, hours and minutes with a point: 3.30,
  * 15.05 - read as the number 3,3 or 15,05, which is all an answer needs to be.
  */
-import { st, tex, type AdvancedProblem, type AnswerSpec, type SolutionStep } from "./problem";
+import { st, tex, type WrittenProblem, type AnswerSpec, type SolutionStep } from "./problem";
 import { GROUP_THINGS, type QuestionScene, type ScaleTerm } from "./questionScene";
 import type { Figure, FigureLabel, FigureShape, Point } from "./geometry";
 import { pick, randInt, type Rng } from "../../rng";
@@ -51,7 +51,7 @@ interface Spec {
   answerOnly?: { choices: number[] };
 }
 
-function make(stageId: BasicStageId, s: Spec): AdvancedProblem {
+function make(stageId: BasicStageId, s: Spec): WrittenProblem {
   return {
     stageId,
     kind: "expression",
@@ -94,7 +94,7 @@ export function tableChoices(rng: Rng, a: number, b: number): number[] {
 }
 
 /** Gångertabellen: just the answer - picked or written (see answerOnly); the groups picture is there to count on. */
-function timesTables(rng: Rng): AdvancedProblem {
+function timesTables(rng: Rng): WrittenProblem {
   const a = randInt(rng, 2, 10);
   const b = randInt(rng, 2, 10);
   const answerOnly = { choices: tableChoices(rng, a, b) };
@@ -120,7 +120,7 @@ function timesTables(rng: Rng): AdvancedProblem {
 }
 
 /** 56 / 8: division as the table backwards - or sharing equally. */
-function divisionFacts(rng: Rng): AdvancedProblem {
+function divisionFacts(rng: Rng): WrittenProblem {
   const b = randInt(rng, 2, 10);
   const q = randInt(rng, 2, 10);
   const a = b * q;
@@ -148,7 +148,7 @@ const w = (value: number): ScaleTerm => ({ kind: "weight", value });
 const balance = (left: ScaleTerm[], right: ScaleTerm[]): QuestionScene => ({ kind: "balance", left, right });
 
 /** □ + 7 = 15, 20 − □ = 12, □ · 4 = 24: the missing number, found by counting back. */
-function missingNumber(rng: Rng): AdvancedProblem {
+function missingNumber(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["addFirst", "addSecond", "subSecond", "subFirst", "times"] as const);
   const box = "\\square";
   if (kind === "times") {
@@ -192,7 +192,7 @@ function spanSteps(h1: number, m1: number, h2: number, m2: number): SolutionStep
 }
 
 /** Hur lång tid? Within a day, whole and half hours and quarters (åk 3). */
-function duration(rng: Rng): AdvancedProblem {
+function duration(rng: Rng): WrittenProblem {
   const h1 = randInt(rng, 7, 16);
   const m1 = pick(rng, [0, 30, 15, 0, 30, 45]);
   const length = pick(rng, [15, 30, 45, 60, 90, 120, 75, 105]);
@@ -209,7 +209,7 @@ function duration(rng: Rng): AdvancedProblem {
 }
 
 /** Pengar: counting what's in the wallet, or how many coins make a sum. */
-function money(rng: Rng): AdvancedProblem {
+function money(rng: Rng): WrittenProblem {
   if (rng() < 0.65) {
     const kinds = [100, 50, 20, 10, 5, 2, 1];
     const chosen = kinds.filter(() => rng() < 0.5).slice(0, 4);
@@ -262,7 +262,7 @@ function pyramidFigure(): Figure {
 }
 
 /** Hörn, sidor, kanter, sidoytor: counted on a shape that's drawn. */
-function shapes(rng: Rng): AdvancedProblem {
+function shapes(rng: Rng): WrittenProblem {
   const shape = pick(rng, ["triangle", "square", "rectangle", "pentagon", "hexagon", "cube", "box", "pyramid", "cube", "box"] as ShapeName[]);
   const flat = shape === "triangle" || shape === "square" || shape === "rectangle" || shape === "pentagon" || shape === "hexagon";
   if (flat) {
@@ -305,7 +305,7 @@ function triangleWithAngles(a: number, b: number): { points: [Point, Point, Poin
 }
 
 /** Vinklar: what's left of 90°, 180°, the triangle's 180° or the quadrilateral's 360°. */
-function angles(rng: Rng): AdvancedProblem {
+function angles(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["triangle", "triangle", "right", "straight", "quad"] as const);
   if (kind === "triangle") {
     let a: number, b: number;
@@ -409,7 +409,7 @@ function grid(points: { name: string; at: [number, number] }[]): Figure {
 }
 
 /** Koordinatsystem: a point's x or y, or how far apart two points on a line are. */
-function coordinates(rng: Rng): AdvancedProblem {
+function coordinates(rng: Rng): WrittenProblem {
   const x = randInt(rng, 1, 8);
   const y = randInt(rng, 1, 8);
   const kind = pick(rng, ["x", "y", "x", "y", "distance"] as const);
@@ -438,7 +438,7 @@ function coordinates(rng: Rng): AdvancedProblem {
 // --- Åk 4-6: ekvationer, delbarhet, överslag ----------------------------------------
 
 /** x + 7 = 15, x − 4 = 9, 6x = 42, x / 3 = 5, 2x + 3 = 11: the unknown number, by doing the opposite. */
-function simpleEquations(rng: Rng): AdvancedProblem {
+function simpleEquations(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["plus", "minus", "times", "divide", "twoStep"] as const);
   const x = randInt(rng, 2, 15);
   const a = randInt(rng, 2, 12);
@@ -462,7 +462,7 @@ const isPrime = (n: number) => n > 1 && Array.from({ length: Math.floor(Math.sqr
 const smallestFactor = (n: number) => [2, 3, 5, 7, 11, 13].find((p) => n % p === 0) ?? n;
 
 /** Delbarhet och primtal: the next prime, the biggest prime factor, the smallest number both go into. */
-function primes(rng: Rng): AdvancedProblem {
+function primes(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["nextPrime", "factor", "lcm"] as const);
   if (kind === "nextPrime") {
     const n = randInt(rng, 10, 60);
@@ -515,7 +515,7 @@ function primes(rng: Rng): AdvancedProblem {
 }
 
 /** Överslag: round first, then work it out - a sum to hundreds, a product to tens, a shop's prices. */
-function estimation(rng: Rng): AdvancedProblem {
+function estimation(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["product", "sum", "prices"] as const);
   const r10 = (n: number) => Math.round(n / 10) * 10;
   const r100 = (n: number) => Math.round(n / 100) * 100;
@@ -566,7 +566,7 @@ function estimation(rng: Rng): AdvancedProblem {
 // --- Åk 4-6: areaenheter och tidsskillnader ------------------------------------------
 
 /** cm², dm², m² (and mm²): a hundred between each - ten each way, both ways. */
-function areaUnits(rng: Rng): AdvancedProblem {
+function areaUnits(rng: Rng): WrittenProblem {
   const units = ["mm²", "cm²", "dm²", "m²"];
   const from = randInt(rng, 0, 3);
   let to = randInt(rng, 0, 3);
@@ -586,7 +586,7 @@ function areaUnits(rng: Rng): AdvancedProblem {
 }
 
 /** Tidsskillnader with the 24-hour clock: how long a trip takes, or what the time is after a while. */
-function timeDifference(rng: Rng): AdvancedProblem {
+function timeDifference(rng: Rng): WrittenProblem {
   const h1 = randInt(rng, 6, 20);
   const m1 = 5 * randInt(rng, 1, 11);
   if (rng() < 0.6) {
@@ -612,7 +612,7 @@ function timeDifference(rng: Rng): AdvancedProblem {
   return make("2.9.5", { promptKey: "basic.prompt.later", promptVars: { start: clock(h1, m1), add }, answer: value(clockValue(h2, m2)), steps });
 }
 
-export const BASIC_GENERATORS: Record<BasicStageId, (rng: Rng) => AdvancedProblem> = {
+export const BASIC_GENERATORS: Record<BasicStageId, (rng: Rng) => WrittenProblem> = {
   "1.4.1": timesTables,
   "1.4.2": divisionFacts,
   "1.4.3": missingNumber,

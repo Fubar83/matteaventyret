@@ -17,6 +17,8 @@
  *
  * Numbers are kept as digit strings and whole numbers wherever possible, so
  * no floating point decides a digit.
+ *
+ * How it works, and what must stay true: docs/question-types/trappan.md.
  */
 import { pick, randInt, type Rng } from "../rng";
 import { questionType } from "./questionType";

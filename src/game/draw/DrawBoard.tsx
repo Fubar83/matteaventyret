@@ -385,8 +385,18 @@ function BoardGuides({
           return (
             <g key={b.id}>
               {glow(b)}
-              <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={10} fill={lit ? HIGHLIGHT.fill : "#ffffff"} stroke={active.has(b.id) ? "#38bdf8" : lit ? HIGHLIGHT.stroke : "#cbd5e1"} strokeWidth={active.has(b.id) || lit ? 3 : 2} />
-              <text x={b.x + b.w / 2} y={b.y + b.h / 2} fontSize={b.h * 0.55} fill={PRINTED_INK} textAnchor="middle" dominantBaseline="central" fontWeight={600}>
+              <rect
+                x={b.x}
+                y={b.y}
+                width={b.w}
+                height={b.h}
+                rx={10}
+                fill={lit ? HIGHLIGHT.fill : b.faint ? "#f8fafc" : "#ffffff"}
+                stroke={active.has(b.id) ? "#38bdf8" : lit ? HIGHLIGHT.stroke : "#cbd5e1"}
+                strokeWidth={active.has(b.id) || lit ? 3 : 2}
+                strokeDasharray={b.faint ? "6 5" : undefined}
+              />
+              <text x={b.x + b.w / 2} y={b.y + b.h / 2} fontSize={b.h * 0.55} fill={b.faint ? "#94a3b8" : PRINTED_INK} textAnchor="middle" dominantBaseline="central" fontWeight={600}>
                 {b.text}
               </text>
               {value === "struck" && <line x1={b.x + b.w * 0.15} y1={b.y + b.h * 0.85} x2={b.x + b.w * 0.85} y2={b.y + b.h * 0.15} stroke={STATUS_COLOR.wrong} strokeWidth={4} strokeLinecap="round" />}

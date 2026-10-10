@@ -9,6 +9,8 @@
  *   2.9.6 kassan   - the cashier again: several things, paid with a 100, 200 or 500 note
  *
  * Each round goes from its easiest question to its hardest (`difficulty`).
+ *
+ * How it works, and what must stay true: docs/question-types/shop.md.
  */
 import { pick, randInt, type Rng } from "../rng";
 import { questionType } from "./questionType";
@@ -195,7 +197,7 @@ function basket(rng: Rng): ShopProblem {
     const shop = pick(rng, ["kiosk", "market"] as ShopKind[]);
     const shelf = stockShelf(rng, shop, 6);
     const n = rng() < 0.6 ? 2 : 3;
-    const buy = shelf.slice(0, 0);
+    const buy: ShopItem[] = [];
     const pool = [...shelf];
     while (buy.length < n) buy.push(pool.splice(randInt(rng, 0, pool.length - 1), 1)[0]);
     const total = buy.reduce((s, x) => s + x.price, 0);

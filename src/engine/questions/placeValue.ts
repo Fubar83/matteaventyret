@@ -1,7 +1,11 @@
-/** Positionssystemet (1.1.1): what a digit in a four-digit number is worth - the 6 in 6 435 is 6 000. */
+/**
+ * Positionssystemet (1.1.1): what a digit in a four-digit number is worth - the 6 in 6 435 is 6 000.
+ *
+ * How it works, and what must stay true: docs/question-types/placeValue.md.
+ */
 import { digitAt } from "../digits";
 import { randInt, type Rng } from "../rng";
-import { questionType } from "./questionType";
+import { questionType, retry } from "./questionType";
 
 export type PlaceValueStageId = "1.1.1";
 
@@ -14,11 +18,14 @@ export interface PlaceValueProblem {
   answer: number;
 }
 
-function placeValue(rng: Rng): PlaceValueProblem {
-  const number = randInt(rng, 1000, 9999);
-  const columnAsked = randInt(rng, 0, 3);
-  return { stageId: "1.1.1", kind: "placeValue", number, columnAsked, answer: digitAt(number, columnAsked) * 10 ** columnAsked };
-}
+/** Never about a 0: "what is the 0 worth in 4 039?" has nothing to show in the blocks and nothing to count. */
+const placeValue = (rng: Rng) =>
+  retry("1.1.1", (): PlaceValueProblem | null => {
+    const number = randInt(rng, 1000, 9999);
+    const columnAsked = randInt(rng, 0, 3);
+    const digit = digitAt(number, columnAsked);
+    return digit === 0 ? null : { stageId: "1.1.1", kind: "placeValue", number, columnAsked, answer: digit * 10 ** columnAsked };
+  });
 
 export const PLACE_VALUE_QUESTIONS = questionType({
   id: "placeValue",

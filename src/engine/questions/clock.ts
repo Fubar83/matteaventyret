@@ -110,10 +110,13 @@ export function spokenTime(h: number, m: number): { key: string; hour: number; n
 /**
  * The clock, a step at a time - each step moves one dial: the times (hel och
  * halv → kvart → fem minuter → minuten), the faces (every number → only
- * 12-3-6-9 → Roman → none), and digital and the 24-hour clock. Every step
- * mixes reading a clock ("Vad är klockan?", written) with setting one
- * (dragging the hands), and each round goes from its easiest question to its
- * hardest (see `difficulty`, generateRound).
+ * 12-3-6-9 → Roman → none), and digital and the 24-hour clock. A step mixes
+ * its tasks: reading a clock ("Vad är klockan?", picked among the usual
+ * mistakes), setting the hands to a time said in words or shown on a digital
+ * clock, and setting a digital clock to the hands. Each round goes from its
+ * easiest question to its hardest (see `difficulty`, generateRound).
+ *
+ * How it works, and what must stay true: docs/question-types/clock.md.
  *
  *   1.5.1 hel och halv   1.5.3 kvart   1.5.4 fem minuter
  *   1.5.5 digital klocka (morning)   1.5.6 24-timmarsklockan   1.5.7 på minuten
@@ -131,7 +134,11 @@ export interface ClockProblem {
   stageId: ClockStageId;
   kind: "clock";
   task: "read" | "setAnalog" | "setDigital";
-  /** The time, 0-23 (a 12-hour face shows 17.30 as 5.30). */
+  /**
+   * The time. Read and set from words: 1-12, as it's said ("halv 6"). With a
+   * digital clock: 0-23, as it shows (a 12-hour face shows 17.30 as 5.30).
+   * `sky` always has the time of day.
+   */
   h: number;
   m: number;
   /** What the time is given as: a clock with hands (read, setDigital), in words or on a digital clock (setAnalog). */

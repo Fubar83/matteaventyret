@@ -53,6 +53,12 @@ describe("buildColumnBoard", () => {
     const dec = buildColumnBoard(buildGraph("columnAdd", { top: 47, bottom: 38 }), 47, 38, "+", {}, 1);
     expect(dec.layout.texts.filter((t) => t.text === ",").length).toBe(3); // top, bottom and answer rows
   });
+
+  it("shows a number's missing hundredth (3,5 under 1,25) as a faint 0 - and only that one", () => {
+    const board = buildColumnBoard(buildGraph("columnAdd", { top: 350, bottom: 125 }), 350, 125, "+", {}, 2, { top: 1 });
+    const faint = board.layout.boxes.filter((b) => b.faint).map((b) => `${b.id}=${b.text}`);
+    expect(faint).toEqual(["top:0=0"]);
+  });
 });
 
 describe("buildColumnBoard for subtraction", () => {

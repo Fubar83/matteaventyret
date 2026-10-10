@@ -8,7 +8,9 @@ TypeScript + Vite), works offline as a PWA, and has no server.
 This document is the map: where things live, how a question flows from a
 level to stars, the rules the code keeps, and how to extend it. It is written
 for people and for coding agents alike - the agent-specific working rules are
-in [AGENTS.md](AGENTS.md).
+in [AGENTS.md](AGENTS.md). Each type of question has a document of its own in
+[docs/question-types/](docs/question-types/README.md): its levels, how its
+questions are made and played, and what must stay true.
 
 ## The big picture
 
@@ -117,7 +119,7 @@ player does not type-check.
 `geometry.ts` (figures), `examTopics.ts` (the national tests' topics) and
 `advanced.ts` (åk 7-9 and gymnasiet). They share the model in `problem.ts`:
 
-- `AdvancedProblem`: the task (an i18n prompt and LaTeX), the `answer`
+- `WrittenProblem`: the task (an i18n prompt and LaTeX), the `answer`
   (`AnswerSpec`: a value, solutions, an expression in a required form, or a
   system), the help ladder (tip, first step, worked solution), and optionally
   a `figure`, a `scene` picture for young children, a `unit`, or `answerOnly`
@@ -217,11 +219,16 @@ It shows up in Storybook's "Nivå" setting automatically.
    Add it to `QUESTION_TYPES` in `engine/generator.ts`.
 2. `game/questions/<type>/<Type>Player.tsx`, and its entry in `PLAYERS` in
    `QuestionPlayer.tsx` (until then the code doesn't type-check). A player
-   takes the problem, reports a `QuestionOutcome` through `onSolved`, uses
-   `HelpLadder` for help and `NextSheet` to move on.
+   takes the problem and reports a `QuestionOutcome` through `onSolved`, built
+   with `triedOutcome` or `guidedOutcome` (`questionOutcome.ts`) so its stars
+   follow the same rules as every other type. A question answered with one
+   number gets its tries from `useAnswerTries`. `HelpLadder` gives help and
+   `NextSheet` moves on after a shown answer.
 3. Its levels in `game/stages.ts` and their texts in `i18n/`.
 4. A story file in `src/stories/`, listed in `catalog.ts`, with the type's
    variants as stories (`variants.ts`) and its settings as controls.
+5. Its document, `docs/question-types/<id>.md`, listed in that folder's
+   README: the levels, how it's made and played, and what must stay true.
 
 ### What the tests catch
 
@@ -231,7 +238,9 @@ It shows up in Storybook's "Nivå" setting automatically.
 | a level id or kind claimed by two types; a level making another type's kind | `engine/__tests__/questionTypes.test.ts` |
 | a kind without a player | the type-check |
 | a type the game plays without a story; a story variant no level makes | `stories/storyCoverage.test.ts` |
-| a level title or text in only one language | `game/__tests__/content.test.ts` |
+| a level title, or a written question's prompt or tip, in only one language | `game/__tests__/content.test.ts` |
+| a type without its document | `engine/__tests__/questionTypes.test.ts` |
+| a player that scores differently from the rest | `game/__tests__/questionOutcome.test.ts` (the shared rules) |
 | a written question whose worked steps don't check out | `engine/__tests__/solutionSteps.test.ts` |
 | a freely written level without a recognition profile | `recognition/__tests__/profiles.test.ts` |
 | a profile listing characters its model doesn't know | `recognition/profiles.ts` throws when it loads |

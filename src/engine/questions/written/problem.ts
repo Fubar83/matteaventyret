@@ -1,5 +1,5 @@
 /**
- * The written questions' model: what a question is (AdvancedProblem - its
+ * The written questions' model: what a question is (WrittenProblem - its
  * task, the answer written work is checked against, the help ladder, and a
  * figure, picture or unit where it has one), and the helpers the topic
  * modules write their tasks and solutions with. The levels themselves are in
@@ -34,7 +34,7 @@ export type AnswerSpec =
   /** An equation system's solution, one value per variable. */
   | { kind: "system"; variables: string[]; values: number[] };
 
-export interface AdvancedProblem {
+export interface WrittenProblem {
   stageId: WrittenStageId;
   kind: "expression";
   /** i18n key for the question's wording ("adv.prompt.*"), and its values. */
@@ -49,8 +49,6 @@ export interface AdvancedProblem {
   solution: string[];
   /** Geometry (geometry.ts): the shape, its measurements marked. */
   figure?: Figure;
-  /** How hard it is, where a level knows - a round's questions then come easiest first (generateRound). */
-  difficulty?: number;
   /** A picture of the question for the younger levels: a balance, groups of things, things shared out. */
   scene?: QuestionScene;
   /** Geometry: the answer's unit ("cm", "m²") - written after the answer, it isn't part of the number. */
@@ -79,7 +77,7 @@ export const st = (guideKey: string, line: string, guideVars?: Record<string, st
  * (the task restated first is left out - it's already shown) with a general
  * guide: start from the formula and the given numbers, then work it out.
  */
-export function stepsOf(p: AdvancedProblem): SolutionStep[] {
+export function stepsOf(p: WrittenProblem): SolutionStep[] {
   if (p.steps && p.steps.length > 0) return p.steps;
   const lines = p.solution.filter((line, i) => !(i === 0 && line === p.display && p.solution.length > 1));
   return lines.map((line, i) => st(i === 0 ? "step.first" : i === lines.length - 1 ? "step.finish" : "step.next", line.replace(/^\s*=\s*/, "")));
@@ -101,7 +99,7 @@ const NUMBER = /\d+(?:\\,\d{3})*(?:(?:\{,\}|[.,])\d+)?/g;
  * 3,14, the value most people use for it. (For pointing out a written number
  * that came from nowhere - mathinput/workCheck.ts's unknownNumbers.)
  */
-export function givenNumbers(p: AdvancedProblem): number[] {
+export function givenNumbers(p: WrittenProblem): number[] {
   const texts = [p.display, p.firstStep, ...p.solution, ...(p.figure?.labels.map((l) => l.text) ?? []), ...Object.values(p.promptVars ?? {}).map(String)];
   const out = texts.flatMap((text) => [...text.matchAll(NUMBER)].map((m) => Number(m[0].replace(/\\,/g, "").replace(/\{,\}|,/, "."))));
   if (texts.some((text) => text.includes("\\pi"))) out.push(3.14);

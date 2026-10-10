@@ -8,6 +8,8 @@
  * Decimals (2.3.3, 2.3.4) are exact integer arithmetic at a fixed scale: 4,7
  * is the integer 47 with decimalPlaces 1, worked the same way - only the board
  * draws the comma.
+ *
+ * How it works, and what must stay true: docs/question-types/column.md.
  */
 import { digitAt, digitsToNumber } from "../digits";
 import { randInt, type Rng } from "../rng";
@@ -19,9 +21,21 @@ type MulStageId = "2.1.1" | "2.1.2" | "2.1.3";
 type DecimalStageId = "2.3.3" | "2.3.4";
 export type ColumnStageId = AddSubStageId | MulStageId | DecimalStageId;
 
+/**
+ * Addition and subtraction can have decimals: the numbers are integers at the
+ * scale `decimalPlaces` (4,7 is 47 with 1). Where one number has fewer
+ * decimals than that (the 3,5 in 3,5 + 1,25), `topDecimals`/`bottomDecimals`
+ * say so - its last digit is a 0 to think of, which the board shows faint.
+ */
+interface DecimalFields {
+  decimalPlaces?: number;
+  topDecimals?: number;
+  bottomDecimals?: number;
+}
+
 export type ColumnProblem =
-  | { stageId: AddSubStageId | DecimalStageId; kind: "columnAdd"; top: number; bottom: number; answer: number; decimalPlaces?: number }
-  | { stageId: AddSubStageId | DecimalStageId; kind: "columnSub"; top: number; bottom: number; answer: number; decimalPlaces?: number }
+  | ({ stageId: AddSubStageId | DecimalStageId; kind: "columnAdd"; top: number; bottom: number; answer: number } & DecimalFields)
+  | ({ stageId: AddSubStageId | DecimalStageId; kind: "columnSub"; top: number; bottom: number; answer: number } & DecimalFields)
   | { stageId: MulStageId; kind: "columnMul"; top: number; bottom: number; answer: number };
 
 // --- Building numbers to a pattern -------------------------------------------
@@ -167,18 +181,28 @@ function chooseColumns(rng: Rng, fromCols: readonly number[], count: number): Se
 
 // --- Verified questions --------------------------------------------------------
 
-function add(stageId: AddSubStageId | DecimalStageId, top: number, bottom: number, decimalPlaces?: number): ColumnProblem {
+/** Decimals: the scale both numbers are worked at, and each number's own decimals where they differ (3,5 + 1,25). */
+interface Decimals {
+  places: number;
+  top?: number;
+  bottom?: number;
+}
+
+const decimalFields = (d?: Decimals) =>
+  d ? { decimalPlaces: d.places, ...(d.top !== undefined && d.top !== d.places ? { topDecimals: d.top } : {}), ...(d.bottom !== undefined && d.bottom !== d.places ? { bottomDecimals: d.bottom } : {}) } : {};
+
+function add(stageId: AddSubStageId | DecimalStageId, top: number, bottom: number, decimals?: Decimals): ColumnProblem {
   const answer = top + bottom;
   const check = verifyAddition(top, bottom, answer);
   if (!check.valid) throw new Error(`generator/verifier mismatch for ${top}+${bottom}: ${check.reason}`);
-  return { stageId, kind: "columnAdd", top, bottom, answer, ...(decimalPlaces !== undefined ? { decimalPlaces } : {}) };
+  return { stageId, kind: "columnAdd", top, bottom, answer, ...decimalFields(decimals) };
 }
 
-function sub(stageId: AddSubStageId | DecimalStageId, top: number, bottom: number, decimalPlaces?: number): ColumnProblem {
+function sub(stageId: AddSubStageId | DecimalStageId, top: number, bottom: number, decimals?: Decimals): ColumnProblem {
   const answer = top - bottom;
   const check = verifySubtraction(top, bottom, answer);
   if (!check.valid) throw new Error(`generator/verifier mismatch for ${top}-${bottom}: ${check.reason}`);
-  return { stageId, kind: "columnSub", top, bottom, answer, ...(decimalPlaces !== undefined ? { decimalPlaces } : {}) };
+  return { stageId, kind: "columnSub", top, bottom, answer, ...decimalFields(decimals) };
 }
 
 function mul(stageId: MulStageId, top: number, bottom: number): ColumnProblem {
@@ -282,26 +306,48 @@ const multiplication = (stageId: MulStageId, len: number, carries: (rng: Rng) =>
   });
 
 /**
- * Decimals at a fixed scale: tenths (2.3.3: 47 = 4,7) or hundredths (2.3.4:
- * 350 = 3,50, with a hundredths digit that isn't 0 in one of them). The
- * carry/växling was taught in world 1, so no pattern is forced.
+ * 2.3.3: tenths - 4,7 + 2,5, 6,2 − 3,8 - with a minnessiffra or a växling
+ * across the comma more often than not: the comma changes nothing about how
+ * it's done.
  */
-function decimals(stageId: DecimalStageId, places: 1 | 2) {
-  const len = places + 1;
-  const needsLastDigit = (top: number, bottom: number) => places === 2 && digitAt(top, 0) === 0 && digitAt(bottom, 0) === 0;
-  return (rng: Rng): ColumnProblem => {
-    const isAdd = rng() < 0.5;
-    return retry(stageId, () => {
-      if (isAdd) {
-        const { top, bottom } = buildAdditionWithCarryPattern(rng, len, new Set());
-        if (isTrivial(top, bottom, "add") || needsLastDigit(top, bottom)) return null;
-        return add(stageId, top, bottom, places);
-      }
-      const { top, bottom } = buildSubtractionWithBorrowPattern(rng, len, new Set());
-      if (top - bottom < 10 || isTrivial(top, bottom, "sub") || needsLastDigit(top, bottom)) return null;
-      return sub(stageId, top, bottom, places);
-    });
-  };
+function tenths(rng: Rng): ColumnProblem {
+  const isAdd = rng() < 0.5;
+  return retry("2.3.3", () => {
+    const len = randInt(rng, 2, 3); // 4,7 or 12,5
+    const cols = Array.from({ length: len }, (_, i) => i);
+    if (isAdd) {
+      const { top, bottom } = buildAdditionWithCarryPattern(rng, len, chooseColumns(rng, cols, randInt(rng, 0, 2)));
+      return isTrivial(top, bottom, "add") ? null : add("2.3.3", top, bottom, { places: 1 });
+    }
+    const { top, bottom } = buildSubtractionWithBorrowPattern(rng, len, chooseColumns(rng, cols.slice(0, -1), randInt(rng, 0, 1)));
+    return top - bottom < 10 || isTrivial(top, bottom, "sub") ? null : sub("2.3.3", top, bottom, { places: 1 });
+  });
+}
+
+/**
+ * 2.3.4: olika antal decimaler - 3,5 + 1,25, 4,2 − 1,75: one number with
+ * hundredths, the other with tenths only. The commas go under each other
+ * and the missing hundredth is a 0 to think of (the board shows it faint) -
+ * which, when it's on top in a subtraction, has to borrow.
+ */
+function differentDecimals(rng: Rng): ColumnProblem {
+  const isAdd = rng() < 0.5;
+  const tenthsOnTop = rng() < 0.5;
+  const tenthsOnly = (n: number) => n - (n % 10);
+  return retry("2.3.4", () => {
+    const len = randInt(rng, 3, 4); // 3,50 or 12,50
+    const cols = Array.from({ length: len }, (_, i) => i);
+    const built = isAdd
+      ? buildAdditionWithCarryPattern(rng, len, chooseColumns(rng, cols, randInt(rng, 0, 2)))
+      : buildSubtractionWithBorrowPattern(rng, len, chooseColumns(rng, cols.slice(0, -1), randInt(rng, 0, 1)));
+    // The one with tenths only: its hundredths digit made 0 - the other keeps one that isn't.
+    const top = tenthsOnTop ? tenthsOnly(built.top) : built.top;
+    const bottom = tenthsOnTop ? built.bottom : tenthsOnly(built.bottom);
+    if (digitAt(tenthsOnTop ? bottom : top, 0) === 0) return null;
+    const decimals = { places: 2, top: tenthsOnTop ? 1 : 2, bottom: tenthsOnTop ? 2 : 1 };
+    if (isAdd) return isTrivial(top, bottom, "add") ? null : add("2.3.4", top, bottom, decimals);
+    return top - bottom < 10 || isTrivial(top, bottom, "sub") ? null : sub("2.3.4", top, bottom, decimals);
+  });
 }
 
 export const COLUMN_QUESTIONS = questionType({
@@ -318,8 +364,8 @@ export const COLUMN_QUESTIONS = questionType({
     "2.1.1": multiplication("2.1.1", 2, () => new Set()),
     "2.1.2": multiplication("2.1.2", 2, () => new Set([0])),
     "2.1.3": multiplication("2.1.3", 3, (rng) => chooseColumns(rng, [0, 1], randInt(rng, 1, 2))),
-    "2.3.3": decimals("2.3.3", 1),
-    "2.3.4": decimals("2.3.4", 2),
+    "2.3.3": tenths,
+    "2.3.4": differentDecimals,
   },
   key: (p) => `${p.kind}:${p.top}:${p.bottom}`,
 });

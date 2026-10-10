@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import { parseExpression } from "../../mathinput/evaluate";
 import { checkWrittenAnswer, type Answer } from "../../mathinput/workCheck";
 import { ADVANCED_GENERATORS, type AdvancedStageId } from "../questions/written/advanced";
-import { tex, type AdvancedProblem } from "../questions/written/problem";
+import { tex, type WrittenProblem } from "../questions/written/problem";
 import { generateRound } from "../generator";
 import { makeRng } from "../rng";
 
 const N = 300;
 
 /** The checker's form of a problem's answer. */
-function toAnswer(p: AdvancedProblem): Answer {
+function toAnswer(p: WrittenProblem): Answer {
   const a = p.answer;
   if (a.kind === "value") return a;
   if (a.kind === "solutions") return { kind: "solutions", variable: a.variable, values: a.values, given: [] };

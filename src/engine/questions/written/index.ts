@@ -4,6 +4,8 @@
  * geometry, the national tests' topics and åk 7-9 to gymnasiet. One question
  * type, its levels gathered from the topic modules; the model they share is
  * problem.ts.
+ *
+ * How it works, and what must stay true: docs/question-types/written.md.
  */
 import { questionType } from "../questionType";
 import { ADVANCED_GENERATORS } from "./advanced";

@@ -9,7 +9,7 @@
  */
 import type { Rng } from "../../rng";
 import { pick, randInt } from "../../rng";
-import { coef, par, signed, st, tex, type AdvancedProblem, type AnswerSpec, type SolutionStep } from "./problem";
+import { coef, par, signed, st, tex, type WrittenProblem, type AnswerSpec, type SolutionStep } from "./problem";
 
 export type AdvancedStageId =
   | "3.1.1"
@@ -31,7 +31,7 @@ export type AdvancedStageId =
   | "4.3.1"
   | "4.3.2";
 
-const withSteps = (p: AdvancedProblem, steps: SolutionStep[]): AdvancedProblem => ({ ...p, steps });
+const withSteps = (p: WrittenProblem, steps: SolutionStep[]): WrittenProblem => ({ ...p, steps });
 
 const nonZero = (rng: Rng, lo: number, hi: number) => {
   for (;;) {
@@ -41,14 +41,14 @@ const nonZero = (rng: Rng, lo: number, hi: number) => {
 };
 
 
-function base(stageId: AdvancedStageId, promptKey: string, display: string, answer: AnswerSpec, firstStep: string, solution: string[], promptVars?: Record<string, string | number>): AdvancedProblem {
+function base(stageId: AdvancedStageId, promptKey: string, display: string, answer: AnswerSpec, firstStep: string, solution: string[], promptVars?: Record<string, string | number>): WrittenProblem {
   return { stageId, kind: "expression", promptKey, promptVars, display, answer, tipKey: `adv.tip.${stageId}`, firstStep, solution };
 }
 
 // --- Åk 7-9 ---------------------------------------------------------------
 
 /** Negativa tal: addition, subtraction and multiplication with negative numbers. */
-function negativeNumbers(rng: Rng): AdvancedProblem {
+function negativeNumbers(rng: Rng): WrittenProblem {
   const a = nonZero(rng, -9, 9);
   const b = nonZero(rng, -9, 9);
   const op = pick(rng, ["+", "-", "*"] as const);
@@ -75,7 +75,7 @@ function negativeNumbers(rng: Rng): AdvancedProblem {
 }
 
 /** Potenser: a small base to a small power. */
-function powers(rng: Rng): AdvancedProblem {
+function powers(rng: Rng): WrittenProblem {
   const b = randInt(rng, 2, 5);
   const maxExp = b === 2 ? 6 : b === 3 ? 4 : 3;
   const n = randInt(rng, 2, maxExp);
@@ -88,7 +88,7 @@ function powers(rng: Rng): AdvancedProblem {
 }
 
 /** Grundpotensform: a number times a power of ten, written out. */
-function scientific(rng: Rng): AdvancedProblem {
+function scientific(rng: Rng): WrittenProblem {
   const mantissa = randInt(rng, 11, 99) / 10;
   const n = pick(rng, [-3, -2, 2, 3, 4, 5]);
   const value = Math.round(mantissa * 10 ** n * 1e6) / 1e6;
@@ -100,7 +100,7 @@ function scientific(rng: Rng): AdvancedProblem {
 }
 
 /** Procent av: p % of a number that makes it whole. */
-function percentOf(rng: Rng): AdvancedProblem {
+function percentOf(rng: Rng): WrittenProblem {
   const p = pick(rng, [5, 10, 20, 25, 30, 40, 50, 75]);
   // A whole answer: n a multiple of 100 / gcd(p, 100).
   const g = gcd(p, 100);
@@ -114,7 +114,7 @@ function percentOf(rng: Rng): AdvancedProblem {
 }
 
 /** Förändringsfaktor: a price raised or lowered by p %. */
-function changeFactor(rng: Rng): AdvancedProblem {
+function changeFactor(rng: Rng): WrittenProblem {
   const up = randInt(rng, 0, 1) === 1;
   const p = pick(rng, [10, 15, 20, 25, 30, 40]);
   const n = 20 * randInt(rng, 2, 25);
@@ -128,7 +128,7 @@ function changeFactor(rng: Rng): AdvancedProblem {
 }
 
 /** Förenkla: collect x-terms and numbers. */
-function simplify(rng: Rng): AdvancedProblem {
+function simplify(rng: Rng): WrittenProblem {
   const a = randInt(rng, 2, 9);
   const b = nonZero(rng, -6, 8);
   const c = nonZero(rng, -9, 9);
@@ -145,7 +145,7 @@ function simplify(rng: Rng): AdvancedProblem {
 }
 
 /** Ekvationer: ax + b = c with a whole solution. */
-function equation(rng: Rng): AdvancedProblem {
+function equation(rng: Rng): WrittenProblem {
   const x = nonZero(rng, -6, 9);
   const a = randInt(rng, 2, 9);
   const b = nonZero(rng, -9, 15);
@@ -159,7 +159,7 @@ function equation(rng: Rng): AdvancedProblem {
 }
 
 /** Ekvationer med x på båda sidor: ax + b = cx + d. */
-function equationBothSides(rng: Rng): AdvancedProblem {
+function equationBothSides(rng: Rng): WrittenProblem {
   const x = nonZero(rng, -5, 8);
   const c = randInt(rng, 1, 5);
   const a = c + randInt(rng, 1, 5);
@@ -181,7 +181,7 @@ const bx = (b: number) => (b === 1 ? "x" : `${b}x`);
  * Expanding (the answer has to be written out, no brackets), factoring back
  * into a square, and the rule as a mental-maths trick (31² = (30 + 1)²).
  */
-function squareRules(rng: Rng): AdvancedProblem {
+function squareRules(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["plus", "minus", "coefficient", "factor", "trick"] as const);
   const a = randInt(rng, 1, 9);
   if (kind === "trick") {
@@ -221,7 +221,7 @@ function squareRules(rng: Rng): AdvancedProblem {
  * Konjugatregeln: (a + b)(a − b) = a² − b². Expanding, factoring a difference
  * of two squares, and the trick 21 · 19 = (20 + 1)(20 − 1) = 400 − 1.
  */
-function conjugateRule(rng: Rng): AdvancedProblem {
+function conjugateRule(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["expand", "coefficient", "factor", "trick"] as const);
   const a = randInt(rng, 1, 10);
   if (kind === "trick") {
@@ -259,7 +259,7 @@ function conjugateRule(rng: Rng): AdvancedProblem {
  * x² + bx = 0 (take x out: x(x + b) = 0) and a product that is zero
  * (nollproduktmetoden).
  */
-function quadraticBasics(rng: Rng): AdvancedProblem {
+function quadraticBasics(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["square", "coefficient", "commonFactor", "zeroProduct"] as const);
   if (kind === "square" || kind === "coefficient") {
     const r = randInt(rng, 2, 12);
@@ -305,7 +305,7 @@ function quadraticBasics(rng: Rng): AdvancedProblem {
 }
 
 /** Pythagoras: the hypotenuse from two whole sides. */
-function pythagoras(rng: Rng): AdvancedProblem {
+function pythagoras(rng: Rng): WrittenProblem {
   const [a, b, c] = pick(rng, [
     [3, 4, 5],
     [6, 8, 10],
@@ -324,7 +324,7 @@ function pythagoras(rng: Rng): AdvancedProblem {
 }
 
 /** Linjära funktioner: y at an x, or the slope through two points. */
-function linear(rng: Rng): AdvancedProblem {
+function linear(rng: Rng): WrittenProblem {
   const k = nonZero(rng, -4, 5);
   const m = randInt(rng, -6, 8);
   if (randInt(rng, 0, 1) === 0) {
@@ -367,7 +367,7 @@ function xPow(n: number): string {
  * moved over to "= 0" (x² + px = k), divided through by the x² coefficient
  * (2x² + …), or with a double root (the square root is 0: one solution).
  */
-function pq(rng: Rng): AdvancedProblem {
+function pq(rng: Rng): WrittenProblem {
   const kind = pick(rng, ["standard", "standard", "rearrange", "divide", "double"] as const);
   const r1 = nonZero(rng, -7, 7);
   let r2 = kind === "double" ? r1 : nonZero(rng, -7, 7);
@@ -407,7 +407,7 @@ function pq(rng: Rng): AdvancedProblem {
 }
 
 /** Logaritmer: lg of a power of ten, or the x in lg x = n / 10^x = N. */
-function logarithms(rng: Rng): AdvancedProblem {
+function logarithms(rng: Rng): WrittenProblem {
   const n = randInt(rng, 1, 5);
   const N = 10 ** n;
   const form = randInt(rng, 0, 2);
@@ -434,7 +434,7 @@ const DEFINITION = {
 } as const;
 
 /** Trigonometri: exact values, and a side from the hypotenuse and an angle. */
-function trigonometry(rng: Rng): AdvancedProblem {
+function trigonometry(rng: Rng): WrittenProblem {
   if (randInt(rng, 0, 1) === 0) {
     const [fn, v, value] = pick(rng, [
       ["sin", 30, 0.5],
@@ -463,7 +463,7 @@ function trigonometry(rng: Rng): AdvancedProblem {
 }
 
 /** Derivata: f(x) = ax^n + bx + c. */
-function derivative(rng: Rng): AdvancedProblem {
+function derivative(rng: Rng): WrittenProblem {
   const a = nonZero(rng, -5, 6);
   const n = randInt(rng, 2, 4);
   const b = nonZero(rng, -7, 7);
@@ -478,7 +478,7 @@ function derivative(rng: Rng): AdvancedProblem {
 }
 
 /** Integraler: ∫ₐᵇ (n+1)·k·xⁿ dx with a whole value. */
-function integral(rng: Rng): AdvancedProblem {
+function integral(rng: Rng): WrittenProblem {
   const n = randInt(rng, 1, 2);
   const k = randInt(rng, 1, 3);
   const c = (n + 1) * k;
@@ -498,7 +498,7 @@ function gcd(a: number, b: number): number {
   return b === 0 ? a : gcd(b, a % b);
 }
 
-export const ADVANCED_GENERATORS: Record<AdvancedStageId, (rng: Rng) => AdvancedProblem> = {
+export const ADVANCED_GENERATORS: Record<AdvancedStageId, (rng: Rng) => WrittenProblem> = {
   "3.1.1": negativeNumbers,
   "3.1.2": powers,
   "3.1.3": scientific,

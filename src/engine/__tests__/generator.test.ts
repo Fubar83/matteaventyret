@@ -41,6 +41,8 @@ describe("generator: stage 1.1.1 (place value)", () => {
       expect(digitsOf(p.number).length).toBe(4);
       const digit = digitAt(p.number, p.columnAsked);
       expect(p.answer).toBe(digit * 10 ** p.columnAsked);
+      // Never what a 0 is worth.
+      expect(digit).not.toBe(0);
     }
   });
 });
@@ -250,39 +252,54 @@ describe("generator: stage 2.2.4 (division with remainder)", () => {
 });
 
 describe("generator: stage 2.3.3 (decimal add/sub, tenths)", () => {
-  it("2-digit-scaled operands (e.g. 47 = 4,7), tagged decimalPlaces: 1", () => {
+  it("tenths (47 = 4,7, 125 = 12,5), tagged decimalPlaces: 1 - and with a minnessiffra or a växling across the comma now and then", () => {
     const rng = makeRng(233);
+    let crossings = 0;
     for (let i = 0; i < N; i++) {
       const p = generateProblem("2.3.3", rng);
       if (p.kind !== "columnAdd" && p.kind !== "columnSub") throw new Error("expected columnAdd/columnSub");
       expect(p.decimalPlaces).toBe(1);
       expect(p.top).toBeGreaterThanOrEqual(10);
-      expect(p.top).toBeLessThanOrEqual(99);
-      if (p.kind === "columnAdd") expect(p.answer).toBe(p.top + p.bottom);
-      else {
+      expect(p.top).toBeLessThanOrEqual(999);
+      if (p.kind === "columnAdd") {
+        expect(p.answer).toBe(p.top + p.bottom);
+        if (classifyAdditionCarries(p.top, p.bottom).columnsWithCarry.includes(0)) crossings++;
+      } else {
         expect(p.top).toBeGreaterThanOrEqual(p.bottom);
         expect(p.answer).toBe(p.top - p.bottom);
+        if (classifySubtractionBorrows(p.top, p.bottom).columnsWithBorrow.includes(0)) crossings++;
       }
     }
+    expect(crossings / N).toBeGreaterThan(0.2);
   });
 });
 
-describe("generator: stage 2.3.4 (decimal add/sub, hundredths)", () => {
-  it("3-digit-scaled operands (e.g. 350 = 3,50), tagged decimalPlaces: 2, genuinely uses 2 places", () => {
+describe("generator: stage 2.3.4 (olika antal decimaler)", () => {
+  it("one number with hundredths, the other with tenths only (3,5 + 1,25) - its missing hundredth a 0", () => {
     const rng = makeRng(234);
+    let tenthsOnTop = 0;
     for (let i = 0; i < N; i++) {
       const p = generateProblem("2.3.4", rng);
       if (p.kind !== "columnAdd" && p.kind !== "columnSub") throw new Error("expected columnAdd/columnSub");
       expect(p.decimalPlaces).toBe(2);
       expect(p.top).toBeGreaterThanOrEqual(100);
-      expect(p.top).toBeLessThanOrEqual(999);
-      expect(digitAt(p.top, 0) !== 0 || digitAt(p.bottom, 0) !== 0).toBe(true);
+      expect(p.top).toBeLessThanOrEqual(9999);
+      // Exactly one of them has tenths only, and its hundredths digit is the 0 that pads it.
+      const decimals = [p.topDecimals ?? 2, p.bottomDecimals ?? 2].sort();
+      expect(decimals).toEqual([1, 2]);
+      const [short, long] = p.topDecimals === 1 ? [p.top, p.bottom] : [p.bottom, p.top];
+      expect(digitAt(short, 0)).toBe(0);
+      expect(digitAt(long, 0)).not.toBe(0);
+      if (p.topDecimals === 1) tenthsOnTop++;
       if (p.kind === "columnAdd") expect(p.answer).toBe(p.top + p.bottom);
       else {
         expect(p.top).toBeGreaterThanOrEqual(p.bottom);
         expect(p.answer).toBe(p.top - p.bottom);
       }
     }
+    // Both ways round - on top, a subtraction has to borrow from the padded 0.
+    expect(tenthsOnTop).toBeGreaterThan(N / 5);
+    expect(tenthsOnTop).toBeLessThan((N * 4) / 5);
   });
 });
 

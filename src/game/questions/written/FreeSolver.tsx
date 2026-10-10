@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { playEffect } from "../../../audio/sound";
-import { tex, type AdvancedProblem } from "../../../engine/questions/written/problem";
+import { tex, type WrittenProblem } from "../../../engine/questions/written/problem";
 import { questionStars } from "../../../engine/scoring";
 import { t } from "../../../i18n";
 import { answerOf } from "../../../mathinput/stepCheck";
@@ -10,11 +10,11 @@ import { profileForStage } from "../../../recognition/profiles";
 import { ColumnHelper } from "./ColumnHelper";
 import { WorkPad } from "../../draw/WorkPad";
 import { HelpLadder, type HelpStep } from "../HelpLadder";
-import type { QuestionOutcome } from "../questionOutcome";
+import { triedOutcome, type QuestionOutcome } from "../questionOutcome";
 import { Tex } from "../../Tex";
 
 interface FreeSolverProps {
-  problem: AdvancedProblem;
+  problem: WrittenProblem;
   level: WritingLevel;
   onSolved: (outcome: QuestionOutcome) => void;
 }
@@ -60,10 +60,10 @@ export function FreeSolver({ problem, level, onSolved }: FreeSolverProps) {
     // "24 cm" is 24 - a geometry answer's unit isn't part of the number.
     const v = checkWrittenAnswer(problem.unit ? withoutUnits(latex) : latex, answer);
     if (v.correct) {
-      const helped = helpUsed > 0 || attempts >= 2;
       playEffect("correct");
       setMessage(null);
-      setSolved({ helped, fullSetup: v.fullSetup, wrongFirstAttempts: attempts > 0 ? 1 : 0, hintUsed: attempts >= 2, miniTutorialUsed: attempts >= 3 });
+      // The written work is the setup: a correct calculation leading to the answer.
+      setSolved(triedOutcome({ wrong: attempts, helpUsed, setup: v.fullSetup }));
       return;
     }
     // Everything written is right, some solutions are still to come: not a wrong try - keep going.

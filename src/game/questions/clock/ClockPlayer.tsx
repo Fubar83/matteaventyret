@@ -6,7 +6,7 @@ import { DigitalClock } from "./DigitalClock";
 import { DigitalClockSetter } from "./DigitalClockSetter";
 import { HelpLadder } from "../HelpLadder";
 import { SkyScene } from "./SkyScene";
-import type { QuestionOutcome } from "../questionOutcome";
+import { triedOutcome, type QuestionOutcome } from "../questionOutcome";
 import { NextSheet } from "../NextSheet";
 
 /** "halv 6", "fem i halv 3" - the time in words, the hours as digits, in the current language. */
@@ -37,9 +37,8 @@ function minutePlace(m: number): string {
 const twoDigits = (n: number) => String(n).padStart(2, "0");
 
 /** A question's stars: help (beyond the first wrong try) or the answer shown costs. */
-function outcomeOf(wrong: number, helpUsed: number, shown: boolean): QuestionOutcome {
-  return { helped: helpUsed > 0 || wrong >= 2 || shown, fullSetup: true, wrongFirstAttempts: wrong >= 1 ? 1 : 0, hintUsed: wrong >= 2, miniTutorialUsed: shown };
-}
+/** Nothing to set up: ★★★ is right the first time without help (triedOutcome). */
+const outcomeOf = (wrong: number, helpUsed: number, shown: boolean): QuestionOutcome => triedOutcome({ wrong, helpUsed, shown });
 
 /** The tip for a clock question: the level's own, and the 24-hour rule when it's afternoon. */
 function tipFor(problem: ClockProblem): string {

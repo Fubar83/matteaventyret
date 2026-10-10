@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { checkWrittenAnswer, withoutUnits } from "../../mathinput/workCheck";
-import type { AdvancedProblem } from "../questions/written/problem";
+import type { WrittenProblem } from "../questions/written/problem";
 import { GEOMETRY_GENERATORS } from "../questions/written/geometry";
 import { generateRound } from "../generator";
 import { makeRng } from "../rng";
 
-function verdict(p: AdvancedProblem, work: string) {
+function verdict(p: WrittenProblem, work: string) {
   if (p.answer.kind !== "value") throw new Error("geometry answers are values");
   return checkWrittenAnswer(withoutUnits(work), p.answer);
 }

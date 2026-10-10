@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { decimalText, type TrappanProblem } from "../../../engine/questions/trappan";
 import { t } from "../../../i18n";
-import { GuidedColumn, type GuidedResult } from "../../../mathinput/GuidedColumn";
-import type { QuestionOutcome } from "../questionOutcome";
+import { GuidedColumn } from "../../../mathinput/GuidedColumn";
+import { guidedOutcome, type QuestionOutcome } from "../questionOutcome";
 import { shiftedText, trappanPlan } from "./trappanPlan";
 
 interface TrappanPlayerProps {
@@ -24,18 +24,6 @@ export function TrappanPlayer({ problem, onSolved, first = false, startAt }: Tra
   const plan = useMemo(() => trappanPlan(problem), [problem]);
   const question = `${decimalText(problem.dividend)} ÷ ${decimalText(problem.divisor)}`;
 
-  function done(result: GuidedResult) {
-    // Tracing is help like a shown digit: the stars for doing it alone are earned with "Spåra" off.
-    const helped = result.shown > 0 || result.traced > 0;
-    onSolved({
-      helped,
-      fullSetup: !helped,
-      wrongFirstAttempts: result.wrong > 0 ? 1 : 0,
-      hintUsed: helped,
-      miniTutorialUsed: false,
-    });
-  }
-
   return (
     <div className="flex flex-col items-center gap-4 w-full">
       <p className="text-slate-700 text-center font-medium">{t(problem.withRest ? "trappan.promptRest" : problem.roundTo === undefined ? "trappan.prompt" : problem.roundTo === 1 ? "trappan.promptRound1" : "trappan.promptRound", { n: problem.roundTo ?? 0 })}</p>
@@ -48,7 +36,7 @@ export function TrappanPlayer({ problem, onSolved, first = false, startAt }: Tra
           </p>
         </div>
       )}
-      <GuidedColumn plan={plan} onDone={done} trace={first} startAt={startAt} />
+      <GuidedColumn plan={plan} onDone={(result) => onSolved(guidedOutcome(result))} trace={first} startAt={startAt} />
     </div>
   );
 }

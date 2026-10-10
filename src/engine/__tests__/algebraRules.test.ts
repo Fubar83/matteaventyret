@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { parseExpression } from "../../mathinput/evaluate";
 import { checkWrittenAnswer, type Answer } from "../../mathinput/workCheck";
 import { ADVANCED_GENERATORS } from "../questions/written/advanced";
-import { type AdvancedProblem } from "../questions/written/problem";
+import { type WrittenProblem } from "../questions/written/problem";
 import { makeRng } from "../rng";
 
 /** The problem's answer in the checker's form - as ExpressionPlayer builds it. */
-function answerOf(p: AdvancedProblem): Answer {
+function answerOf(p: WrittenProblem): Answer {
   const a = p.answer;
   if (a.kind === "value") return a;
   if (a.kind === "solutions") return { kind: "solutions", variable: a.variable, values: a.values, given: [] };

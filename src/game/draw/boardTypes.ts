@@ -26,6 +26,8 @@ export interface DrawBox {
   kind: "digit" | "small" | "printed" | "sign";
   /** For "printed": the digit shown. */
   text?: string;
+  /** For "printed": a digit that is only thought of - the 0 that makes 3,5 into 3,50 under 1,25 - drawn faint and dashed. */
+  faint?: boolean;
   /** How many digits the box takes: 2 for a borrowed "10", or a result box that can take a whole column sum ("15"). */
   maxDigits?: 1 | 2;
   /** A straight line through it counts as crossing it out. */

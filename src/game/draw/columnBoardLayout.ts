@@ -54,8 +54,12 @@ export function buildColumnBoard(
   bottom: number,
   operator: ColumnOperator,
   written: WrittenMap,
-  decimalPlaces = 0
+  decimalPlaces = 0,
+  /** Each number's own decimals, where it has fewer than `decimalPlaces` (3,5 in 3,5 + 1,25): its missing digits are 0s to think of. */
+  operandDecimals: { top?: number; bottom?: number } = {}
 ): ColumnBoard {
+  // The columns where a number has no digit of its own - the 0 it's padded with to line the commas up.
+  const padded = (decimals: number | undefined, col: number) => decimals !== undefined && col < decimalPlaces - decimals;
   const columns = buildColumns(graph, top, bottom);
   const boxes: DrawBox[] = [];
   const texts: PrintedText[] = [];
@@ -102,11 +106,11 @@ export function buildColumnBoard(
     });
     if (col.topDigit !== null) {
       const id = `top:${col.col}`;
-      boxes.push({ id, x: center - DIGIT_W / 2, y: topY, w: DIGIT_W, h: DIGIT_H, kind: "printed", text: String(col.topDigit), strikeable: !!col.topStrikeCell });
+      boxes.push({ id, x: center - DIGIT_W / 2, y: topY, w: DIGIT_W, h: DIGIT_H, kind: "printed", text: String(col.topDigit), strikeable: !!col.topStrikeCell, faint: padded(operandDecimals.top, col.col) });
       targets[id] = { kind: "top", strike: col.topStrikeCell };
     }
     if (col.bottomDigit !== null) {
-      boxes.push({ id: `bottom:${col.col}`, x: center - DIGIT_W / 2, y: bottomY, w: DIGIT_W, h: DIGIT_H, kind: "printed", text: String(col.bottomDigit) });
+      boxes.push({ id: `bottom:${col.col}`, x: center - DIGIT_W / 2, y: bottomY, w: DIGIT_W, h: DIGIT_H, kind: "printed", text: String(col.bottomDigit), faint: padded(operandDecimals.bottom, col.col) });
     }
     if (col.resultCell) {
       const cell = col.resultCell;

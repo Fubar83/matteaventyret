@@ -10,6 +10,8 @@
  * Numbers are written as digit strings with their decimals (like trappan's),
  * and the answer is never one that ends in a 0 after the comma (2,5 · 1,2 =
  * 3,00) - that's a lesson of its own.
+ *
+ * How it works, and what must stay true: docs/question-types/mulGuided.md.
  */
 import { randInt, type Rng } from "../rng";
 import { questionType } from "./questionType";

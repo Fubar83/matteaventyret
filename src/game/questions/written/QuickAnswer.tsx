@@ -2,7 +2,7 @@ import { useState } from "react";
 import { t } from "../../../i18n";
 import type { WritingLevel } from "../../../recognition/levels";
 import { AnswerBoard } from "../../draw/AnswerBoard";
-import type { QuestionOutcome } from "../questionOutcome";
+import { triedOutcome, type QuestionOutcome } from "../questionOutcome";
 import { NextSheet } from "../NextSheet";
 
 type Mode = "choose" | "write";
@@ -16,10 +16,8 @@ function loadMode(): Mode {
   }
 }
 
-/** Stars as for the other questions: help (beyond the first slip) or the answer shown costs. */
-function outcomeOf(wrong: number, shown: boolean): QuestionOutcome {
-  return { helped: wrong >= 2 || shown, fullSetup: true, wrongFirstAttempts: wrong >= 1 ? 1 : 0, hintUsed: wrong >= 2, miniTutorialUsed: shown };
-}
+/** A fact to know, nothing to set up: ★★★ is right the first time (triedOutcome). */
+const outcomeOf = (wrong: number, shown: boolean): QuestionOutcome => triedOutcome({ wrong, shown });
 
 /**
  * Just the answer, for facts to know (the times tables): picked among a few

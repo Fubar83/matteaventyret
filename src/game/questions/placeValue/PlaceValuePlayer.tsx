@@ -8,6 +8,7 @@ import { PlaceValueBoard } from "./PlaceValueBoard";
 import { BaseTenBlocks } from "../../scenes/BaseTenBlocks";
 import type { QuestionOutcome } from "../questionOutcome";
 import { NextSheet } from "../NextSheet";
+import { useAnswerTries } from "../useAnswerTries";
 
 interface PlaceValuePlayerProps {
   problem: PlaceValueProblem;
@@ -16,73 +17,34 @@ interface PlaceValuePlayerProps {
 
 /**
  * "What is the 3 worth in 4 339?" - read off, nothing to set up, so right the
- * first time without help is the full ★★★ (see engine/scoring.ts).
+ * first time without help is the full ★★★ (see engine/scoring.ts). The
+ * answer is echoed under the number as it's written.
  */
 export function PlaceValuePlayer({ problem, onSolved }: PlaceValuePlayerProps) {
-  const answerLength = digitsOf(problem.answer).length;
   const [answerText, setAnswerText] = useState("");
-  const [resetToken, setResetToken] = useState(0);
-  const [attempts, setAttempts] = useState(0);
   const [helpUsed, setHelpUsed] = useState(0);
-  const [verdict, setVerdict] = useState<"correct" | "wrong" | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [revealed, setRevealed] = useState(false);
+  const tries = useAnswerTries({ answer: problem.answer, hint: t("placeValue.hint"), helpUsed, onRetry: () => setAnswerText(""), onSolved });
 
   const digit = digitAt(problem.number, problem.columnAsked);
   const place = t(`place.${problem.columnAsked}`);
-  const outcome = (finalAttempts: number, shown: boolean): QuestionOutcome => ({
-    helped: helpUsed > 0 || finalAttempts >= 2 || shown,
-    fullSetup: finalAttempts === 0,
-    wrongFirstAttempts: finalAttempts >= 1 ? 1 : 0,
-    hintUsed: finalAttempts >= 2,
-    miniTutorialUsed: finalAttempts >= 3 || shown,
-  });
-
-  function resetAnswer() {
-    setAnswerText("");
-    setResetToken((r) => r + 1);
-  }
-
-  function submitValue(value: number) {
-    if (value === problem.answer) {
-      setVerdict("correct");
-      setMessage(null);
-      onSolved(outcome(attempts, false));
-      return;
-    }
-    const nextAttempts = attempts + 1;
-    setAttempts(nextAttempts);
-    setVerdict("wrong");
-    if (nextAttempts === 1) {
-      setMessage(t("placeValue.tryAgain"));
-      resetAnswer();
-    } else if (nextAttempts === 2) {
-      setMessage(t("placeValue.hint"));
-      resetAnswer();
-    } else {
-      setMessage(t("placeValue.reveal", { answer: problem.answer }));
-      setRevealed(true);
-      setAnswerText(String(problem.answer));
-    }
-  }
 
   return (
     <div className="flex flex-col items-center gap-6">
       <BaseTenBlocks number={problem.number} highlight={problem.columnAsked} />
-      <PlaceValueBoard number={problem.number} columnAsked={problem.columnAsked} answerText={answerText} verdict={verdict} />
+      <PlaceValueBoard number={problem.number} columnAsked={problem.columnAsked} answerText={tries.revealed ? String(problem.answer) : answerText} verdict={tries.verdict} />
       <AnswerBoard
-        length={answerLength}
-        onSubmit={submitValue}
-        resetToken={resetToken}
-        revealed={revealed ? problem.answer : null}
-        verdict={verdict === "correct" ? "correct" : null}
+        length={digitsOf(problem.answer).length}
+        onSubmit={tries.submit}
+        resetToken={tries.resetToken}
+        revealed={tries.revealed ? problem.answer : null}
+        verdict={tries.solved ? "correct" : null}
         onDigitsChange={(digits) => setAnswerText(digits.map((d) => d ?? "").join(""))}
       />
-      {message && <p className="text-slate-600 text-sm max-w-xs text-center">{message}</p>}
-      {revealed ? (
-        <NextSheet note={message} onNext={() => onSolved(outcome(attempts, true))} />
+      {tries.message && <p className="text-slate-600 text-sm max-w-xs text-center">{tries.message}</p>}
+      {tries.revealed ? (
+        <NextSheet note={tries.message} onNext={tries.moveOn} />
       ) : (
-        verdict !== "correct" && (
+        !tries.solved && (
           <HelpLadder
             used={helpUsed}
             onUse={setHelpUsed}

@@ -12,7 +12,7 @@
  * picked at random, numbers drawn so the answer comes out right for the
  * level, and a guided step plan like every other question.
  */
-import { st, tex, type AdvancedProblem, type SolutionStep } from "./problem";
+import { st, tex, type WrittenProblem, type SolutionStep } from "./problem";
 import { pick, randInt, type Rng } from "../../rng";
 
 export type WordStageId = "1.3.1" | "1.3.2" | "2.11.1" | "2.11.2" | "3.8.1" | "3.8.2";
@@ -569,7 +569,7 @@ export function wordTexts(locale: "sv" | "en"): Record<string, string> {
 
 function generate(stage: WordStageId) {
   const own = TEMPLATES.filter((tpl) => tpl.stage === stage);
-  return (rng: Rng): AdvancedProblem => {
+  return (rng: Rng): WrittenProblem => {
     const tpl = pick(rng, own);
     // Not when a step before the last already comes out at the answer (2 · 5 = 10, then 20 − 10 = 10): it would look done too early.
     let made = tpl.make(rng);
@@ -591,7 +591,7 @@ function generate(stage: WordStageId) {
   };
 }
 
-export const WORD_GENERATORS: Record<WordStageId, (rng: Rng) => AdvancedProblem> = {
+export const WORD_GENERATORS: Record<WordStageId, (rng: Rng) => WrittenProblem> = {
   "1.3.1": generate("1.3.1"),
   "1.3.2": generate("1.3.2"),
   "2.11.1": generate("2.11.1"),

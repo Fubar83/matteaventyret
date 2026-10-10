@@ -23,6 +23,8 @@ export const Addition: Story = { args: { ...firstMatching(LEVELS, COLUMN.additio
 export const Subtraktion: Story = { args: { ...firstMatching(LEVELS, COLUMN.subtraction), match: COLUMN.subtraction } };
 export const Multiplikation: Story = { args: { ...firstMatching(LEVELS, COLUMN.multiplication), match: COLUMN.multiplication } };
 export const Decimaltal: Story = { args: { ...firstMatching(LEVELS, COLUMN.decimals), match: COLUMN.decimals } };
+/** 3,5 + 1,25: the missing hundredth is a faint 0 to think of. */
+export const OlikaAntalDecimaler: Story = { name: "Olika antal decimaler", args: { ...firstMatching(LEVELS, COLUMN.differentDecimals), match: COLUMN.differentDecimals } };
 
 /** The phases: told where to start and what comes next, then choosing the order, then on your own. */
 export const Guidat: Story = { args: { phase: "guidat" } };

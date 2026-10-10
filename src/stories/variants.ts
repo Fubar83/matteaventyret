@@ -6,7 +6,7 @@
  * still has a level that makes it.
  */
 import type { GeneratedProblem } from "../engine/generator";
-import type { AdvancedProblem } from "../engine/questions/written/problem";
+import type { WrittenProblem } from "../engine/questions/written/problem";
 import type { ClockProblem } from "../engine/questions/clock";
 import type { ShopProblem } from "../engine/questions/shop";
 import type { TrappanProblem } from "../engine/questions/trappan";
@@ -15,7 +15,7 @@ import type { QuestionScene } from "../engine/questions/written/questionScene";
 
 export type Match = (p: GeneratedProblem) => boolean;
 
-const expression = (test: (p: AdvancedProblem) => boolean): Match => (p) => p.kind === "expression" && test(p);
+const expression = (test: (p: WrittenProblem) => boolean): Match => (p) => p.kind === "expression" && test(p);
 const clock = (test: (p: ClockProblem) => boolean): Match => (p) => p.kind === "clock" && test(p);
 const shop = (mode: ShopProblem["mode"]): Match => (p) => p.kind === "shop" && p.mode === mode;
 const trappan = (test: (p: TrappanProblem) => boolean): Match => (p) => p.kind === "trappan" && test(p);
@@ -26,7 +26,8 @@ export const COLUMN = {
   addition: (p) => p.kind === "columnAdd" && !p.decimalPlaces,
   subtraction: (p) => p.kind === "columnSub" && !p.decimalPlaces,
   multiplication: (p) => p.kind === "columnMul",
-  decimals: (p) => (p.kind === "columnAdd" || p.kind === "columnSub") && !!p.decimalPlaces,
+  decimals: (p) => (p.kind === "columnAdd" || p.kind === "columnSub") && !!p.decimalPlaces && !p.topDecimals && !p.bottomDecimals,
+  differentDecimals: (p) => (p.kind === "columnAdd" || p.kind === "columnSub") && !!(p.topDecimals || p.bottomDecimals),
 } satisfies Record<string, Match>;
 
 export const STATISTICS = {

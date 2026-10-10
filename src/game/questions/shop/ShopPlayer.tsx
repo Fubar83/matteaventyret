@@ -3,7 +3,7 @@ import { fewestPieces, sum, type Money, type ShopItem, type ShopKind, type ShopP
 import { t } from "../../../i18n";
 import { Avatar } from "../../Avatar";
 import { HelpLadder } from "../HelpLadder";
-import type { QuestionOutcome } from "../questionOutcome";
+import { triedOutcome, type QuestionOutcome } from "../questionOutcome";
 import { MoneyPiece } from "./Money";
 import { NextSheet } from "../NextSheet";
 
@@ -169,13 +169,8 @@ export function ShopPlayer({ problem, onSolved }: { problem: ShopProblem; onSolv
     setBubble({ text: t("shop.say.picked", { item: capital(itemName(id)) }), mood: "talk" });
   }
 
-  const outcome = (shown: boolean): QuestionOutcome => ({
-    helped: helpUsed > 0 || attempts >= 2 || shown,
-    fullSetup: true,
-    wrongFirstAttempts: attempts >= 1 ? 1 : 0,
-    hintUsed: attempts >= 2,
-    miniTutorialUsed: shown,
-  });
+  // Nothing to set up: ★★★ is the right money the first time without help (triedOutcome).
+  const outcome = (shown: boolean): QuestionOutcome => triedOutcome({ wrong: attempts, helpUsed, shown });
 
   /** The answer laid out on the tray: from the wallet (pay, basket) or the till (change). */
   function solution(): Piece[] {

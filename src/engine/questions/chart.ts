@@ -2,6 +2,8 @@
  * Tabeller och diagram (Lgr22 åk 4-6 "Sannolikhet och statistik"): a bar
  * chart over 4 kinds of fruit - read one bar, the difference between two, or
  * the total. Every answer is a whole number read off the chart.
+ *
+ * How it works, and what must stay true: docs/question-types/chart.md.
  */
 import { randInt, type Rng } from "../rng";
 import { questionType, retry } from "./questionType";

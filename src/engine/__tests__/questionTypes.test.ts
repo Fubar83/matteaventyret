@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { generateProblem, problemKey, QUESTION_TYPES, questionTypeOf, STAGE_IDS } from "../generator";
 import { makeRng } from "../rng";
@@ -32,6 +34,18 @@ describe("question types", () => {
       const rng = makeRng(5);
       const keys = new Set(Array.from({ length: 40 }, () => problemKey(generateProblem(id, rng))));
       expect(keys.size, id).toBeGreaterThanOrEqual(4);
+    }
+  });
+});
+
+// Each type's working is written down (docs/question-types/), so a refactoring knows what must stay true.
+describe("question type documents", () => {
+  it("every type has one, and the index lists it", () => {
+    const dir = join(__dirname, "../../../docs/question-types");
+    const index = readFileSync(join(dir, "README.md"), "utf8");
+    for (const { id } of QUESTION_TYPES) {
+      expect(existsSync(join(dir, `${id}.md`)), `docs/question-types/${id}.md`).toBe(true);
+      expect(index, `README.md lists ${id}`).toContain(`(${id}.md)`);
     }
   });
 });
