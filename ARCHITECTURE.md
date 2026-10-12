@@ -1,6 +1,6 @@
 # Architecture
 
-MatteÄventyret is a Swedish maths training game for åk 1 to gymnasiet. Children
+MatteÄventyret is a Swedish maths training game from förskoleklass to gymnasiet. Children
 answer by **writing with a finger or pen**; an on-device recognizer reads the
 handwriting and the game checks the maths. It is a static web app (React +
 TypeScript + Vite), works offline as a PWA, and has no server.
@@ -11,6 +11,8 @@ for people and for coding agents alike - the agent-specific working rules are
 in [AGENTS.md](AGENTS.md). Each type of question has a document of its own in
 [docs/question-types/](docs/question-types/README.md): its levels, how its
 questions are made and played, and what must stay true.
+[docs/curriculum.md](docs/curriculum.md) maps Lgr22 up to åk 7 to the levels
+that teach it, and what's still missing.
 
 ## The big picture
 
@@ -62,7 +64,9 @@ Entry points are the HTML files at the root: `index.html` (the game, `src/main.t
 
 Three words with precise meanings:
 
-- **Level** (`StageId`, e.g. `"2.5.7"`): one step of the curriculum. In the engine
+- **Level** (`StageId`, e.g. `"2.5.7"`): one step of the curriculum. Its first number is
+  mostly the school stage - 0 förskoleklass, 1 åk 1-3, 2 åk 4-6, 3 åk 7-9, 4
+  gymnasiet - but the `grade` in `game/stages.ts` is what counts (2.8.1 is åk 1-3). In the engine
   a level is a generator, `(rng) => problem`. In the game it is a `StageMeta`
   entry in `game/stages.ts`: its training path, grade, what opens it, round
   length, title, and how its handwriting is read.
@@ -85,6 +89,15 @@ Three words with precise meanings:
 | `clock` | `questions/clock.ts` | clock | `clock/ClockPlayer` |
 | `shop` | `questions/shop.ts` | shop | `shop/ShopPlayer` |
 | `written` | `questions/written/` | expression | `written/ExpressionPlayer` (free board, or just the answer) |
+| `choice` | `questions/choice/` | choice | `choice/ChoicePlayer` (pick one: words, numbers, arrows or pictures) |
+| `sort` | `questions/sort/` | sortGroups, sortOrder | `sort/SortPlayer` (tap things into groups, or into a row in order) |
+| `numberLine` | `questions/numberLine/` | placeOnLine | `numberLine/NumberLinePlayer` (tap where a number goes) |
+| `grid` | `questions/grid/` | gridCells, gridPoints | `grid/GridPlayer` (colour squares, mark points) |
+
+The pictures a question can show (a balance, a number line, a fraction, a
+thermometer, a robot grid…) are one shared model, `engine/questions/scene.ts`,
+drawn by `game/scenes/` — the written and the single-choice questions both use
+them.
 
 ### The question-type contract
 

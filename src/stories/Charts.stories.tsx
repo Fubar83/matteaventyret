@@ -21,3 +21,5 @@ export const ValfriNiva: Story = { name: "Valfri nivå" };
 export const AvlasEnStapel: Story = { name: "Avläs en stapel", args: { ...firstMatching(LEVELS, CHARTS.lookup), match: CHARTS.lookup } };
 export const Skillnad: Story = { name: "Skillnad", args: { ...firstMatching(LEVELS, CHARTS.difference), match: CHARTS.difference } };
 export const Summa: Story = { name: "Summa", args: { ...firstMatching(LEVELS, CHARTS.sum), match: CHARTS.sum } };
+export const Piktogram: Story = { args: { ...firstMatching(LEVELS, CHARTS.pictogram), match: CHARTS.pictogram } };
+export const Linjediagram: Story = { args: { ...firstMatching(LEVELS, CHARTS.line), match: CHARTS.line } };

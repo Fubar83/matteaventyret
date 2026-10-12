@@ -31,7 +31,7 @@ function sectionsOf(path: TrainingPath): { key: string; label: string; color?: s
   if (path.group === "exam") {
     return PATHS.map((p) => ({ key: p.id, label: t(p.nameKey), color: p.color, stages: stages.filter((s) => s.path === p.id) })).filter((x) => x.stages.length > 0);
   }
-  const grades: GradeBand[] = ["ak1-3", "ak4-6", "ak7-9", "gy"];
+  const grades: GradeBand[] = ["fk", "ak1-3", "ak4-6", "ak7-9", "gy"];
   return grades.map((g) => ({ key: g, label: t(`grade.${g}`), stages: stages.filter((s) => s.grade === g) })).filter((x) => x.stages.length > 0);
 }
 

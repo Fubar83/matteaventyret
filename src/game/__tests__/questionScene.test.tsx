@@ -2,7 +2,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
-import type { QuestionScene as Scene } from "../../engine/questions/written/questionScene";
+import type { QuestionScene as Scene } from "../../engine/questions/scene";
 import { BaseTenBlocks } from "../scenes/BaseTenBlocks";
 import { QuestionScene } from "../scenes/QuestionScene";
 

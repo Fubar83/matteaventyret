@@ -10,11 +10,12 @@ import type { AdvancedStageId } from "./advanced";
 import type { BasicStageId } from "./basicTopics";
 import type { ExamStageId } from "./examTopics";
 import type { Figure, GeometryStageId } from "./geometry";
-import type { QuestionScene } from "./questionScene";
+import type { NumberSenseStageId } from "./numberSense";
+import type { QuestionScene } from "../scene";
 import type { WordStageId } from "./wordProblems";
 
 /** Every written question's level. */
-export type WrittenStageId = AdvancedStageId | BasicStageId | ExamStageId | GeometryStageId | WordStageId;
+export type WrittenStageId = AdvancedStageId | BasicStageId | ExamStageId | GeometryStageId | WordStageId | NumberSenseStageId;
 
 /** The answer, in a form that can be checked against written work (see mathinput/workCheck.ts's Answer). */
 export type AnswerSpec =

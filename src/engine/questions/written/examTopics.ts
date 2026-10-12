@@ -14,7 +14,7 @@
  *   gy      4.1.3 ekvationssystem
  */
 import { coef, signed, st, tex, type WrittenProblem, type AnswerSpec, type SolutionStep } from "./problem";
-import type { QuestionScene, UnitFamily } from "./questionScene";
+import type { QuestionScene, UnitFamily } from "../scene";
 import { pick, randInt, type Rng } from "../../rng";
 
 export type ExamStageId =

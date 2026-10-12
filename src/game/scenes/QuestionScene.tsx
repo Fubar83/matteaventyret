@@ -1,8 +1,15 @@
 import { useState } from "react";
-import type { GroupThing, QuestionScene as Scene, ScaleTerm } from "../../engine/questions/written/questionScene";
+import type { GroupThing, QuestionScene as Scene, ScaleTerm } from "../../engine/questions/scene";
 import { t } from "../../i18n";
 import { Sprite } from "./Sprite";
 import { UnitStairs } from "./UnitStairs";
+import { FractionPicture, Jug, KitchenScale, NumberLine, Ruler, Thermometer } from "./MeasurePictures";
+import { CountPicture, PatternRow, Queue, Ribbons, Shelf, WeighBalance } from "./EarlyPictures";
+import { BarsPicture, CodeBlock, Graph, PieChart, TallyTable, Timetable } from "./DataPictures";
+import { AnglePicture, Crossing, Cuboid, SimilarTriangles } from "./GeometryPictures";
+import { RobotGrid } from "./RobotGrid";
+import { ChocolateBar, Pizzas } from "./FoodPictures";
+import { ChanceDevice, ShapePicture, SymmetryGrid } from "./ShapePictures";
 import type { SpriteName } from "./spriteNames";
 
 /**
@@ -325,21 +332,89 @@ function RoundLine({ value, step }: { value: number; step: number }) {
   );
 }
 
-/** The picture of a question: a balance, groups of things, things to share, numbers to round, units on the staircase. */
+/** A picture on its own - in the question's panel, or small as an option to pick. */
+export function ScenePicture({ scene, small = false }: { scene: Scene; small?: boolean }) {
+  switch (scene.kind) {
+    case "balance":
+      return <Balance left={scene.left} right={scene.right} />;
+    case "groups":
+      return <Groups groups={scene.groups} each={scene.each} thing={scene.thing} />;
+    case "share":
+      return <Share total={scene.total} among={scene.among} thing={scene.thing} />;
+    case "rounding":
+      return (
+        <>
+          {scene.numbers.map((n) => (
+            <RoundLine key={`${n.value}-${n.step}`} value={n.value} step={n.step} />
+          ))}
+        </>
+      );
+    case "units":
+      return <UnitStairs family={scene.family} from={scene.from} to={scene.to} value={scene.value} />;
+    case "numberLine":
+      return <NumberLine from={scene.from} to={scene.to} step={scene.step} labelEvery={scene.labelEvery} arrow={scene.arrow} />;
+    case "fraction":
+      return <FractionPicture shape={scene.shape} parts={scene.parts} shaded={scene.shaded} size={small ? 90 : 150} />;
+    case "ruler":
+      return <Ruler thing={scene.thing} startMm={scene.startMm} lengthMm={scene.lengthMm} />;
+    case "thermometer":
+      return <Thermometer value={scene.value} min={scene.min} max={scene.max} />;
+    case "shape":
+      return <ShapePicture shape={scene.shape} size={small ? 86 : 140} />;
+    case "symmetry":
+      return <SymmetryGrid size={scene.size} cells={scene.cells} line={scene.line} at={scene.at} />;
+    case "chance":
+      return <ChanceDevice device={scene.device} colors={scene.colors} />;
+    case "robot":
+      return <RobotGrid w={scene.w} h={scene.h} start={scene.start} program={scene.program} letters={scene.letters} star={scene.star} />;
+    case "pizza":
+      return <Pizzas pizzas={scene.pizzas} small={small} />;
+    case "chocolate":
+      return <ChocolateBar rows={scene.rows} cols={scene.cols} eaten={scene.eaten} />;
+    case "count":
+      return <CountPicture groups={scene.groups} small={small} />;
+    case "queue":
+      return <Queue animals={scene.animals} />;
+    case "pattern":
+      return <PatternRow items={scene.items} blank={scene.blank} small={small} />;
+    case "shelf":
+      return <Shelf rows={scene.rows} />;
+    case "lengths":
+      return <Ribbons ribbons={scene.ribbons} />;
+    case "weigh":
+      return <WeighBalance left={scene.left} right={scene.right} heavier={scene.heavier} />;
+    case "kitchenScale":
+      return <KitchenScale grams={scene.grams} max={scene.max} step={scene.step} />;
+    case "jug":
+      return <Jug dl={scene.dl} />;
+    case "tally":
+      return <TallyTable rows={scene.rows} />;
+    case "pie":
+      return <PieChart sectors={scene.sectors} total={scene.total} />;
+    case "timetable":
+      return <Timetable stops={scene.stops} times={scene.times} />;
+    case "graph":
+      return <Graph x={scene.x} y={scene.y} lines={scene.lines} small={small} />;
+    case "angle":
+      return <AnglePicture degrees={scene.degrees} turn={scene.turn} />;
+    case "crossing":
+      return <Crossing degrees={scene.degrees} given={scene.given} asked={scene.asked} />;
+    case "similar":
+      return <SimilarTriangles sides={scene.sides} k={scene.k} small={scene.small} big={scene.big} />;
+    case "cuboid":
+      return <Cuboid l={scene.l} w={scene.w} h={scene.h} unit={scene.unit} />;
+    case "code":
+      return <CodeBlock lines={scene.lines} />;
+    case "bars":
+      return <BarsPicture values={scene.values} from={scene.from} to={scene.to} step={scene.step} small={small} />;
+  }
+}
+
+/** The picture of a question, in its panel. */
 export function QuestionScene({ scene }: { scene: Scene }) {
   return (
     <div className="w-full max-w-xl rounded-3xl bg-gradient-to-b from-sky-50 to-white border-2 border-sky-100 shadow-sm p-3 flex flex-col items-center gap-3">
-      {scene.kind === "balance" ? (
-        <Balance left={scene.left} right={scene.right} />
-      ) : scene.kind === "groups" ? (
-        <Groups groups={scene.groups} each={scene.each} thing={scene.thing} />
-      ) : scene.kind === "share" ? (
-        <Share total={scene.total} among={scene.among} thing={scene.thing} />
-      ) : scene.kind === "rounding" ? (
-        scene.numbers.map((n) => <RoundLine key={`${n.value}-${n.step}`} value={n.value} step={n.step} />)
-      ) : (
-        <UnitStairs family={scene.family} from={scene.from} to={scene.to} value={scene.value} />
-      )}
+      <ScenePicture scene={scene} />
     </div>
   );
 }

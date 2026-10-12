@@ -8,13 +8,13 @@
  *           1.2.2 hörn, sidor och kanter
  *   åk 4-6  2.12.1 vinklar (90°, 180°, 360°), 2.13.1 koordinatsystem
  *           2.14.1 ekvationer med ett obekant tal, 2.15.1 delbarhet och primtal
- *           2.10.3 överslag, 2.9.4 areaenheter, 2.9.5 tidsskillnader
+ *           2.10.3 överslag, 2.9.4 areaenheter, 2.9.5 tidsskillnader, 2.18.2 kombinatorik
  *
  * Times are written the Swedish way, hours and minutes with a point: 3.30,
  * 15.05 - read as the number 3,3 or 15,05, which is all an answer needs to be.
  */
 import { st, tex, type WrittenProblem, type AnswerSpec, type SolutionStep } from "./problem";
-import { GROUP_THINGS, type QuestionScene, type ScaleTerm } from "./questionScene";
+import { GROUP_THINGS, type QuestionScene, type ScaleTerm } from "../scene";
 import type { Figure, FigureLabel, FigureShape, Point } from "./geometry";
 import { pick, randInt, type Rng } from "../../rng";
 
@@ -31,7 +31,8 @@ export type BasicStageId =
   | "2.15.1"
   | "2.10.3"
   | "2.9.4"
-  | "2.9.5";
+  | "2.9.5"
+  | "2.18.2";
 
 const dec = (n: number) => Math.round(n * 1e6) / 1e6;
 /** A clock time the Swedish way: 9.05, 15.30. */
@@ -612,6 +613,33 @@ function timeDifference(rng: Rng): WrittenProblem {
   return make("2.9.5", { promptKey: "basic.prompt.later", promptVars: { start: clock(h1, m1), add }, answer: value(clockValue(h2, m2)), steps });
 }
 
+/**
+ * 2.18.2: enkel kombinatorik - one of these with one of those (tops and
+ * trousers, flavours and cones): multiply. Or a queue: everyone to choose
+ * from first, then one fewer each time.
+ */
+function combinations(rng: Rng): WrittenProblem {
+  if (rng() < 0.7) {
+    const a = randInt(rng, 2, 5);
+    const b = randInt(rng, 2, 4);
+    return make("2.18.2", {
+      promptKey: `basic.prompt.combine.${pick(rng, ["clothes", "icecream", "menu"] as const)}`,
+      promptVars: { a, b },
+      answer: value(a * b),
+      steps: [st("step.basic.combine", `${a} \\cdot ${b} = ${a * b}`, { a, b })],
+    });
+  }
+  const n = randInt(rng, 3, 4);
+  const factors = Array.from({ length: n }, (_, i) => n - i);
+  const ways = factors.reduce((x, y) => x * y, 1);
+  return make("2.18.2", {
+    promptKey: "basic.prompt.combine.queue",
+    promptVars: { n },
+    answer: value(ways),
+    steps: [st("step.basic.queue", `${factors.join(" \\cdot ")} = ${ways}`, { n })],
+  });
+}
+
 export const BASIC_GENERATORS: Record<BasicStageId, (rng: Rng) => WrittenProblem> = {
   "1.4.1": timesTables,
   "1.4.2": divisionFacts,
@@ -626,4 +654,5 @@ export const BASIC_GENERATORS: Record<BasicStageId, (rng: Rng) => WrittenProblem
   "2.10.3": estimation,
   "2.9.4": areaUnits,
   "2.9.5": timeDifference,
+  "2.18.2": combinations,
 };

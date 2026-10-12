@@ -24,7 +24,7 @@ describe("training paths", () => {
 
   it("keeps younger years first on a topic path", () => {
     const order = inTrainingOrder(STAGES.filter((s) => s.path === "geometri")).map((id) => stageById(id)!.grade);
-    expect(order[0]).toBe("ak1-3");
+    expect(order[0]).toBe("fk");
     expect(order.at(-1)).toBe("gy");
   });
 

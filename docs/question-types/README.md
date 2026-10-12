@@ -17,13 +17,17 @@ player.
 | `placeValue` | what a digit is worth | 1.1.1 | [placeValue.md](placeValue.md) |
 | `column` | addition, subtraction, multiplication in columns; decimals | 1.1.2–1.1.7, 2.1.1–2.1.3, 2.3.3–2.3.4 | [column.md](column.md) |
 | `shortDivision` | kort division (not played yet) | 2.2.1–2.2.4 | [shortDivision.md](shortDivision.md) |
-| `statistics` | medelvärde, median, typvärde | 2.7.1–2.7.3 | [statistics.md](statistics.md) |
-| `chart` | reading bar charts | 2.8.1–2.8.3 | [chart.md](chart.md) |
+| `statistics` | medelvärde, median, typvärde, variationsbredd | 2.7.1–2.7.5 | [statistics.md](statistics.md) |
+| `chart` | reading bar charts, pictograms, line charts | 2.8.1–2.8.5 | [chart.md](chart.md) |
 | `trappan` | division with trappan | 2.5.1–2.5.8 | [trappan.md](trappan.md) |
 | `mulGuided` | bigger multiplications, decimals | 2.1.4–2.1.6 | [mulGuided.md](mulGuided.md) |
 | `clock` | reading and setting clocks | 1.5.1, 1.5.3–1.5.7 | [clock.md](clock.md) |
 | `shop` | paying and giving change | 1.6.2–1.6.4, 2.9.6 | [shop.md](shop.md) |
-| `written` | everything written on the free board, åk 1 – gymnasiet | 66 levels | [written.md](written.md) |
+| `written` | everything written on the free board, åk 1 – gymnasiet | 75 levels | [written.md](written.md) |
+| `choice` | recognise, compare, pick, förskoleklass to åk 9: counting, patterns, position words, fractions (pizza, chocolate), shapes, measuring, tables and charts, chance, graphs and formulas, percent, geometry, programming | 47 levels | [choice.md](choice.md) |
+| `sort` | sorting into groups and putting in order, förskoleklass to åk 9: shapes, odd and even, primes, fractions around a half, rational numbers; numbers, fractions and percent, negatives, lengths in different units, standard form | 12 levels | [sort.md](sort.md) |
+| `numberLine` | placing a number on a number line: whole numbers, fractions, decimals, negatives, estimating roots and π | 6 levels | [numberLine.md](numberLine.md) |
+| `grid` | drawing on a grid: finishing a symmetric figure, colouring a fraction or percent, a rectangle of given area and perimeter, plotting points, reflections and translations | 6 levels | [grid.md](grid.md) |
 
 ## What every type shares
 
@@ -54,8 +58,9 @@ Help is never refused and every question is solved in the end:
 2. A second: the question's hint comes by itself.
 3. A third: the answer is shown, and Nästa moves on.
 
-Single-choice questions (a clock to read, the times tables to pick) show the
-answer after the second wrong pick, since there are few options left.
+Single-choice questions (a clock to read, the times tables to pick, the
+`choice` type) show the answer after the second wrong pick among four
+options - after the first among two or three - since there are few left.
 `game/questions/useAnswerTries.ts` does this for any question answered with
 one number.
 

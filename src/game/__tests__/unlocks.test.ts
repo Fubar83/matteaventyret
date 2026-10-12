@@ -11,8 +11,8 @@ describe("the path graph", () => {
     }
   });
 
-  it("only Positionssystemet is open from the start", () => {
-    expect(STAGES.filter((s) => isStageUnlocked(s.id, {})).map((s) => s.id)).toEqual(["1.1.1"]);
+  it("only Räkna (förskoleklass) and Positionssystemet (åk 1) are open from the start", () => {
+    expect(STAGES.filter((s) => isStageUnlocked(s.id, {})).map((s) => s.id)).toEqual(["0.1.1", "1.1.1"]);
   });
 
   it("paths branch: after Positionssystemet, addition, subtraction and diagrams all open at once", () => {
@@ -36,8 +36,8 @@ describe("the path graph", () => {
 describe("recommendNext", () => {
   const today = "2026-09-30";
 
-  it("the very first time: Positionssystemet", () => {
-    expect(recommendNext({}, {}, today)).toBe("1.1.1");
+  it("the very first time: counting, the first level of förskoleklass", () => {
+    expect(recommendNext({}, {}, today)).toBe("0.1.1");
   });
 
   it("something new comes first - on the path the child is on", () => {

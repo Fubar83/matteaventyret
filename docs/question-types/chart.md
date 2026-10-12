@@ -1,7 +1,9 @@
 # Charts — `chart`
 
-Tabeller och diagram (Lgr22 "Sannolikhet och statistik"): reading a bar chart
-over four kinds of fruit. Reading is åk 1–3; comparing and summing are åk 4–6.
+Tabeller och diagram (Lgr22 "Sannolikhet och statistik"): reading a chart -
+bars over four kinds of fruit, a pictogram, a line chart of the temperature
+through a day. Reading bars and pictograms is åk 1–3; comparing, summing and
+line charts are åk 4–6.
 
 ## Levels
 
@@ -10,18 +12,23 @@ over four kinds of fruit. Reading is åk 1–3; comparing and summing are åk 4�
 | 2.8.1 | Läsa av ett diagram | how many of one fruit | all but the one asked ("?") — read it off the scale |
 | 2.8.2 | Jämföra i diagram | the difference between two (they're highlighted) | yes |
 | 2.8.3 | Summera i diagram | all the fruit together | yes |
+| 2.8.4 | Piktogram | how many of one fruit (count the pictures, each is 2); the difference between two rows | no numbers — counting the pictures twice is the reading |
+| 2.8.5 | Linjediagram | the temperature at a time (kl 8–16); how many degrees warmer one time was than another | no numbers — read it off the scale |
 
 ## The question
 
-`ChartProblem`: `categoryKeys` (the four fruit, i18n keys), `values` (1–15
-each), `questionType` (lookup / difference / sum), `askIndex` (lookup),
+`ChartProblem`: `style` (`bar`, `pictogram`, `line`), `categoryKeys` (the four
+fruit, or the line chart's five times, i18n keys), `values` (1–15 each), `questionType` (lookup / difference / sum), `askIndex` (lookup),
 `compareIndices` (difference), `answer`. Two questions are the same when
 their question type, values and asked bars are.
 
 ## How it's made
 
 Four values 1–15. A difference is between two bars of different heights, so
-it's never 0.
+it's never 0 - and a pictogram's or line chart's difference is the bigger
+minus the smaller, the bigger asked first. A pictogram's values are even
+(each picture is `PICTOGRAM_UNIT`, 2). A line chart's day warms up to the
+early afternoon, then cools a little, 0–15 degrees.
 
 ## How it's played
 

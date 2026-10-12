@@ -1,17 +1,18 @@
 # Written questions — `written`
 
-Everything answered by writing on the free board, from åk 1's word problems to
-gymnasiet's integrals: 66 levels of `kind: "expression"`. Facts to know, like
+Everything answered by writing on the free board, from åk 1's mental
+arithmetic to gymnasiet's integrals: 75 levels of `kind: "expression"`. Facts to know, like
 the times tables, ask for just the answer instead.
 
 ## Levels
 
-One type; its levels come from five topic modules in
+One type; its levels come from six topic modules in
 `engine/questions/written/`, which share the model in `problem.ts`:
 
 | Module | Levels | Covers |
 |---|---|---|
-| `basicTopics.ts` | 1.2.2, 1.4.1–1.4.3, 1.5.2, 1.6.1, 2.9.4, 2.9.5, 2.10.3, 2.12.1, 2.13.1, 2.14.1, 2.15.1 | åk 1–6: the times tables, sharing, the missing number, time, money, corners and edges, angles, coordinates, equations, primes, estimation |
+| `numberSense.ts` | 1.7.1–1.7.4, 1.8.1, 1.8.4, 1.10.1, 2.20.1 | åk 1–6 number sense: tiokamrater, within 20 over the ten, doubles and halves, tens in the head and hundrakamrater, the number line, patterns, measuring with a ruler, sequences (the 10th number) |
+| `basicTopics.ts` | 1.2.2, 1.4.1–1.4.3, 1.5.2, 1.6.1, 2.9.4, 2.9.5, 2.10.3, 2.12.1, 2.13.1, 2.14.1, 2.15.1, 2.18.2 | åk 1–6: the times tables, sharing, the missing number, time, money, corners and edges, angles, coordinates, equations, primes, estimation, combinations (one of these with one of those; a queue) |
 | `wordProblems.ts` | 1.3.1, 1.3.2, 2.11.1, 2.11.2, 3.8.1, 3.8.2 | textuppgifter, one step to several, percent, equations from the words |
 | `geometry.ts` | 1.2.1, 2.4.1–2.4.4, 3.4.3–3.4.6, 4.2.2, 4.2.3 | perimeter and area with a figure: rectangles to composite shapes, circles, sectors, the area rule |
 | `examTopics.ts` | 2.6.1–2.6.4, 2.9.1–2.9.3, 2.10.1, 2.10.2, 3.3.7, 3.4.7, 3.4.8, 3.5.1, 3.6.1, 3.6.2, 3.7.1, 3.7.2, 4.1.3 | the national tests' topics: fractions, units, order of operations, rounding, speed, scale, probability, volume, sequences, equation systems |
@@ -31,7 +32,7 @@ Each level's title is `stage.<id>` in `i18n/`.
 | `tipKey`, `firstStep`, `solution` | the help ladder: a tip, the first step, the whole worked solution (LaTeX lines) |
 | `steps` | the solution as guided steps; `stepsOf` makes them from `solution` when absent |
 | `figure` | geometry: the shape, its measurements marked (`GeometryFigure`) |
-| `scene` | a picture for young children: a `balance`, `groups`, `share`, `rounding` or `units` (the unit staircase) |
+| `scene` | a picture (`engine/questions/scene.ts`): a `balance`, `groups`, `share`, `rounding`, `units` (the unit staircase), a `numberLine` or a `ruler` |
 | `unit` | the answer's unit ("cm", "m²"), written after it but not part of the number |
 | `answerOnly` | a fact to know: just the answer, picked among `choices` or written |
 
@@ -55,9 +56,14 @@ solution are; a geometry question is all in its figure.
   question (`engine/__tests__/solutionSteps.test.ts`), and every level's
   prompt and tip must exist in both languages with its placeholders filled
   (`game/__tests__/content.test.ts`).
-- The times tables (1.4.1) are `answerOnly`; their wrong choices are the
-  slips children make: the next or previous fact in either table, then the
-  sum (`tableChoices`).
+- The times tables (1.4.1) and the number-sense facts (1.7.x, 1.8.1, 1.8.4,
+  1.10.1) are `answerOnly`. Their wrong choices are the slips children make:
+  for the tables, the next or previous fact in either table, then the sum
+  (`tableChoices`); for 8 + 5, 12 or 3 or 15.
+- A number line's arrow is never on a numbered tick, so there's something to
+  read; counting on from the nearest numbered tick is the worked step.
+- On the ruler, the thing starts at 0, or at a whole centimetre (then it's
+  the end minus the start; the end alone is a slip offered).
 
 ## How it's played
 

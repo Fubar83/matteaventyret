@@ -12,12 +12,13 @@ import { ADVANCED_GENERATORS } from "./advanced";
 import { BASIC_GENERATORS } from "./basicTopics";
 import { EXAM_GENERATORS } from "./examTopics";
 import { GEOMETRY_GENERATORS } from "./geometry";
+import { NUMBER_SENSE_GENERATORS } from "./numberSense";
 import { WORD_GENERATORS } from "./wordProblems";
 
 export const WRITTEN_QUESTIONS = questionType({
   id: "written",
   kinds: ["expression"],
-  levels: { ...BASIC_GENERATORS, ...WORD_GENERATORS, ...GEOMETRY_GENERATORS, ...EXAM_GENERATORS, ...ADVANCED_GENERATORS },
+  levels: { ...NUMBER_SENSE_GENERATORS, ...BASIC_GENERATORS, ...WORD_GENERATORS, ...GEOMETRY_GENERATORS, ...EXAM_GENERATORS, ...ADVANCED_GENERATORS },
   // The worked solution too: a geometry question is all in its figure, with no display to tell two apart.
   key: (p) => `adv:${p.stageId}:${p.display}:${JSON.stringify(p.promptVars ?? {})}:${p.solution.join("|")}`,
 });

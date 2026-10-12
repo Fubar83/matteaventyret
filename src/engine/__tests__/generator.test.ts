@@ -392,6 +392,95 @@ describe("generator: stage 2.8.3 (chart sum)", () => {
   });
 });
 
+describe("generator: 2.7.4 and 2.7.5 (range, the median of an even count)", () => {
+  it("the range is the biggest minus the smallest, never 0", () => {
+    const rng = makeRng(274);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.7.4", rng);
+      if (p.kind !== "statistics") throw new Error("expected statistics");
+      expect(p.answer).toBe(Math.max(...p.values) - Math.min(...p.values));
+      expect(p.answer).toBeGreaterThan(0);
+    }
+  });
+
+  it("an even count's median is halfway between the middle two - always whole", () => {
+    const rng = makeRng(275);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.7.5", rng);
+      if (p.kind !== "statistics") throw new Error("expected statistics");
+      const s = [...p.values].sort((a, b) => a - b);
+      expect(p.values).toHaveLength(6);
+      expect(p.answer).toBe((s[2] + s[3]) / 2);
+      expect(Number.isInteger(p.answer)).toBe(true);
+    }
+  });
+});
+
+describe("generator: 2.8.4 and 2.8.5 (pictogram, line chart)", () => {
+  it("a pictogram's values are whole pictures of 2; a difference is the bigger minus the smaller", () => {
+    const rng = makeRng(284);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.8.4", rng);
+      if (p.kind !== "chart") throw new Error("expected chart");
+      expect(p.style).toBe("pictogram");
+      for (const v of p.values) expect(v % 2).toBe(0);
+      if (p.questionType === "difference") expect(p.answer).toBe(p.values[p.compareIndices![0]] - p.values[p.compareIndices![1]]);
+      expect(p.answer).toBeGreaterThan(0);
+    }
+  });
+
+  it("a line chart's day stays on the scale, 0-15 degrees", () => {
+    const rng = makeRng(285);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("2.8.5", rng);
+      if (p.kind !== "chart") throw new Error("expected chart");
+      expect(p.style).toBe("line");
+      expect(p.values).toHaveLength(5);
+      for (const v of p.values) expect(v >= 0 && v <= 15).toBe(true);
+      if (p.questionType === "difference") expect(p.answer).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("generator: number sense (1.7.x, 1.8.1, 1.8.4, 1.10.1)", () => {
+  const quick = ["1.7.1", "1.7.2", "1.7.3", "1.7.4", "1.8.1", "1.8.4", "1.10.1"] as const;
+
+  it("is just the answer, picked among four different numbers - the right one among them, none below 0", () => {
+    for (const stage of quick) {
+      const rng = makeRng(17);
+      for (let i = 0; i < N; i++) {
+        const p = generateProblem(stage, rng);
+        if (p.kind !== "expression" || p.answer.kind !== "value") throw new Error("expected a written value question");
+        const choices = p.answerOnly!.choices;
+        expect(new Set(choices).size, stage).toBe(4);
+        expect(choices, stage).toContain(p.answer.value);
+        for (const c of choices) expect(c, stage).toBeGreaterThanOrEqual(0);
+      }
+    }
+  });
+
+  it("1.8.1: the arrow is never on a numbered tick, and is a tick", () => {
+    const rng = makeRng(181);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("1.8.1", rng);
+      if (p.kind !== "expression" || p.scene?.kind !== "numberLine") throw new Error("expected a number line");
+      const { from, step, labelEvery, arrow } = p.scene;
+      expect((arrow - from) % step).toBe(0);
+      expect((arrow - from) % labelEvery).not.toBe(0);
+    }
+  });
+
+  it("1.10.1: the length is where it ends minus where it starts, on the 15 cm ruler", () => {
+    const rng = makeRng(1101);
+    for (let i = 0; i < N; i++) {
+      const p = generateProblem("1.10.1", rng);
+      if (p.kind !== "expression" || p.scene?.kind !== "ruler" || p.answer.kind !== "value") throw new Error("expected a ruler");
+      expect(p.answer.value * 10).toBe(p.scene.lengthMm);
+      expect(p.scene.startMm + p.scene.lengthMm).toBeLessThanOrEqual(150);
+    }
+  });
+});
+
 describe("generateRound", () => {
   it("never repeats a problem within a round or from recent rounds", () => {
     const rng = makeRng(42);

@@ -18,13 +18,16 @@ interface StatisticsPlayerProps {
   onSolved: (outcome: QuestionOutcome) => void;
 }
 
+/** The measures found by calculating (the rest by putting the values in order). */
+const calculated = (problem: StatisticsProblem) => problem.measure === "mean" || problem.measure === "range";
+
 /**
- * Is the written work the setup for this measure? A mean: a true calculation
- * ending in it ("12 + 15 + 9 = 36", "36 / 3 = 12"). A median or a mode: the
- * values written in order - that's how either is found.
+ * Is the written work the setup for this measure? A mean or a range: a true
+ * calculation ending in it ("12 + 15 + 9 = 36", "36 / 3 = 12", "19 − 4 = 15").
+ * A median or a mode: the values written in order - that's how either is found.
  */
 function statisticsSetupDone(problem: StatisticsProblem, work: string): boolean {
-  if (problem.measure === "mean") return checkWrittenAnswer(work, { kind: "value", value: problem.answer }).fullSetup;
+  if (calculated(problem)) return checkWrittenAnswer(work, { kind: "value", value: problem.answer }).fullSetup;
   const sorted = [...problem.values].sort((a, b) => a - b);
   const written = numbersIn(work);
   return written.length === sorted.length && written.every((v, i) => v === sorted[i]);
@@ -34,21 +37,35 @@ function statisticsSetupDone(problem: StatisticsProblem, work: string): boolean 
 export function StatisticsPlayer({ problem, level = 2, onSolved }: StatisticsPlayerProps) {
   const [helpUsed, setHelpUsed] = useState(0);
   const [work, setWork] = useState("");
+  // A median of an even count is halfway between the middle two.
+  const even = problem.measure === "median" && problem.values.length % 2 === 0;
   const tries = useAnswerTries({
     answer: problem.answer,
-    hint: t(`statistics.hint.${problem.measure}`),
+    hint: t(even ? "statistics.hint.medianEven" : `statistics.hint.${problem.measure}`),
     helpUsed,
     setup: () => statisticsSetupDone(problem, work),
     onSolved,
   });
 
   const sum = problem.values.reduce((a, b) => a + b, 0);
-  const sorted = [...problem.values].sort((a, b) => a - b).join(", ");
-  const stepText = problem.measure === "mean" ? t("statistics.step.mean", { sum, n: problem.values.length }) : t("statistics.step.sorted", { sorted });
+  const inOrder = [...problem.values].sort((a, b) => a - b);
+  const sorted = inOrder.join(", ");
+  const [min, max] = [inOrder[0], inOrder[inOrder.length - 1]];
+  const middle = [inOrder[inOrder.length / 2 - 1], inOrder[inOrder.length / 2]];
+  const stepText =
+    problem.measure === "mean"
+      ? t("statistics.step.mean", { sum, n: problem.values.length })
+      : problem.measure === "range"
+        ? t("statistics.step.range", { max, min })
+        : t("statistics.step.sorted", { sorted });
   const solutionText =
     problem.measure === "mean"
       ? t("statistics.solution.mean", { sum, n: problem.values.length, answer: problem.answer })
-      : t(`statistics.solution.${problem.measure}`, { answer: problem.answer });
+      : problem.measure === "range"
+        ? t("statistics.solution.range", { max, min, answer: problem.answer })
+        : even
+          ? t("statistics.solution.medianEven", { a: middle[0], b: middle[1], answer: problem.answer })
+          : t(`statistics.solution.${problem.measure}`, { answer: problem.answer });
 
   return (
     <div className="flex flex-col items-center gap-5 w-full">
@@ -64,7 +81,7 @@ export function StatisticsPlayer({ problem, level = 2, onSolved }: StatisticsPla
         level={level}
         profile={profileForStage(problem.stageId)}
         title={t("work.title")}
-        subtitle={problem.measure === "mean" ? t("work.why") : `${t("work.sortedHint")} ${t("work.why")}`}
+        subtitle={calculated(problem) ? t("work.why") : `${t("work.sortedHint")} ${t("work.why")}`}
         rows={2}
         onChange={setWork}
         disabled={tries.solved}

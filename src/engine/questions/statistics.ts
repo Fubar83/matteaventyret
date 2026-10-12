@@ -1,14 +1,18 @@
 /**
  * Lägesmått (Lgr22 åk 4-6 "Sannolikhet och statistik"): medelvärde, median
- * and typvärde of a few small numbers (1-20) - each always a whole number.
+ * and typvärde of a few small numbers (1-20) - and how spread out they are,
+ * variationsbredden. Each answer is a whole number.
+ *
+ *   2.7.1 medelvärde   2.7.2 median (an odd count)   2.7.3 typvärde
+ *   2.7.4 variationsbredd   2.7.5 median of an even count (the middle two's mean)
  *
  * How it works, and what must stay true: docs/question-types/statistics.md.
  */
 import { randInt, shuffle, type Rng } from "../rng";
 import { questionType, retry } from "./questionType";
 
-export type StatisticsStageId = "2.7.1" | "2.7.2" | "2.7.3";
-export type StatMeasure = "mean" | "median" | "mode";
+export type StatisticsStageId = "2.7.1" | "2.7.2" | "2.7.3" | "2.7.4" | "2.7.5";
+export type StatMeasure = "mean" | "median" | "mode" | "range";
 
 export interface StatisticsProblem {
   stageId: StatisticsStageId;
@@ -48,9 +52,25 @@ function mode(rng: Rng): StatisticsProblem {
   return { stageId: "2.7.3", kind: "statistics", measure: "mode", values: shuffle(rng, [often, often, often, ...others]), answer: often };
 }
 
+/** 2.7.4: the range - the biggest minus the smallest, of 5-7 numbers. */
+function range(rng: Rng): StatisticsProblem {
+  const values = Array.from({ length: randInt(rng, 5, 7) }, () => randInt(rng, 1, 20));
+  const answer = Math.max(...values) - Math.min(...values);
+  return answer === 0 ? range(rng) : { stageId: "2.7.4", kind: "statistics", measure: "range", values, answer };
+}
+
+/** 2.7.5: the median of 6 numbers - halfway between the middle two, which add up to an even number so it's whole. */
+const medianEven = (rng: Rng) =>
+  retry("2.7.5", (): StatisticsProblem | null => {
+    const values = Array.from({ length: 6 }, () => randInt(rng, 1, 20));
+    const sorted = [...values].sort((a, b) => a - b);
+    const [lo, hi] = [sorted[2], sorted[3]];
+    return (lo + hi) % 2 !== 0 || lo === hi ? null : { stageId: "2.7.5", kind: "statistics", measure: "median", values, answer: (lo + hi) / 2 };
+  });
+
 export const STATISTICS_QUESTIONS = questionType({
   id: "statistics",
   kinds: ["statistics"],
-  levels: { "2.7.1": mean, "2.7.2": median, "2.7.3": mode },
+  levels: { "2.7.1": mean, "2.7.2": median, "2.7.3": mode, "2.7.4": range, "2.7.5": medianEven },
   key: (p) => `${p.kind}:${p.measure}:${p.values.join(",")}`,
 });

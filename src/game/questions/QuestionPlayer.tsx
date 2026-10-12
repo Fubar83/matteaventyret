@@ -4,12 +4,16 @@ import type { ColumnProblem } from "../../engine/questions/column";
 import type { Phase } from "../../engine/types";
 import type { WritingLevel } from "../../recognition/levels";
 import { ChartPlayer } from "./chart/ChartPlayer";
+import { ChoicePlayer } from "./choice/ChoicePlayer";
 import { ClockPlayer } from "./clock/ClockPlayer";
 import { ColumnProblemPlayer, type ColumnProblemSummary } from "./column/ColumnProblemPlayer";
+import { GridCellsPlayer, GridPointsPlayer } from "./grid/GridPlayer";
 import { MulPlayer } from "./multiplication/MulPlayer";
+import { NumberLinePlayer } from "./numberLine/NumberLinePlayer";
 import { PlaceValuePlayer } from "./placeValue/PlaceValuePlayer";
 import type { QuestionOutcome } from "./questionOutcome";
 import { ShopPlayer } from "./shop/ShopPlayer";
+import { SortGroupsPlayer, SortOrderPlayer } from "./sort/SortPlayer";
 import { StatisticsPlayer } from "./statistics/StatisticsPlayer";
 import { TrappanPlayer } from "./trappan/TrappanPlayer";
 import { ExpressionPlayer } from "./written/ExpressionPlayer";
@@ -54,6 +58,12 @@ const PLAYERS: { [K in QuestionKind]: Player<K> } = {
   clock: ({ problem, onSolved }) => <ClockPlayer problem={problem} onSolved={onSolved} />,
   shop: ({ problem, onSolved }) => <ShopPlayer problem={problem} onSolved={onSolved} />,
   expression: ({ problem, level, onSolved }) => <ExpressionPlayer problem={problem} level={level} onSolved={onSolved} />,
+  choice: ({ problem, onSolved }) => <ChoicePlayer problem={problem} onSolved={onSolved} />,
+  sortGroups: ({ problem, onSolved }) => <SortGroupsPlayer problem={problem} onSolved={onSolved} />,
+  sortOrder: ({ problem, onSolved }) => <SortOrderPlayer problem={problem} onSolved={onSolved} />,
+  placeOnLine: ({ problem, onSolved }) => <NumberLinePlayer problem={problem} onSolved={onSolved} />,
+  gridCells: ({ problem, onSolved }) => <GridCellsPlayer problem={problem} onSolved={onSolved} />,
+  gridPoints: ({ problem, onSolved }) => <GridPointsPlayer problem={problem} onSolved={onSolved} />,
 };
 
 /** Every kind of question a player can be picked for. */

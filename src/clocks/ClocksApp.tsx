@@ -9,7 +9,7 @@ import { makeRng } from "../engine/rng";
 import { ThemeBanner, type ThemeId } from "../game/scenes/ThemeBanner";
 import { QuestionScene } from "../game/scenes/QuestionScene";
 import { BaseTenBlocks } from "../game/scenes/BaseTenBlocks";
-import type { QuestionScene as Scene } from "../engine/questions/written/questionScene";
+import type { QuestionScene as Scene } from "../engine/questions/scene";
 import { TRAPPAN_QUESTIONS, type Decimal, type TrappanProblem, type TrappanStageId } from "../engine/questions/trappan";
 import { TrappanPlayer } from "../game/questions/trappan/TrappanPlayer";
 import { PlanFigure, TrappanFigure } from "../game/questions/trappan/TrappanFigure";

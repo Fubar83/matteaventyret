@@ -17,8 +17,10 @@ export interface TrainingPath {
   stages: StageId[];
 }
 
-const GRADES: GradeBand[] = ["ak1-3", "ak4-6", "ak7-9", "gy"];
+const GRADES: GradeBand[] = ["fk", "ak1-3", "ak4-6", "ak7-9", "gy"];
 const EXAMS: { id: string; grade: GradeBand; color: string }[] = [
+  // No national test in förskoleklass: its path is everything to be ready for åk 1.
+  { id: "fk", grade: "fk", color: "#4ade80" },
   { id: "ak3", grade: "ak1-3", color: "#fbbf24" },
   { id: "ak6", grade: "ak4-6", color: "#38bdf8" },
   { id: "ak9", grade: "ak7-9", color: "#a78bfa" },
@@ -46,7 +48,7 @@ export function inTrainingOrder(stages: StageMeta[]): StageId[] {
 }
 
 export const TRAINING_PATHS: TrainingPath[] = [
-  // Inför nationella provet: everything that year's test covers.
+  // Year by year: everything that year's national test covers (förskoleklass: what åk 1 builds on).
   ...EXAMS.map((e) => ({
     id: `exam-${e.id}`,
     group: "exam" as const,

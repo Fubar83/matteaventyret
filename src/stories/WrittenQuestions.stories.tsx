@@ -50,3 +50,9 @@ export const BildEnheter: Story = { name: "Bild: enhetstrappan", args: { ...firs
 
 export const GeometriMedFigur: Story = { name: "Geometri med figur", args: { ...firstMatching(LEVELS, WRITTEN.figure), match: WRITTEN.figure } };
 export const SvarMedEnhet: Story = { name: "Svar med enhet", args: { ...firstMatching(LEVELS, WRITTEN.unit), match: WRITTEN.unit } };
+
+/** Number sense: the number line, measuring with a ruler, patterns and sequences. */
+export const Tallinjen: Story = { args: { ...firstMatching(LEVELS, WRITTEN.numberLine), match: WRITTEN.numberLine } };
+export const MataLangd: Story = { name: "Mäta längd", args: { ...firstMatching(LEVELS, WRITTEN.ruler), match: WRITTEN.ruler } };
+export const Talmonster: Story = { name: "Talmönster", args: { ...firstMatching(LEVELS, WRITTEN.pattern), match: WRITTEN.pattern } };
+export const Talfoljder: Story = { name: "Talföljder", args: { ...firstMatching(LEVELS, WRITTEN.sequence), match: WRITTEN.sequence } };

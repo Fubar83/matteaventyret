@@ -21,3 +21,5 @@ export const ValfriNiva: Story = { name: "Valfri nivå" };
 export const Medelvarde: Story = { name: "Medelvärde", args: { ...firstMatching(LEVELS, STATISTICS.mean), match: STATISTICS.mean } };
 export const Median: Story = { name: "Median", args: { ...firstMatching(LEVELS, STATISTICS.median), match: STATISTICS.median } };
 export const Typvarde: Story = { name: "Typvärde", args: { ...firstMatching(LEVELS, STATISTICS.mode), match: STATISTICS.mode } };
+export const Variationsbredd: Story = { args: { ...firstMatching(LEVELS, STATISTICS.range), match: STATISTICS.range } };
+export const MedianJamntAntal: Story = { name: "Median, jämnt antal", args: { ...firstMatching(LEVELS, STATISTICS.medianEven), match: STATISTICS.medianEven } };

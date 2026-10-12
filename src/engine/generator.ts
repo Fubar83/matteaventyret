@@ -5,13 +5,17 @@
  * (see questions/questionType.ts) - adding a type is adding it to the list.
  */
 import { CHART_QUESTIONS } from "./questions/chart";
+import { CHOICE_QUESTIONS } from "./questions/choice";
 import { CLOCK_QUESTIONS } from "./questions/clock";
 import { COLUMN_QUESTIONS } from "./questions/column";
+import { GRID_QUESTIONS } from "./questions/grid";
 import { MUL_GUIDED_QUESTIONS } from "./questions/multiply";
+import { NUMBER_LINE_QUESTIONS } from "./questions/numberLine";
 import { PLACE_VALUE_QUESTIONS } from "./questions/placeValue";
 import { MAX_ATTEMPTS } from "./questions/questionType";
 import { SHOP_QUESTIONS } from "./questions/shop";
 import { SHORT_DIVISION_QUESTIONS } from "./questions/shortDivision";
+import { SORT_QUESTIONS } from "./questions/sort";
 import { STATISTICS_QUESTIONS } from "./questions/statistics";
 import { TRAPPAN_QUESTIONS } from "./questions/trappan";
 import { WRITTEN_QUESTIONS } from "./questions/written";
@@ -29,6 +33,10 @@ export const QUESTION_TYPES = [
   CLOCK_QUESTIONS,
   SHOP_QUESTIONS,
   WRITTEN_QUESTIONS,
+  CHOICE_QUESTIONS,
+  SORT_QUESTIONS,
+  NUMBER_LINE_QUESTIONS,
+  GRID_QUESTIONS,
 ] as const;
 
 type AnyType = (typeof QUESTION_TYPES)[number];

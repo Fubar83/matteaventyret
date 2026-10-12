@@ -17,8 +17,8 @@ export const PATHS: readonly { id: PathId; nameKey: string; color: string }[] = 
   { id: "problem", nameKey: "path.problem", color: "#fde68a" },
 ];
 
-/** School stages, youngest first. */
-export type GradeBand = "ak1-3" | "ak4-6" | "ak7-9" | "gy";
+/** School stages, youngest first: förskoleklass, åk 1-3, 4-6, 7-9, gymnasiet. */
+export type GradeBand = "fk" | "ak1-3" | "ak4-6" | "ak7-9" | "gy";
 
 /**
  * A level as the game shows it: where it sits (its path, grade and what opens
@@ -52,7 +52,7 @@ const s = (
   path,
   requires,
   grade,
-  writingLevel: grade === "ak1-3" ? 1 : grade === "ak4-6" ? 2 : grade === "ak7-9" ? 3 : 4,
+  writingLevel: grade === "fk" || grade === "ak1-3" ? 1 : grade === "ak4-6" ? 2 : grade === "ak7-9" ? 3 : 4,
 });
 
 /**
@@ -63,6 +63,17 @@ const s = (
  * engine-complete but has no player yet.)
  */
 export const STAGES: StageMeta[] = [
+  // Förskoleklass: counting, comparing, order, patterns, position words - open from the start beside Positionssystemet.
+  s("0.1.1", 6, "tal", [], "fk"),
+  s("0.1.2", 6, "tal", ["0.1.1"], "fk"),
+  s("0.1.5", 6, "tal", ["0.1.2"], "fk"),
+  s("0.1.3", 6, "tal", ["0.1.1"], "fk"),
+  s("0.1.4", 6, "tal", ["0.1.3"], "fk"),
+  s("0.1.6", 6, "tal", ["0.1.3"], "fk"),
+  s("0.2.1", 6, "algebra", ["0.1.1"], "fk"),
+  s("0.3.1", 6, "geometri", ["0.1.1"], "fk"),
+  s("0.4.1", 6, "geometri", ["0.1.1"], "fk"),
+  s("0.3.2", 6, "vardag", ["0.1.2"], "fk"),
   // Åk 1-3
   s("1.1.1", 6, "tal", [], "ak1-3"),
   s("1.1.2", 6, "plusminus", ["1.1.1"], "ak1-3"),
@@ -73,6 +84,33 @@ export const STAGES: StageMeta[] = [
   s("1.1.7", 8, "plusminus", ["1.1.5"], "ak1-3"),
   s("2.8.1", 6, "statistik", ["1.1.1"], "ak1-3"),
   s("1.2.1", 6, "geometri", ["1.1.2"], "ak1-3"),
+  // Taluppfattning och huvudräkning: the facts, the number line, comparing, patterns.
+  s("1.7.1", 8, "plusminus", ["1.1.1"], "ak1-3"),
+  s("1.7.2", 8, "plusminus", ["1.7.1"], "ak1-3"),
+  s("1.7.3", 8, "ganger", ["1.7.2"], "ak1-3"),
+  s("1.7.4", 8, "plusminus", ["1.7.2", "1.1.1"], "ak1-3"),
+  s("1.8.2", 8, "tal", ["1.1.1"], "ak1-3"),
+  s("1.8.3", 8, "tal", ["1.8.2"], "ak1-3"),
+  s("1.8.5", 6, "tal", ["1.8.3"], "ak1-3"),
+  s("1.8.6", 6, "tal", ["1.8.2"], "ak1-3"),
+  s("1.8.1", 6, "tal", ["1.1.1"], "ak1-3"),
+  s("1.8.7", 6, "tal", ["1.8.1"], "ak1-3"),
+  s("1.8.4", 6, "algebra", ["1.7.1"], "ak1-3"),
+  // Bråk, former, symmetri, mätning, kalendern och slumpen.
+  s("1.9.1", 6, "decimal", ["1.7.3"], "ak1-3"),
+  s("1.9.2", 6, "decimal", ["1.9.1"], "ak1-3"),
+  s("1.9.3", 6, "decimal", ["1.9.2"], "ak1-3"),
+  s("1.9.4", 6, "decimal", ["1.9.1"], "ak1-3"),
+  s("1.2.3", 6, "geometri", ["1.1.1"], "ak1-3"),
+  s("1.2.4", 6, "geometri", ["1.2.3"], "ak1-3"),
+  s("1.2.5", 6, "geometri", ["1.2.3"], "ak1-3"),
+  s("1.2.6", 6, "geometri", ["1.2.4"], "ak1-3"),
+  s("1.10.1", 6, "geometri", ["1.8.1"], "ak1-3"),
+  s("1.10.2", 6, "vardag", ["1.10.1"], "ak1-3"),
+  s("1.10.3", 6, "vardag", ["1.10.2"], "ak1-3"),
+  s("1.11.1", 6, "statistik", ["2.8.1"], "ak1-3"),
+  s("2.8.4", 6, "statistik", ["2.8.1", "1.7.3"], "ak1-3"),
+  s("1.13.1", 6, "statistik", ["2.8.1"], "ak1-3"),
   // Åk 4-6
   s("2.1.1", 6, "ganger", ["1.1.4"], "ak4-6"),
   s("2.1.2", 8, "ganger", ["2.1.1"], "ak4-6"),
@@ -96,11 +134,26 @@ export const STAGES: StageMeta[] = [
   s("2.7.2", 6, "statistik", ["2.8.1"], "ak4-6"),
   s("2.7.3", 6, "statistik", ["2.8.1"], "ak4-6"),
   s("2.7.1", 6, "statistik", ["2.8.3", "2.1.1"], "ak4-6"),
+  s("2.7.4", 6, "statistik", ["2.7.2"], "ak4-6"),
+  s("2.7.5", 6, "statistik", ["2.7.2"], "ak4-6"),
+  s("2.8.5", 6, "statistik", ["2.8.2"], "ak4-6"),
+  // Decimaltalen, negativa tal, talföljder och programmering.
+  s("2.16.1", 6, "decimal", ["1.1.1", "1.9.1"], "ak4-6"),
+  s("2.16.2", 6, "decimal", ["2.16.1"], "ak4-6"),
+  s("2.16.3", 6, "decimal", ["2.16.1"], "ak4-6"),
+  s("2.17.1", 6, "tal", ["1.8.1"], "ak4-6"),
+  s("2.17.2", 6, "tal", ["2.17.1"], "ak4-6"),
+  s("2.17.3", 6, "tal", ["2.17.1"], "ak4-6"),
+  s("2.20.1", 6, "algebra", ["1.8.4"], "ak4-6"),
+  s("1.12.1", 6, "algebra", ["1.8.4"], "ak1-3"),
+  s("2.19.2", 6, "algebra", ["1.12.1"], "ak4-6"),
+  s("2.19.3", 6, "algebra", ["2.19.2"], "ak4-6"),
   // Geometry, from one shape at a time to shapes put together.
   s("2.4.1", 6, "geometri", ["1.2.1", "2.1.1"], "ak4-6"),
   s("2.4.2", 6, "geometri", ["2.4.1"], "ak4-6"),
   s("2.4.3", 6, "geometri", ["2.4.2"], "ak4-6"),
   s("2.4.4", 6, "geometri", ["2.4.2"], "ak4-6"),
+  s("2.4.5", 6, "geometri", ["2.4.1"], "ak4-6"),
   // Åk 7-9
   s("3.1.1", 6, "tal", ["1.1.7"], "ak7-9"),
   s("3.1.2", 6, "tal", ["2.1.2"], "ak7-9"),
@@ -120,6 +173,12 @@ export const STAGES: StageMeta[] = [
   s("3.4.5", 6, "geometri", ["3.4.3", "2.4.4"], "ak7-9"),
   s("3.4.6", 6, "geometri", ["3.4.5", "3.3.2"], "ak7-9"),
   // Gymnasiet
+  s("3.1.4", 6, "tal", ["3.1.2"], "ak7-9"),
+  s("3.1.5", 6, "tal", ["3.1.4"], "ak7-9"),
+  s("3.1.6", 6, "tal", ["3.1.3"], "ak7-9"),
+  s("3.1.7", 6, "tal", ["3.1.4"], "ak7-9"),
+  s("3.3.8", 6, "algebra", ["3.3.2"], "ak7-9"),
+  s("3.10.1", 6, "algebra", ["3.4.2"], "ak7-9"),
   s("4.1.2", 6, "tal", ["3.1.3"], "gy"),
   s("4.1.1", 6, "algebra", ["3.3.3", "3.4.1"], "gy"),
   s("4.2.1", 6, "geometri", ["3.4.1"], "gy"),
@@ -132,19 +191,40 @@ export const STAGES: StageMeta[] = [
   s("2.6.2", 6, "decimal", ["2.6.1"], "ak4-6"),
   s("2.6.3", 6, "decimal", ["2.6.2"], "ak4-6"),
   s("2.6.4", 6, "decimal", ["2.6.3"], "ak4-6"),
+  s("2.6.5", 6, "decimal", ["2.6.1", "1.9.3"], "ak4-6"),
+  s("2.6.6", 6, "decimal", ["2.6.3", "2.6.5"], "ak4-6"),
+  s("2.6.7", 6, "decimal", ["2.6.5"], "ak4-6"),
+  s("2.16.4", 6, "decimal", ["2.16.3", "2.6.4"], "ak4-6"),
+  s("2.6.8", 6, "decimal", ["2.6.5"], "ak4-6"),
+  s("2.16.5", 6, "decimal", ["2.16.1"], "ak4-6"),
+  s("2.6.9", 6, "decimal", ["2.6.4"], "ak4-6"),
+  s("2.18.1", 6, "statistik", ["1.11.1", "2.6.1"], "ak4-6"),
+  s("2.18.2", 6, "statistik", ["2.18.1", "2.1.1"], "ak4-6"),
+  s("2.8.6", 6, "statistik", ["2.8.1", "2.6.4"], "ak4-6"),
   s("2.9.1", 6, "vardag", ["2.4.1"], "ak4-6"),
   s("2.9.2", 6, "vardag", ["2.9.1"], "ak4-6"),
   s("2.9.3", 6, "vardag", ["2.9.1"], "ak4-6"),
+  s("2.9.8", 6, "vardag", ["2.9.1"], "ak4-6"),
+  s("2.12.3", 6, "geometri", ["2.1.1", "2.9.1"], "ak4-6"),
   s("2.10.1", 6, "tal", ["2.9.1"], "ak4-6"),
   s("2.10.2", 6, "tal", ["2.10.1"], "ak4-6"),
   s("3.5.1", 6, "decimal", ["2.6.3"], "ak7-9"),
   s("3.6.1", 6, "vardag", ["2.9.3"], "ak7-9"),
   s("3.6.2", 6, "vardag", ["3.6.1"], "ak7-9"),
+  s("3.4.9", 6, "geometri", ["3.6.2"], "ak7-9"),
   s("3.7.1", 6, "statistik", ["2.6.4"], "ak7-9"),
   s("3.7.2", 6, "statistik", ["3.7.1"], "ak7-9"),
+  s("3.7.3", 6, "statistik", ["2.7.1", "2.7.2"], "ak7-9"),
+  s("3.7.4", 6, "statistik", ["2.8.2", "3.7.3"], "ak7-9"),
+  s("3.2.3", 6, "decimal", ["3.2.2"], "ak7-9"),
+  s("3.2.4", 6, "vardag", ["3.2.2"], "ak7-9"),
   s("3.3.7", 6, "algebra", ["2.10.1"], "ak7-9"),
+  s("3.10.2", 6, "algebra", ["3.3.7"], "ak7-9"),
   s("3.4.7", 6, "geometri", ["2.9.2"], "ak7-9"),
   s("3.4.8", 6, "geometri", ["3.4.7"], "ak7-9"),
+  s("3.4.11", 6, "geometri", ["3.4.7"], "ak7-9"),
+  s("3.9.1", 6, "algebra", ["2.19.3"], "ak7-9"),
+  s("3.9.2", 6, "algebra", ["3.9.1"], "ak7-9"),
   s("4.1.3", 6, "algebra", ["3.3.3"], "gy"),
   // The rest of åk 1-6: tables, the clock, money, shapes; angles, coordinates, equations, primes, estimation.
   s("1.4.1", 8, "ganger", ["1.1.2"], "ak1-3"),
@@ -157,6 +237,7 @@ export const STAGES: StageMeta[] = [
   s("1.5.5", 8, "vardag", ["1.5.4"], "ak1-3"),
   s("1.5.6", 8, "vardag", ["1.5.5"], "ak1-3"),
   s("1.5.7", 8, "vardag", ["1.5.6"], "ak1-3"),
+  s("1.5.8", 6, "vardag", ["1.5.1"], "ak1-3"),
   s("1.5.2", 6, "vardag", ["1.5.4"], "ak1-3"),
   s("1.6.1", 6, "vardag", ["1.1.2"], "ak1-3"),
   // Affären: pay, give change, shop from a list - and the till with bigger notes.
@@ -166,17 +247,24 @@ export const STAGES: StageMeta[] = [
   s("2.9.6", 6, "vardag", ["1.6.4"], "ak4-6"),
   s("1.2.2", 6, "geometri", ["1.1.1"], "ak1-3"),
   s("2.12.1", 6, "geometri", ["2.4.2"], "ak4-6"),
+  s("2.12.2", 6, "geometri", ["2.12.1"], "ak4-6"),
+  s("3.4.10", 6, "geometri", ["2.12.1"], "ak7-9"),
   s("2.13.1", 6, "algebra", ["1.1.1"], "ak4-6"),
+  s("2.13.2", 6, "algebra", ["2.13.1"], "ak4-6"),
+  s("3.4.12", 6, "geometri", ["2.13.2"], "ak7-9"),
   s("2.14.1", 6, "algebra", ["1.4.3"], "ak4-6"),
   s("2.15.1", 6, "tal", ["2.1.1"], "ak4-6"),
+  s("2.15.2", 6, "tal", ["2.15.1"], "ak4-6"),
   s("2.10.3", 6, "tal", ["2.1.1"], "ak4-6"),
   s("2.9.4", 6, "vardag", ["2.4.1"], "ak4-6"),
   s("2.9.5", 6, "vardag", ["1.5.2"], "ak4-6"),
+  s("2.9.7", 6, "vardag", ["2.9.5"], "ak4-6"),
   // Textuppgifter, from the first stories to an equation from the words.
   s("1.3.1", 6, "problem", ["1.2.1"], "ak1-3"),
   s("1.3.2", 6, "problem", ["1.3.1"], "ak1-3"),
   s("2.11.1", 6, "problem", ["1.3.2"], "ak4-6"),
   s("2.11.2", 6, "problem", ["2.11.1"], "ak4-6"),
+  s("2.11.3", 6, "algebra", ["2.11.1", "2.13.1"], "ak4-6"),
   s("3.8.1", 6, "problem", ["2.11.2"], "ak7-9"),
   s("3.8.2", 6, "problem", ["3.8.1"], "ak7-9"),
 ];
