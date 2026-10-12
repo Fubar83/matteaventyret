@@ -6,6 +6,11 @@ import type {
   ChoiceText,
 } from "../../engine/questions/choice/problem";
 import { SORT_QUESTIONS } from "../../engine/questions/sort";
+import { BALANCE_QUESTIONS } from "../../engine/questions/balance";
+import { BLOCKS_QUESTIONS } from "../../engine/questions/blocks";
+import { CONSTRUCT_QUESTIONS } from "../../engine/questions/construct";
+import { EXPERIMENT_QUESTIONS } from "../../engine/questions/experiment";
+import { MATCH_QUESTIONS } from "../../engine/questions/match";
 import { GRID_QUESTIONS } from "../../engine/questions/grid";
 import { NUMBER_LINE_QUESTIONS } from "../../engine/questions/numberLine";
 import type { SortProblem } from "../../engine/questions/sort/problem";
@@ -119,6 +124,23 @@ describe("every text the game shows exists in Swedish and English", () => {
               ];
             },
           ] as [string, () => ChoiceText[]],
+      ),
+      // The other new types: their question, help, and every text an option or a reason has.
+      ...[MATCH_QUESTIONS, BLOCKS_QUESTIONS, BALANCE_QUESTIONS, EXPERIMENT_QUESTIONS, CONSTRUCT_QUESTIONS].flatMap((type) =>
+        Object.entries(type.levels).map(
+          ([stage, gen]) =>
+            [
+              stage,
+              () => {
+                const p = (gen as (r: typeof rng) => { prompt: ChoiceText; tip: ChoiceText; explanation: ChoiceText } & Record<string, unknown>)(rng);
+                const options = (x: unknown) => ((x as { options?: { text?: ChoiceText }[] }).options ?? []).flatMap((o) => (o.text ? [o.text] : []));
+                const reasons = (x: unknown) => ((x as { whyNot?: (ChoiceText | null)[] }).whyNot ?? []).filter((w): w is ChoiceText => w !== null);
+                const cards = ((p.cards as { option: { text?: ChoiceText } }[] | undefined) ?? []).flatMap((c) => (c.option.text ? [c.option.text] : []));
+                // An experiment has no question of its own: its questions are the guess and the one after.
+                return [p.prompt, p.tip, p.explanation, ...cards, ...(p.predict ? [(p.predict as { prompt: ChoiceText }).prompt, ...options(p.predict), ...reasons(p.predict)] : [])].filter((x): x is ChoiceText => !!x);
+              },
+            ] as [string, () => ChoiceText[]],
+        ),
       ),
     ];
     for (const [stage, texts] of levels) {

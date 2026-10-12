@@ -23,6 +23,9 @@ Two kinds:
 | 2.6.9 | Procent av en figur | cells | colour 35 % of 20 squares (or 25, 4 % each) | how many |
 | 2.4.5 | Rita en rektangel | cells | a rectangle of area 12 and perimeter 14 (one shape) — or of area 12 only (any) | a filled rectangle, its area, its perimeter |
 | 2.13.2 | Pricka in punkter | points | (3, 5) — sometimes in all four quadrants; the fourth corner of a rectangle | exactly those points |
+| 2.12.6 | Förstora en figur | cells | a figure of 3–5 squares, drawn twice as big anywhere in the empty part | the same shape, each square 2 × 2, wherever it is |
+| 3.4.14 | Vridning | points | a triangle turned a quarter turn either way, or a half turn, about the origin | exactly the image's corners — the other way round, or a reflection, caught |
+| 3.10.4 | Rita linjen | points | y = kx + m drawn by marking two points on it | any two points on the line — k and m swapped, the wrong sign of k, the wrong m caught |
 | 3.4.12 | Spegling och förflyttning | points | a triangle reflected in the x- or y-axis, or moved 3 steps right and 2 down | exactly the image's corners |
 
 ## The question
@@ -30,7 +33,8 @@ Two kinds:
 | Field | |
 |---|---|
 | `gridCells`: `w`, `h`, `given`, `line` | the grid, the squares coloured from the start, a dashed line |
-| `gridCells`: `rule` | `exact` (these squares), `count` (this many), `rectangle` (area, and perimeter when given) |
+| `gridCells`: `rule` | `exact` (these squares), `count` (this many), `rectangle` (area, and perimeter when given), `scaled` (a figure k times as big, anywhere) |
+| `gridPoints`: `line` | instead of exact points: any two on y = kx + m, and the lines that are known slips |
 | `gridCells`: `solution` | one right answer, shown when the answer is |
 | `gridPoints`: `x`, `y`, `shown` | the axes' range and the figures drawn from the start |
 | `gridPoints`: `answer`, `slips` | the points to mark (any order), and wrong answers that are known slips with what to say about them |
@@ -59,6 +63,11 @@ the tests check what the child is checked on.
 
 - Every square and every grid point is a tap target of its own (and a
   button for a screen reader). Given squares are dark blue and stay.
+- A swipe paints: the first square decides whether it colours or clears,
+  and every square the finger passes over does the same. The click after a
+  swipe is ignored, so the first square isn't flipped back.
+- Points for a line (`line`) are joined by a dashed line through both, so
+  the line drawn can be compared with the one asked for.
 - Three points placed are joined with a dashed line, so a triangle shows.
 - **Rätta** says why it's wrong; the answer stays to fix. After **two**
   wrong checks the answer is shown (green) with the explanation.

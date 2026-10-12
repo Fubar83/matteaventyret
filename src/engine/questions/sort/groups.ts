@@ -6,17 +6,20 @@
  *                 1.2.5 figurer och kroppar: flat figures and solids
  *   åk 4-6        2.15.2 primtal: primes and not (1, 9, 51 and 2 the traps)
  *                 2.6.7 bråk kring en halv: less than, equal to, more than a half
+ *                 2.15.3 venndiagram: divisible by 2, by 3, by both, by neither
+ *                 2.12.7 fyrhörningar: four right angles or not, two pairs of parallel sides or not
  *   åk 7-9        3.1.5 rationella och irrationella tal: √9 and 3,14 against √2 and π
  *
  * The things that are easy to get wrong are always among them: 2 is a prime,
  * 51 isn't, 4/8 is a half, √16 is rational, 3,14 isn't π.
  */
 import { pick, randInt, shuffle, type Rng } from "../../rng";
-import { CHANCE_COLORS, PLANE_SHAPES, SOLIDS, type PatternItem, type QuestionScene } from "../scene";
+import { retry } from "../questionType";
+import { CHANCE_COLORS, PLANE_SHAPES, QUADS, SOLIDS, type PatternItem, type Quad, type QuestionScene } from "../scene";
 import { fractionOption, numberOption, text, textOption, type ChoiceOption, type ChoiceText } from "../choice/problem";
 import type { SortGroupsProblem } from "./problem";
 
-export type SortGroupsStageId = "0.4.1" | "1.8.5" | "1.2.5" | "2.15.2" | "2.6.7" | "3.1.5";
+export type SortGroupsStageId = "0.4.1" | "1.8.5" | "1.2.5" | "2.15.2" | "2.6.7" | "3.1.5" | "2.15.3" | "2.12.7";
 
 /** A thing, the group it goes in, and why it goes there. */
 interface Sorted {
@@ -198,6 +201,70 @@ function rationalOrNot(rng: Rng): SortGroupsProblem {
   };
 }
 
+/** Pairs of divisors for a Venn diagram - different enough that every part of it gets numbers. */
+const DIVISORS: [number, number][] = [
+  [2, 3],
+  [2, 5],
+  [3, 5],
+  [3, 4],
+  [2, 7],
+];
+
+/** 2.15.3: a Venn diagram - divisible by one, by the other, by both, by neither. */
+function venn(rng: Rng): SortGroupsProblem {
+  const [a, b] = pick(rng, DIVISORS);
+  const region = (n: number) => (n % a === 0 ? (n % b === 0 ? 1 : 0) : n % b === 0 ? 2 : 3);
+  // Two numbers in each part, from 1 to 60.
+  const numbers = shuffle(rng, Array.from({ length: 60 }, (_, i) => i + 1));
+  const chosen = [0, 1, 2, 3].flatMap((r) => numbers.filter((n) => region(n) === r).slice(0, 2));
+  const why = (n: number) =>
+    text("sort.why.divides", { n, a, b, ya: `@sort.yesNo.${n % a === 0}`, yb: `@sort.yesNo.${n % b === 0}` });
+  return {
+    stageId: "2.15.3",
+    kind: "sortGroups",
+    prompt: text("sort.venn.prompt"),
+    venn: [text("sort.venn.divisible", { n: a }), text("sort.venn.divisible", { n: b })],
+    groups: [textOption("sort.venn.onlyA"), textOption("sort.venn.both"), textOption("sort.venn.onlyB"), textOption("sort.venn.neither")],
+    ...sorted(rng, chosen.map((n) => ({ item: numberOption(n), group: region(n), why: why(n) }))),
+    tip: text("sort.venn.tip", { a, b }),
+    explanation: text("sort.venn.explain", { a, b, ab: a * b }),
+  };
+}
+
+/** The quadrilaterals' properties. */
+const HAS: Record<"rightAngles" | "parallel" | "equalSides", Quad[]> = {
+  rightAngles: ["square", "rectangle"],
+  parallel: ["square", "rectangle", "rhombus", "parallelogram"],
+  equalSides: ["square", "rhombus"],
+};
+
+/** 2.12.7: quadrilaterals by a property - four right angles, two pairs of parallel sides, four equal sides. */
+function quadrilaterals(rng: Rng): SortGroupsProblem {
+  const property = pick(rng, ["rightAngles", "parallel", "equalSides"] as const);
+  const yes = HAS[property];
+  // Six, some of each, turned so it isn't just the look.
+  const shapes = retry("2.12.7", () => {
+    const s = Array.from({ length: 6 }, () => pick(rng, QUADS));
+    return s.some((q) => yes.includes(q)) && s.some((q) => !yes.includes(q)) && new Set(s).size >= 4 ? s : null;
+  });
+  return {
+    stageId: "2.12.7",
+    kind: "sortGroups",
+    prompt: text(`sort.quad.${property}`),
+    groups: [textOption("sort.group.yes"), textOption("sort.group.no")],
+    ...sorted(
+      rng,
+      shapes.map((q) => ({
+        item: { scene: { kind: "quad", shape: q, turn: pick(rng, [0, 0, 15, -20, 30, 90]) } satisfies QuestionScene },
+        group: yes.includes(q) ? 0 : 1,
+        why: text(`sort.why.quad.${property}.${yes.includes(q) ? "yes" : "no"}`, { name: `@sort.quadName.${q}` }),
+      }))
+    ),
+    tip: text(`sort.quad.tip.${property}`),
+    explanation: text(`sort.quad.explain.${property}`),
+  };
+}
+
 export const SORT_GROUPS: Record<SortGroupsStageId, (rng: Rng) => SortGroupsProblem> = {
   "0.4.1": sortShapes,
   "1.8.5": oddEven,
@@ -205,4 +272,6 @@ export const SORT_GROUPS: Record<SortGroupsStageId, (rng: Rng) => SortGroupsProb
   "2.15.2": primes,
   "2.6.7": aroundAHalf,
   "3.1.5": rationalOrNot,
+  "2.15.3": venn,
+  "2.12.7": quadrilaterals,
 };

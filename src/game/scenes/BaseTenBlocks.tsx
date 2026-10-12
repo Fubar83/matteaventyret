@@ -9,10 +9,11 @@ import { t } from "../../i18n";
  * what it is (7 hundratal: 7 · 100), the working out left to the child.
  */
 const UNITS = [1, 10, 100, 1000];
-const COLORS = ["#f59e0b", "#22c55e", "#3b82f6", "#a855f7"];
+export const BLOCK_COLORS = ["#f59e0b", "#22c55e", "#3b82f6", "#a855f7"];
+const COLORS = BLOCK_COLORS;
 
-/** One block of a place, drawn at x, y. */
-function block(place: number, x: number, y: number, key: number): ReactNode {
+/** One block of a place (0 ones, 1 tens, 2 hundreds, 3 thousands), drawn at x, y - the blocks question builds with them too. */
+export function block(place: number, x: number, y: number, key: number): ReactNode {
   const c = COLORS[place];
   const s = "#1e293b";
   if (place === 0) return <rect key={key} x={x} y={y} width={9} height={9} rx={1.5} fill={c} stroke={s} strokeWidth={1.2} />;

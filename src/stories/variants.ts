@@ -178,6 +178,20 @@ export const CHOICE = {
   misleadingChart: choice("3.7.4", prompted("bars.misleading")),
   chartHowMuch: choice("3.7.4", prompted("bars.howMuch")),
   missingLine: choice("3.9.2"),
+  protractor: choice("2.12.4"),
+  areaOnPaper: choice("2.4.7", (p) => p.scene?.kind === "gridShape" && p.scene.points.length === 3),
+  parallelogramOnPaper: choice("2.4.7", (p) => p.scene?.kind === "gridShape" && p.scene.points.length === 4),
+  cubeNets: choice("2.4.8", prompted("net.which")),
+  notCubeNet: choice("2.4.8", prompted("net.whichNot")),
+  congruent: choice("3.4.15"),
+  reasonable: choice("2.10.4", (p) => !!p.display),
+  reasonablePrice: choice("2.10.4", prompted("price")),
+  primeFactors: choice("2.15.4"),
+  sale: choice("3.2.5", prompted("sale")),
+  vatRemove: choice("3.2.5", prompted("vat.remove")),
+  loanMonthly: choice("3.2.6", prompted("amortise")),
+  loanInterest: choice("3.2.6", prompted("loan.interest")),
+  litres: choice("2.9.11"),
 } satisfies Record<string, Match>;
 
 /** Sorting: one variant per level - each asks one thing. */
@@ -195,6 +209,11 @@ export const SORT = {
   negatives: sortLevel("2.17.2"),
   units: sortLevel("2.9.8"),
   standardForm: sortLevel("3.1.6"),
+  venn: sortLevel("2.15.3"),
+  quadrilaterals: sortLevel("2.12.7"),
+  impossibleToCertain: sortLevel("1.11.3"),
+  program: sortLevel("3.9.3"),
+  solution: sortLevel("3.3.12"),
 } satisfies Record<string, Match>;
 
 const line = (stage: string, test: (p: NumberLineProblem) => boolean = () => true): Match => (p) => p.kind === "placeOnLine" && p.stageId === stage && test(p);
@@ -208,6 +227,11 @@ export const NUMBER_LINE = {
   hundredths: line("2.16.5", (p) => p.snap === 0.01),
   negative: line("2.17.3"),
   estimate: line("3.1.7"),
+  zoomedDecimal: line("2.16.7", (p) => p.step < 1),
+  zoomedWhole: line("2.16.7", (p) => p.step === 1),
+  double: line("2.11.4"),
+  time: line("2.9.10", (p) => p.prompt.key.endsWith("placeTime")),
+  ends: line("2.9.10", (p) => p.prompt.key.endsWith("placeEnds")),
 } satisfies Record<string, Match>;
 
 const grid = (stage: string, test: (p: GridProblem) => boolean = () => true): Match => (p) => (p.kind === "gridCells" || p.kind === "gridPoints") && p.stageId === stage && test(p);
@@ -222,6 +246,48 @@ export const GRID = {
   corner: grid("2.13.2", gridPrompt("corner")),
   reflect: grid("3.4.12", gridPrompt("move.reflect")),
   translate: grid("3.4.12", gridPrompt("move.translate")),
+  rotateQuarter: grid("3.4.14", (p) => !p.prompt.key.endsWith("half")),
+  rotateHalf: grid("3.4.14", gridPrompt("turn.half")),
+  enlarge: grid("2.12.6"),
+  drawLine: grid("3.10.4"),
 } satisfies Record<string, Match>;
 
-export const ALL_VARIANTS: Record<string, Record<string, Match>> = { COLUMN, STATISTICS, CHARTS, CLOCK, SHOP, WRITTEN, TRAPPAN, MULTIPLICATION, CHOICE, SORT, NUMBER_LINE, GRID };
+const ofLevel = (kind: string, stage: string, test: (p: GeneratedProblem) => boolean = () => true): Match => (p) => p.kind === kind && p.stageId === stage && test(p);
+export const MATCH = {
+  count: ofLevel("match", "0.1.7"),
+  friends: ofLevel("match", "1.7.5"),
+  clocks: ofLevel("match", "1.5.10"),
+  forms: ofLevel("match", "2.6.10"),
+  units: ofLevel("match", "2.9.9"),
+  expressions: ofLevel("match", "3.3.9"),
+  graphs: ofLevel("match", "3.10.3"),
+} satisfies Record<string, Match>;
+
+export const BLOCKS = {
+  toTwenty: ofLevel("buildNumber", "0.1.8"),
+  threeDigits: ofLevel("buildNumber", "1.14.1"),
+  exchange: ofLevel("buildNumber", "1.14.2"),
+  decimals: ofLevel("buildNumber", "2.16.6"),
+} satisfies Record<string, Match>;
+
+export const BALANCE = {
+  plain: ofLevel("balanceSolve", "2.14.2"),
+  share: ofLevel("balanceSolve", "3.3.10"),
+  both: ofLevel("balanceSolve", "3.3.11"),
+} satisfies Record<string, Match>;
+
+export const EXPERIMENT = {
+  spinner: ofLevel("experiment", "1.11.2"),
+  die: ofLevel("experiment", "2.18.3"),
+  twoDice: ofLevel("experiment", "3.7.5"),
+} satisfies Record<string, Match>;
+
+export const CONSTRUCT = {
+  lineFromZero: ofLevel("construct", "1.10.4", (p) => p.kind === "construct" && p.task === "line" && p.start === 0),
+  lineFromInside: ofLevel("construct", "1.10.4", (p) => p.kind === "construct" && p.task === "line" && p.start > 0),
+  angleRight: ofLevel("construct", "2.12.5", (p) => p.kind === "construct" && p.task === "angle" && p.base === "right"),
+  angleLeft: ofLevel("construct", "2.12.5", (p) => p.kind === "construct" && p.task === "angle" && p.base === "left"),
+  triangle: ofLevel("construct", "3.4.13"),
+} satisfies Record<string, Match>;
+
+export const ALL_VARIANTS: Record<string, Record<string, Match>> = { COLUMN, STATISTICS, CHARTS, CLOCK, SHOP, WRITTEN, TRAPPAN, MULTIPLICATION, CHOICE, SORT, NUMBER_LINE, GRID, MATCH, BLOCKS, BALANCE, EXPERIMENT, CONSTRUCT };

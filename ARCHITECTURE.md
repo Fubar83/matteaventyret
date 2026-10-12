@@ -90,9 +90,14 @@ Three words with precise meanings:
 | `shop` | `questions/shop.ts` | shop | `shop/ShopPlayer` |
 | `written` | `questions/written/` | expression | `written/ExpressionPlayer` (free board, or just the answer) |
 | `choice` | `questions/choice/` | choice | `choice/ChoicePlayer` (pick one: words, numbers, arrows or pictures) |
-| `sort` | `questions/sort/` | sortGroups, sortOrder | `sort/SortPlayer` (tap things into groups, or into a row in order) |
-| `numberLine` | `questions/numberLine/` | placeOnLine | `numberLine/NumberLinePlayer` (tap where a number goes) |
-| `grid` | `questions/grid/` | gridCells, gridPoints | `grid/GridPlayer` (colour squares, mark points) |
+| `sort` | `questions/sort/` | sortGroups, sortOrder | `sort/SortPlayer` (drag or tap things into groups, or into a row in order) |
+| `numberLine` | `questions/numberLine/` | placeOnLine | `numberLine/NumberLinePlayer` (drag the marker, or tap, where a number goes) |
+| `grid` | `questions/grid/` | gridCells, gridPoints | `grid/GridPlayer` (colour squares with a tap or a swipe, mark points) |
+| `match` | `questions/match/` | match | `match/MatchPlayer` (drag a card onto its partner, or tap both) |
+| `blocks` | `questions/blocks/` | buildNumber | `blocks/BlocksPlayer` (base-ten blocks to drag: add, take, change) |
+| `balance` | `questions/balance/` | balanceSolve | `balance/BalancePlayer` (an equation on a balance that tips, step by step) |
+| `experiment` | `questions/experiment/` | experiment | `experiment/ExperimentPlayer` (guess, spin or roll, compare) |
+| `construct` | `questions/construct/` | construct | `construct/ConstructPlayer` (ruler, protractor, compasses; drag to draw) |
 
 The pictures a question can show (a balance, a number line, a fraction, a
 thermometer, a robot grid…) are one shared model, `engine/questions/scene.ts`,
@@ -236,7 +241,9 @@ It shows up in Storybook's "Nivå" setting automatically.
    with `triedOutcome` or `guidedOutcome` (`questionOutcome.ts`) so its stars
    follow the same rules as every other type. A question answered with one
    number gets its tries from `useAnswerTries`. `HelpLadder` gives help and
-   `NextSheet` moves on after a shown answer.
+   `NextSheet` moves on after a shown answer. Where things are moved, let them
+   be dragged: `useDragDrop` (things onto targets) and `useDragPoint` (a point
+   in a drawing) in `dragDrop.tsx` keep a tap working alongside.
 3. Its levels in `game/stages.ts` and their texts in `i18n/`.
 4. A story file in `src/stories/`, listed in `catalog.ts`, with the type's
    variants as stories (`variants.ts`) and its settings as controls.

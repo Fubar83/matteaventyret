@@ -4,6 +4,8 @@ import type { ChoiceText } from "../../../engine/questions/choice/problem";
 import type { SortGroupsProblem, SortOrderProblem } from "../../../engine/questions/sort/problem";
 import { t } from "../../../i18n";
 import { OptionContent } from "../choice/ChoicePlayer";
+import { QuestionScene } from "../../scenes/QuestionScene";
+import { useDragDrop } from "../dragDrop";
 import { HelpLadder } from "../HelpLadder";
 import { NextSheet } from "../NextSheet";
 import { triedOutcome, type QuestionOutcome } from "../questionOutcome";
@@ -61,6 +63,13 @@ export function SortGroupsPlayer({ problem, onSolved }: { problem: SortGroupsPro
   const [message, setMessage] = useState<string | null>(null);
   const working = state === "working";
 
+  const dnd = useDragDrop((item, target) => {
+    const i = Number(item);
+    if (!working || locked[i]) return;
+    setPlaced((p) => p.map((g, j) => (j === i ? (target === "tray" ? null : Number(target)) : g)));
+    setSelected(null);
+  });
+
   function putIn(group: number) {
     if (!working || selected === null) return;
     setPlaced((p) => p.map((g, i) => (i === selected ? group : g)));
@@ -100,52 +109,81 @@ export function SortGroupsPlayer({ problem, onSolved }: { problem: SortGroupsPro
   }
 
   const tray = problem.items.map((_, i) => i).filter((i) => placed[i] === null);
+  /** A group to tap things into - a box, or a part of the Venn diagram. */
+  const box = (gi: number, look: string, label = true) => {
+    const g = problem.groups[gi];
+    return (
+      <div
+        key={gi}
+        role="button"
+        tabIndex={0}
+        aria-label={t("sort.putIn", { group: "text" in g ? say(g.text) : String(gi + 1) })}
+        onClick={() => putIn(gi)}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && putIn(gi)}
+        data-drop={String(gi)}
+        className={`${look} rounded-2xl border-2 border-dashed p-2 flex flex-col items-center gap-2 ${dnd.over === String(gi) ? "border-amber-500 bg-amber-100/80 ring-4 ring-amber-300" : selected !== null || dnd.dragging !== null ? "border-amber-400 bg-amber-50/60 cursor-pointer" : "border-slate-300/70"}`}
+      >
+        {label && (
+          <div className="text-base font-bold text-slate-700 text-center">
+            <OptionContent option={g} />
+          </div>
+        )}
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {problem.items.map((item, i) =>
+            placed[i] === gi ? (
+              <button
+                key={i}
+                type="button"
+                {...(working && !locked[i] ? dnd.handle(String(i)) : {})}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  takeBack(i);
+                }}
+                disabled={!working || locked[i]}
+                className={`${chip} ${chipColor(false, locked[i])} text-lg min-h-12 min-w-12`}
+              >
+                <OptionContent option={item} />
+              </button>
+            ) : null
+          )}
+        </div>
+      </div>
+    );
+  };
   return (
     <div className="flex flex-col items-center gap-4 w-full">
+      {problem.scene && <QuestionScene scene={problem.scene} />}
       <p className="text-lg text-slate-800 text-center font-semibold max-w-md">{say(problem.prompt)}</p>
-      <div className="flex flex-wrap justify-center gap-2 min-h-14 max-w-xl" role="group" aria-label={t("sort.tray")}>
+      {dnd.ghost}
+      <div className="flex flex-wrap justify-center gap-2 min-h-14 max-w-xl" role="group" aria-label={t("sort.tray")} data-drop="tray">
         {tray.map((i) => (
-          <button key={i} type="button" onClick={() => setSelected(selected === i ? null : i)} disabled={!working} aria-pressed={selected === i} className={`${chip} ${chipColor(selected === i, false)}`}>
+          <button key={i} type="button" {...(working ? dnd.handle(String(i)) : {})} onClick={() => setSelected(selected === i ? null : i)} disabled={!working} aria-pressed={selected === i} className={`${chip} ${chipColor(selected === i, false)}`}>
             <OptionContent option={problem.items[i]} />
           </button>
         ))}
         {tray.length === 0 && working && <p className="text-sm text-slate-500 self-center">{t("sort.allPlaced")}</p>}
       </div>
-      <div className={`grid gap-3 w-full max-w-xl ${problem.groups.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
-        {problem.groups.map((g, gi) => (
-          <div
-            key={gi}
-            role="button"
-            tabIndex={0}
-            aria-label={t("sort.putIn", { group: "text" in g ? say(g.text) : String(gi + 1) })}
-            onClick={() => putIn(gi)}
-            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && putIn(gi)}
-            className={`min-h-36 rounded-2xl border-2 border-dashed p-2 flex flex-col items-center gap-2 ${selected !== null ? "border-amber-400 bg-amber-50/60 cursor-pointer" : "border-slate-300 bg-slate-50"}`}
-          >
-            <div className="text-base font-bold text-slate-700 text-center">
-              <OptionContent option={g} />
-            </div>
-            <div className="flex flex-wrap justify-center gap-1.5">
-              {problem.items.map((item, i) =>
-                placed[i] === gi ? (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      takeBack(i);
-                    }}
-                    disabled={!working || locked[i]}
-                    className={`${chip} ${chipColor(false, locked[i])} text-lg min-h-12 min-w-12`}
-                  >
-                    <OptionContent option={item} />
-                  </button>
-                ) : null
-              )}
-            </div>
+      {problem.venn ? (
+        // A Venn diagram: two circles, the parts only-the-first, both and only-the-second inside them, neither under.
+        <div className="w-full max-w-xl flex flex-col gap-2">
+          <div className="flex justify-between px-4 text-sm font-bold">
+            <span className="text-sky-700">{say(problem.venn[0])}</span>
+            <span className="text-fuchsia-700">{say(problem.venn[1])}</span>
           </div>
-        ))}
-      </div>
+          <div className="relative w-full" style={{ aspectRatio: "400 / 240" }}>
+            <svg viewBox="0 0 400 240" className="absolute inset-0 w-full h-full" aria-hidden>
+              <circle cx={145} cy={120} r={112} fill="#e0f2fe" fillOpacity={0.6} stroke="#0284c7" strokeWidth={2.5} />
+              <circle cx={255} cy={120} r={112} fill="#fae8ff" fillOpacity={0.6} stroke="#a21caf" strokeWidth={2.5} />
+            </svg>
+            {box(0, "absolute top-[22%] left-[8%] w-[27%] h-[56%] bg-transparent", false)}
+            {box(1, "absolute top-[22%] left-[37%] w-[26%] h-[56%] bg-transparent", false)}
+            {box(2, "absolute top-[22%] left-[65%] w-[27%] h-[56%] bg-transparent", false)}
+          </div>
+          {box(3, "min-h-20 bg-slate-50")}
+        </div>
+      ) : (
+        <div className={`grid gap-3 w-full max-w-xl ${problem.groups.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>{problem.groups.map((_, gi) => box(gi, "min-h-36 bg-slate-50"))}</div>
+      )}
       {working && (
         <button type="button" onClick={check} disabled={tray.length > 0} className="h-12 px-8 rounded-full bg-sky-500 text-white text-lg font-bold shadow disabled:opacity-40">
           {t("sort.check")}
@@ -206,13 +244,26 @@ export function SortOrderPlayer({ problem, onSolved }: { problem: SortOrderProbl
     setMessage(right === 0 ? t("sort.check.firstWrong", { end: say(problem.ends[0]) }) : t("sort.check.rightUpTo", { n: right }));
   }
 
+  const dnd = useDragDrop((item, target) => {
+    const i = Number(item);
+    if (!working || row.indexOf(i) >= 0 && row.indexOf(i) < lockedUpTo) return;
+    const rest = row.filter((x) => x !== i);
+    if (target === "tray") setRow(rest);
+    else {
+      const at = Math.max(lockedUpTo, Math.min(Number(target.replace("slot", "")), rest.length));
+      setRow([...rest.slice(0, at), i, ...rest.slice(at)]);
+    }
+  });
+
   const tray = problem.items.map((_, i) => i).filter((i) => !row.includes(i));
   return (
     <div className="flex flex-col items-center gap-4 w-full">
+      {dnd.ghost}
+      {problem.scene && <QuestionScene scene={problem.scene} />}
       <p className="text-lg text-slate-800 text-center font-semibold max-w-md">{say(problem.prompt)}</p>
-      <div className="flex flex-wrap justify-center gap-2 min-h-14 max-w-xl" role="group" aria-label={t("sort.tray")}>
+      <div className="flex flex-wrap justify-center gap-2 min-h-14 max-w-xl" role="group" aria-label={t("sort.tray")} data-drop="tray">
         {tray.map((i) => (
-          <button key={i} type="button" onClick={() => working && setRow([...row, i])} disabled={!working} className={`${chip} ${chipColor(false, false)}`}>
+          <button key={i} type="button" {...(working ? dnd.handle(String(i)) : {})} onClick={() => working && setRow([...row, i])} disabled={!working} className={`${chip} ${chipColor(false, false)}`}>
             <OptionContent option={problem.items[i]} />
           </button>
         ))}
@@ -225,11 +276,13 @@ export function SortOrderPlayer({ problem, onSolved }: { problem: SortOrderProbl
         <ol className="flex flex-wrap justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-2" aria-label={t("sort.row")}>
           {Array.from({ length: n }, (_, slot) => {
             const item = row[slot];
-            if (item === undefined) return <li key={slot} className="min-h-14 min-w-14 rounded-xl border-2 border-dashed border-slate-300 bg-white/60" aria-label={t("sort.emptySlot", { n: slot + 1 })} />;
+            const drop = `slot${slot}`;
+            const lit = dnd.over === drop ? "ring-4 ring-amber-300 rounded-xl" : "";
+            if (item === undefined) return <li key={slot} data-drop={drop} className={`min-h-14 min-w-14 rounded-xl border-2 border-dashed border-slate-300 bg-white/60 ${lit}`} aria-label={t("sort.emptySlot", { n: slot + 1 })} />;
             const locked = slot < lockedUpTo;
             return (
-              <li key={slot}>
-                <button type="button" onClick={() => working && !locked && setRow(row.filter((x) => x !== item))} disabled={!working || locked} className={`${chip} ${chipColor(false, locked)}`}>
+              <li key={slot} data-drop={drop} className={lit}>
+                <button type="button" {...(working && !locked ? dnd.handle(String(item)) : {})} onClick={() => working && !locked && setRow(row.filter((x) => x !== item))} disabled={!working || locked} className={`${chip} ${chipColor(false, locked)}`}>
                   <OptionContent option={problem.items[item]} />
                 </button>
               </li>

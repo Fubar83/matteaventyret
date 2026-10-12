@@ -4,6 +4,11 @@
  *   3.4.9  likformighet: the side x in the bigger of two similar triangles
  *   3.4.10 vinklar: vertikalvinklar are equal, sidovinklar make 180°
  *   3.4.11 begränsningsarea: the area of all a box's sides
+ *   3.4.15 kongruens: the triangle with the same three sides, turned or mirrored
+ *
+ * And in åk 4-6:
+ *   2.4.7  area på rutat papper: a triangle or parallelogram - half the rectangle round it
+ *   2.4.8  kubens nät: which net folds into a cube (no 2 × 2 block, no six in a row)
  *
  * The slips: the difference added instead of the scale multiplied, the
  * neighbouring angle for the opposite one, the volume for the area, each side
@@ -11,9 +16,10 @@
  */
 import { pick, randInt, shuffle, type Rng } from "../../rng";
 import { tex } from "../written/problem";
-import { plainOption, shuffledOptions, text, type ChoiceProblem, type Slip } from "./problem";
+import type { QuestionScene } from "../scene";
+import { numberOption, plainOption, shuffledOptions, text, type ChoiceOption, type ChoiceProblem, type Slip } from "./problem";
 
-export type GeometryChoiceStageId = "3.4.9" | "3.4.10" | "3.4.11";
+export type GeometryChoiceStageId = "3.4.9" | "3.4.10" | "3.4.11" | "3.4.15" | "2.4.7" | "2.4.8";
 
 const cm = (n: number, unit = "cm") => plainOption(`${tex(n).replace("{,}", ",")} ${unit}`);
 
@@ -123,8 +129,130 @@ function surfaceArea(rng: Rng): ChoiceProblem {
   };
 }
 
+/** 3.4.15: congruent triangles - the same three sides, however turned or mirrored. */
+function congruence(rng: Rng): ChoiceProblem {
+  const sides = pick(rng, TRIANGLES);
+  const tri = (s: [number, number, number], turn: number, flip: boolean): ChoiceOption => ({ scene: { kind: "triangle", sides: s, turn, flip } satisfies QuestionScene });
+  // The same triangle drawn from another side, turned, maybe mirrored.
+  const [a, b, c] = sides;
+  const again = pick(rng, [[b, c, a], [c, a, b], [a, b, c]] as [number, number, number][]);
+  const turn = () => pick(rng, [0, 30, 60, 90, 150, 200, 270]);
+  return {
+    stageId: "3.4.15",
+    kind: "choice",
+    prompt: text("choice.congruent.prompt"),
+    scene: { kind: "triangle", sides, turn: 0, flip: false },
+    ...shuffledOptions(rng, tri(again, turn(), rng() < 0.5), [
+      { option: tri(sides.map((s) => s * 2) as [number, number, number], turn(), false), why: text("choice.congruent.whySimilar") },
+      { option: tri([a, b, c + 1], turn(), rng() < 0.5), why: text("choice.congruent.whyOneSide") },
+      { option: tri([a + 1, b, c], turn(), false), why: text("choice.congruent.whyOneSide") },
+    ]),
+    tip: text("choice.congruent.tip"),
+    explanation: text("choice.congruent.explain", { a, b, c }),
+  };
+}
+
+/** Twice a polygon's area on grid points (the shoelace formula) - whole, so halves stay exact. */
+const twiceArea = (pts: [number, number][]) => Math.abs(pts.reduce((s, [x, y], i) => s + x * pts[(i + 1) % pts.length][1] - pts[(i + 1) % pts.length][0] * y, 0));
+
+/** 2.4.7: area on squared paper - a triangle is half the rectangle (or parallelogram) round it. */
+function areaOnPaper(rng: Rng): ChoiceProblem {
+  const kind = pick(rng, ["right", "triangle", "parallelogram"] as const);
+  const b = randInt(rng, 3, 7);
+  const h = randInt(rng, 2, 5);
+  const s = randInt(rng, 1, 3);
+  const points: [number, number][] =
+    kind === "right"
+      ? [[1, 1 + h], [1 + b, 1 + h], [1, 1]]
+      : kind === "triangle"
+        ? [[1, 1 + h], [1 + b, 1 + h], [1 + randInt(rng, 0, b), 1]]
+        : [[1, 1 + h], [1 + b, 1 + h], [1 + b + s, 1], [1 + s, 1]];
+  const area = twiceArea(points) / 2;
+  const w = Math.max(...points.map((p) => p[0])) + 1;
+  const slips: Slip[] =
+    kind === "parallelogram"
+      ? [
+          { option: numberOption(area / 2), why: text("choice.paper.whyHalfParallelogram") },
+          { option: numberOption((b + s) * h), why: text("choice.paper.whyBox") },
+          { option: numberOption(area + h), why: text("choice.paper.whyCount") },
+        ]
+      : [
+          { option: numberOption(b * h), why: text("choice.paper.whyWhole") },
+          { option: numberOption(area + 1), why: text("choice.paper.whyCount") },
+          { option: numberOption(b + h), why: text("choice.paper.whyAdd") },
+        ];
+  return {
+    stageId: "2.4.7",
+    kind: "choice",
+    prompt: text("choice.paper.prompt"),
+    scene: { kind: "gridShape", w, h: h + 2, points },
+    ...shuffledOptions(rng, numberOption(area), slips),
+    tip: text(kind === "parallelogram" ? "choice.paper.tipParallelogram" : "choice.paper.tipTriangle"),
+    explanation: text(kind === "parallelogram" ? "choice.paper.explainParallelogram" : "choice.paper.explainTriangle", { b, h, a: tex(area).replace("{,}", ",") }),
+  };
+}
+
+/** The eleven nets of a cube. */
+const CUBE_NETS: [number, number][][] = [
+  ...[[0, 0], [0, 1], [0, 2], [0, 3], [1, 1], [1, 2]].map(([i, j]) => [[0, 1], [1, 1], [2, 1], [3, 1], [i, 0], [j, 2]] as [number, number][]),
+  ...[1, 2, 3].map((j) => [[0, 0], [1, 0], [1, 1], [2, 1], [3, 1], [j, 2]] as [number, number][]),
+  [[0, 0], [1, 0], [1, 1], [2, 1], [2, 2], [3, 2]],
+  [[0, 0], [1, 0], [2, 0], [2, 1], [3, 1], [4, 1]],
+];
+/** Six squares that don't fold into a cube: a 2 × 3 block, six in a row, five in a row, ones with a 2 × 2 block. */
+const NOT_NETS: [number, number][][] = [
+  [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]],
+  [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
+  [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [1, 1]],
+  [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [2, 1]],
+  [[0, 0], [1, 0], [0, 1], [1, 1], [2, 1], [3, 1]],
+  [[0, 0], [1, 0], [0, 1], [1, 1], [2, 1], [2, 2]],
+];
+
+/** 2.4.8: which net folds into a cube - or which doesn't. */
+function cubeNets(rng: Rng): ChoiceProblem {
+  const net = (cells: [number, number][]): ChoiceOption => ({ scene: { kind: "net", cells } satisfies QuestionScene });
+  const whyNot = (cells: [number, number][]) => (cells.length === 6 && cells.every(([, r]) => r === 0) ? "choice.net.whyRow" : cells.some(([c, r]) => [[c + 1, r], [c, r + 1], [c + 1, r + 1]].every(([x, y]) => cells.some(([p, q]) => p === x && q === y))) ? "choice.net.whyBlock" : "choice.net.whyFive");
+  if (rng() < 0.6) {
+    return {
+      stageId: "2.4.8",
+      kind: "choice",
+      prompt: text("choice.net.which"),
+      scene: { kind: "shape", shape: "cube" },
+      ...shuffledOptions(
+        rng,
+        net(pick(rng, CUBE_NETS)),
+        shuffle(rng, NOT_NETS)
+          .slice(0, 3)
+          .map((c) => ({ option: net(c), why: text(whyNot(c)) }))
+      ),
+      tip: text("choice.net.tip"),
+      explanation: text("choice.net.explain"),
+    };
+  }
+  const bad = pick(rng, NOT_NETS);
+  return {
+    stageId: "2.4.8",
+    kind: "choice",
+    prompt: text("choice.net.whichNot"),
+    scene: { kind: "shape", shape: "cube" },
+    ...shuffledOptions(
+      rng,
+      net(bad),
+      shuffle(rng, CUBE_NETS)
+        .slice(0, 3)
+        .map((c) => ({ option: net(c), why: text("choice.net.whyFolds") }))
+    ),
+    tip: text("choice.net.tip"),
+    explanation: text(whyNot(bad)),
+  };
+}
+
 export const GEOMETRY_CHOICES: Record<GeometryChoiceStageId, (rng: Rng) => ChoiceProblem> = {
   "3.4.9": similarity,
   "3.4.10": crossingAngles,
   "3.4.11": surfaceArea,
+  "3.4.15": congruence,
+  "2.4.7": areaOnPaper,
+  "2.4.8": cubeNets,
 };

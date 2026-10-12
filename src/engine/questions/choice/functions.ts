@@ -111,9 +111,13 @@ function kx(k: number, v = "x"): string {
 }
 /** y = kx + m, as written: y = 2x - 3, y = -x, y = \frac{1}{2}x + 1. */
 export function lineFormula(k: number, m: number, v = "x", y = "y"): string {
+  return `${y} = ${linearExpression(k, m, v)}`;
+}
+/** kx + m as written: 3x + 4, -x, 7, 0. */
+export function linearExpression(k: number, m: number, v = "x"): string {
   const start = k === 0 ? "" : kx(k, v);
   const end = m === 0 ? (k === 0 ? "0" : "") : start === "" ? tex(m) : m > 0 ? ` + ${m}` : ` - ${-m}`;
-  return `${y} = ${start}${end}`;
+  return `${start}${end}`;
 }
 const KS = [-3, -2, -1, -0.5, 0.5, 1, 2, 3];
 /** A slope as an option: 2, -1, or a fraction (1/2, -1/3) rather than 0,333. */

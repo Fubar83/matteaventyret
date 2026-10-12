@@ -34,3 +34,7 @@ export const PrickaIn: Story = story("Pricka in en punkt", GRID.point);
 export const FjardeHornet: Story = story("Det fjärde hörnet", GRID.corner);
 export const Spegling: Story = story("Spegling", GRID.reflect);
 export const Forflyttning: Story = story("Förflyttning", GRID.translate);
+export const VridningKvarts: Story = story("Vridning: kvarts varv", GRID.rotateQuarter);
+export const VridningHalv: Story = story("Vridning: halvt varv", GRID.rotateHalf);
+export const Forstora: Story = story("Förstora en figur", GRID.enlarge);
+export const RitaLinjen: Story = story("Rita linjen", GRID.drawLine);

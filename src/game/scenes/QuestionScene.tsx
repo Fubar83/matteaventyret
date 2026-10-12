@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { hourAngle, minuteAngle } from "../../engine/questions/clock";
+import { ClockFace } from "../questions/clock/ClockFace";
 import type { GroupThing, QuestionScene as Scene, ScaleTerm } from "../../engine/questions/scene";
 import { t } from "../../i18n";
 import { Sprite } from "./Sprite";
@@ -6,7 +8,7 @@ import { UnitStairs } from "./UnitStairs";
 import { FractionPicture, Jug, KitchenScale, NumberLine, Ruler, Thermometer } from "./MeasurePictures";
 import { CountPicture, PatternRow, Queue, Ribbons, Shelf, WeighBalance } from "./EarlyPictures";
 import { BarsPicture, CodeBlock, Graph, PieChart, TallyTable, Timetable } from "./DataPictures";
-import { AnglePicture, Crossing, Cuboid, SimilarTriangles } from "./GeometryPictures";
+import { AnglePicture, Crossing, Cuboid, GridShapePicture, NetPicture, ProtractorPicture, QuadPicture, SimilarTriangles, TrianglePicture } from "./GeometryPictures";
 import { RobotGrid } from "./RobotGrid";
 import { ChocolateBar, Pizzas } from "./FoodPictures";
 import { ChanceDevice, ShapePicture, SymmetryGrid } from "./ShapePictures";
@@ -405,6 +407,18 @@ export function ScenePicture({ scene, small = false }: { scene: Scene; small?: b
       return <Cuboid l={scene.l} w={scene.w} h={scene.h} unit={scene.unit} />;
     case "code":
       return <CodeBlock lines={scene.lines} />;
+    case "clock":
+      return <ClockFace face={{ numerals: "arabic", ticks: "minutes", look: "classic" }} hourDeg={hourAngle(scene.h, scene.m)} minuteDeg={minuteAngle(scene.m)} size={small ? 84 : 180} />;
+    case "triangle":
+      return <TrianglePicture sides={scene.sides} turn={scene.turn} flip={scene.flip} size={small ? 96 : 170} />;
+    case "quad":
+      return <QuadPicture shape={scene.shape} turn={scene.turn} size={small ? 76 : 140} />;
+    case "net":
+      return <NetPicture cells={scene.cells} size={small ? 14 : 24} />;
+    case "gridShape":
+      return <GridShapePicture w={scene.w} h={scene.h} points={scene.points} />;
+    case "protractor":
+      return <ProtractorPicture degrees={scene.degrees} base={scene.base} />;
     case "bars":
       return <BarsPicture values={scene.values} from={scene.from} to={scene.to} step={scene.step} small={small} />;
   }

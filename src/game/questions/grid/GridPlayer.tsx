@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type PointerEvent } from "react";
 import { playEffect } from "../../../audio/sound";
 import type { ChoiceText } from "../../../engine/questions/choice/problem";
 import { checkCells, checkPoints, type Cell, type GridCellsProblem, type GridPointsProblem, type Point } from "../../../engine/questions/grid";
@@ -85,6 +85,34 @@ export function GridCellsPlayer({ problem, onSolved }: { problem: GridCellsProbl
   const given = new Set(problem.given.map(key));
   const mine = new Set(cells.map(key));
   const toggle = (c: Cell) => working && !given.has(key(c)) && setCells(mine.has(key(c)) ? cells.filter((x) => key(x) !== key(c)) : [...cells, c]);
+  // A swipe colours every square it passes (or clears them, when it starts on a coloured one).
+  const painting = useRef<boolean | null>(null);
+  const swiped = useRef(false);
+  const cellAt = (el: Element | null): Cell | null => {
+    const k = el?.closest("[data-cell]")?.getAttribute("data-cell");
+    return k ? (k.split(",").map(Number) as Cell) : null;
+  };
+  const paint = (c: Cell, on: boolean) => {
+    if (given.has(key(c))) return;
+    setCells((cs) => (on ? (cs.some((x) => key(x) === key(c)) ? cs : [...cs, c]) : cs.filter((x) => key(x) !== key(c))));
+  };
+  const swipe = {
+    onPointerDown: (e: PointerEvent<SVGSVGElement>) => {
+      const c = working ? cellAt(e.target as Element) : null;
+      if (!c || given.has(key(c))) return;
+      painting.current = !mine.has(key(c));
+      swiped.current = true;
+      paint(c, painting.current);
+    },
+    onPointerMove: (e: PointerEvent<SVGSVGElement>) => {
+      if (painting.current === null) return;
+      const c = cellAt(document.elementFromPoint?.(e.clientX, e.clientY) ?? null);
+      if (c) paint(c, painting.current);
+    },
+    onPointerUp: () => {
+      painting.current = null;
+    },
+  };
   const fill = (c: Cell) => (given.has(key(c)) ? "#0284c7" : mine.has(key(c)) ? (checks.state === "working" ? "#7dd3fc" : "#6ee7b7") : "#ffffff");
   return (
     <div className="flex flex-col items-center gap-4 w-full">
@@ -94,7 +122,7 @@ export function GridCellsPlayer({ problem, onSolved }: { problem: GridCellsProbl
           <Tex latex={problem.display} block />
         </div>
       )}
-      <svg viewBox={`-4 -4 ${problem.w * S + 8} ${problem.h * S + 8}`} width={problem.w * S + 8} className="max-w-full touch-none select-none" role="group" aria-label={t("grid.cells")}>
+      <svg viewBox={`-4 -4 ${problem.w * S + 8} ${problem.h * S + 8}`} width={problem.w * S + 8} className="max-w-full touch-none select-none" {...swipe} role="group" aria-label={t("grid.cells")}>
         {Array.from({ length: problem.w * problem.h }, (_, i) => {
           const c: Cell = [i % problem.w, Math.floor(i / problem.w)];
           return (
@@ -108,7 +136,11 @@ export function GridCellsPlayer({ problem, onSolved }: { problem: GridCellsProbl
               fill={fill(c)}
               stroke="#94a3b8"
               strokeWidth={1}
-              onClick={() => toggle(c)}
+              onClick={() => {
+                // The press already coloured it - the click after it isn't another tap.
+                if (swiped.current) swiped.current = false;
+                else toggle(c);
+              }}
               style={{ cursor: working && !given.has(key(c)) ? "pointer" : undefined }}
               role="button"
               aria-pressed={given.has(key(c)) || mine.has(key(c))}
@@ -193,6 +225,12 @@ export function GridPointsPlayer({ problem, onSolved }: { problem: GridPointsPro
             </g>
           )
         )}
+        {problem.line && points.length === 2 && points[0][0] !== points[1][0] && (() => {
+          const [[ax, ay], [bx, by]] = points;
+          const k = (by - ay) / (bx - ax);
+          const yAt = (x: number) => ay + k * (x - ax);
+          return <line x1={X(x0)} y1={Y(yAt(x0))} x2={X(x1)} y2={Y(yAt(x1))} stroke={dot} strokeWidth={2} strokeDasharray="6 4" pointerEvents="none" />;
+        })()}
         {points.length === 3 && <polygon points={points.map(([x, y]) => `${X(x)},${Y(y)}`).join(" ")} fill="none" stroke={dot} strokeWidth={2} strokeDasharray="6 4" pointerEvents="none" />}
         {points.map(([x, y]) => (
           <circle key={key([x, y])} cx={X(x)} cy={Y(y)} r={7} fill={dot} pointerEvents="none" />

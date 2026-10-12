@@ -4,6 +4,7 @@ import type { ChoiceText } from "../../../engine/questions/choice/problem";
 import { placed, type NumberLineProblem } from "../../../engine/questions/numberLine";
 import { t } from "../../../i18n";
 import { Tex } from "../../Tex";
+import { useDragPoint } from "../dragDrop";
 import { HelpLadder } from "../HelpLadder";
 import { NextSheet } from "../NextSheet";
 import { triedOutcome, type QuestionOutcome } from "../questionOutcome";
@@ -34,6 +35,8 @@ export function NumberLinePlayer({ problem, onSolved }: { problem: NumberLinePro
   const places = Math.round((to - from) / snap);
   const placeAt = (i: number) => Math.round((from + i * snap) * 1e9) / 1e9;
   const ticks = Math.round((to - from) / step);
+  // The marker follows the finger along the line, from place to place.
+  const drag = useDragPoint(420, problem.second ? 126 : 110, (x) => setAt(placeAt(Math.min(places, Math.max(0, Math.round(((x - 24) / 372) * places))))), working);
   const nudge = (d: number) => {
     if (!working) return;
     const i = at === null ? 0 : Math.round((at - from) / snap) + d;
@@ -70,7 +73,7 @@ export function NumberLinePlayer({ problem, onSolved }: { problem: NumberLinePro
       <div className="rounded-2xl bg-white border-2 border-slate-200 px-6 py-3 text-3xl shadow-sm">
         <Tex latex={problem.target} block />
       </div>
-      <svg viewBox="0 0 420 110" className="w-full max-w-xl touch-none select-none" role="img" aria-label={t("line.label", { from: labelText(problem.labels[0].latex), to: labelText(problem.labels.at(-1)!.latex) })}>
+      <svg viewBox={`0 0 420 ${problem.second ? 126 : 110}`} className="w-full max-w-xl touch-none select-none" {...drag} role="img" aria-label={t("line.label", { from: labelText(problem.labels[0].latex), to: labelText(problem.labels.at(-1)!.latex) })}>
         <line x1={14} y1={62} x2={406} y2={62} stroke={INK} strokeWidth={3} strokeLinecap="round" />
         {Array.from({ length: ticks + 1 }, (_, i) => {
           const v = from + i * step;
@@ -79,6 +82,12 @@ export function NumberLinePlayer({ problem, onSolved }: { problem: NumberLinePro
         })}
         {problem.labels.map((l) => (
           <text key={l.at} x={X(l.at)} y={94} textAnchor="middle" fontSize={15} fontWeight={700} fill={INK}>
+            {labelText(l.latex)}
+          </text>
+        ))}
+        {/* A double number line's other scale, under the first. */}
+        {problem.second?.map((l) => (
+          <text key={`s${l.at}`} x={X(l.at)} y={116} textAnchor="middle" fontSize={14} fontWeight={700} fill="#be123c">
             {labelText(l.latex)}
           </text>
         ))}

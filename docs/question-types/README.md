@@ -24,10 +24,15 @@ player.
 | `clock` | reading and setting clocks | 1.5.1, 1.5.3–1.5.7 | [clock.md](clock.md) |
 | `shop` | paying and giving change | 1.6.2–1.6.4, 2.9.6 | [shop.md](shop.md) |
 | `written` | everything written on the free board, åk 1 – gymnasiet | 75 levels | [written.md](written.md) |
-| `choice` | recognise, compare, pick, förskoleklass to åk 9: counting, patterns, position words, fractions (pizza, chocolate), shapes, measuring, tables and charts, chance, graphs and formulas, percent, geometry, programming | 47 levels | [choice.md](choice.md) |
-| `sort` | sorting into groups and putting in order, förskoleklass to åk 9: shapes, odd and even, primes, fractions around a half, rational numbers; numbers, fractions and percent, negatives, lengths in different units, standard form | 12 levels | [sort.md](sort.md) |
-| `numberLine` | placing a number on a number line: whole numbers, fractions, decimals, negatives, estimating roots and π | 6 levels | [numberLine.md](numberLine.md) |
-| `grid` | drawing on a grid: finishing a symmetric figure, colouring a fraction or percent, a rectangle of given area and perimeter, plotting points, reflections and translations | 6 levels | [grid.md](grid.md) |
+| `choice` | recognise, compare, pick, förskoleklass to åk 9: counting, patterns, position words, fractions (pizza, chocolate), shapes, measuring, tables and charts, chance, graphs and formulas, percent, geometry, programming | 56 levels | [choice.md](choice.md) |
+| `sort` | sorting into groups and putting in order, förskoleklass to åk 9: shapes, odd and even, primes, fractions around a half, rational numbers; numbers, fractions and percent, negatives, lengths in different units, standard form | 17 levels | [sort.md](sort.md) |
+| `numberLine` | placing a number on a number line: whole numbers, fractions, decimals, negatives, estimating roots and π | 9 levels | [numberLine.md](numberLine.md) |
+| `grid` | drawing on a grid: finishing a symmetric figure, colouring a fraction or percent, a rectangle of given area and perimeter, plotting points, reflections and translations | 9 levels | [grid.md](grid.md) |
+| `match` | matching pairs: a picture and its number, number friends, clocks, fractions and percent, units, expressions, graphs and formulas | 7 levels | [match.md](match.md) |
+| `blocks` | building numbers with base-ten blocks, changing a ten into ten ones, decimals | 4 levels | [blocks.md](blocks.md) |
+| `balance` | solving equations on a balance, step by step | 3 levels | [balance.md](balance.md) |
+| `experiment` | chance experiments: guess, throw, compare | 3 levels | [experiment.md](experiment.md) |
+| `construct` | constructing with ruler, protractor and compasses | 3 levels | [construct.md](construct.md) |
 
 ## What every type shares
 

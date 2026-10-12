@@ -33,6 +33,11 @@ Engine modules in `engine/questions/sort/`:
 | 2.9.8 | Längder i olika enheter | order | `order.ts` | 4 lengths around a metre, each in its own unit (m, dm, cm, mm) |
 | 3.1.5 | Rationella och irrationella tal | groups | `groups.ts` | 4 rational (√16, 3,14, 0,333…, 22/7, −5) and 3 irrational (√2, π) |
 | 3.1.6 | Grundpotensform i storleksordning | order | `order.ts` | 4 numbers, mostly as a · 10ᵏ, some written out — 9 · 10³ < 2 · 10⁴ |
+| 1.11.3 | Från omöjligt till säkert | order | `order.ts` | four events about a bag (shown): a colour not in it, the few, the many, either — impossible to certain |
+| 2.15.3 | Venndiagram | groups (Venn) | `groups.ts` | 8 numbers to 60 into divisible by 2, by 3, by both, by neither — two in each part |
+| 2.12.7 | Fyrhörningar | groups | `groups.ts` | 6 quadrilaterals, turned: four right angles, two pairs of parallel sides, or four equal sides — yes or no |
+| 3.9.3 | Ordna programmet | order | `order.ts` | four lines of a program in the order that prints the number asked — each uses the line before |
+| 3.3.12 | Ordna lösningen | order | `order.ts` | an equation's steps, from the equation to x = … |
 
 ## The question
 
@@ -48,6 +53,8 @@ shown with the same `OptionContent`.
 | `answer` | `sortGroups`: each thing's group; `sortOrder`: the things' indexes in the right order |
 | `why` (`sortGroups`) | per thing, why it belongs where it does — said when a check finds it elsewhere |
 | `ends` (`sortOrder`) | the words at the two ends of the row: "minst" … "störst" |
+| `scene` | a picture over it all, when there is one (the bag) |
+| `venn` (`sortGroups`) | two properties drawn as a Venn diagram: the groups are then only the first, both, only the second, neither |
 | `tip`, `explanation` | the help ladder; an order's explanation lists it: "93 < 309 < 390 < 903" |
 
 `key` is the level, the prompt and the things whatever their order: the
@@ -67,10 +74,17 @@ same things shuffled again are the same question.
 
 `game/questions/sort/SortPlayer.tsx`:
 
-- **Groups**: the tray on top, the groups below as dashed boxes. Tap a thing
-  (it's highlighted), then a group. A thing in a group can be tapped back out.
-- **Order**: the tray on top, the row below with its ends named. Tapping a
-  thing puts it in the next place; tapping a placed one takes it out.
+- **Groups**: the tray on top, the groups below as dashed boxes (or, for a
+  Venn question, two overlapping rings and "neither"). Drag a thing into a
+  group, or tap it (it's highlighted) and then the group. A placed thing can
+  be dragged or tapped back out to the tray.
+- **Order**: the tray on top, the row below with its ends named. A thing
+  dragged onto a place goes in there (the rest move along); tapping a thing
+  puts it in the next place; tapping a placed one takes it out.
+- A picture (`scene`) above the tray when the question has one - the bag for
+  the events.
+- Dragging is `useDragDrop` from `game/questions/dragDrop.tsx`: a press that
+  doesn't move stays a tap, so taps and a screen reader work as before.
 - **Rätta** when everything is placed. Groups: the right ones stay (green,
   locked), the wrong ones come back to the tray, with one of their reasons.
   Order: the run that's right from the start stays, the rest comes back.

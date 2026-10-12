@@ -1,3 +1,4 @@
+import type { Quad } from "../../engine/questions/scene";
 import { t } from "../../i18n";
 
 /**
@@ -148,6 +149,144 @@ export function Cuboid({ l, w, h, unit }: { l: number; w: number; h: number; uni
       {text(x0 + L / 2, y0 + 14, l)}
       {text(x0 - 6, y0 - H / 2, h, "end")}
       {text(x0 + L + D / 2 + 8, y0 - D / 2 + 6, w, "start")}
+    </svg>
+  );
+}
+
+/** The protractor's middle and radius, in its picture's coordinates (viewBox 0 0 360 200). */
+export const PROTRACTOR = { cx: 180, cy: 180, r: 150, width: 360, height: 200 };
+
+/**
+ * A protractor with both scales - the outer from 0 on the right, the inner
+ * from 0 on the left - the first arm along its base pointing `base`, and a
+ * second arm at `theta` (degrees anticlockwise from the right) when there is one.
+ */
+export function ProtractorDrawing({ base, theta, color = "#e11d48" }: { base: "right" | "left"; theta?: number | null; color?: string }) {
+  const { cx, cy, r } = PROTRACTOR;
+  const at = (deg: number, rr: number) => [cx + rr * Math.cos(rad(deg)), cy - rr * Math.sin(rad(deg))] as const;
+  return (
+    <g>
+      <path d={`M${cx - r} ${cy} A${r} ${r} 0 0 1 ${cx + r} ${cy} Z`} fill="#e0f2fe" fillOpacity={0.75} stroke="#0284c7" strokeWidth={2} />
+      {Array.from({ length: 181 }, (_, d) => {
+        const len = d % 10 === 0 ? 14 : d % 5 === 0 ? 9 : 5;
+        const [x1, y1] = at(d, r);
+        const [x2, y2] = at(d, r - len);
+        return <line key={d} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#0369a1" strokeWidth={d % 10 === 0 ? 1.4 : 0.8} />;
+      })}
+      {Array.from({ length: 19 }, (_, i) => {
+        const d = i * 10;
+        // The 0 and 180 at the ends lifted clear of the arms that lie along the base.
+        const lift = d === 0 || d === 180 ? 9 : 0;
+        const [ox, oy0] = at(d, r - 24);
+        const [ix, iy0] = at(d, r - 42);
+        const [oy, iy] = [oy0 - lift, iy0 - lift];
+        return (
+          <g key={d} fontSize={10} fontWeight={700} textAnchor="middle" dominantBaseline="central">
+            <text x={ox} y={oy} fill="#0c4a6e">
+              {d}
+            </text>
+            <text x={ix} y={iy} fill="#be123c">
+              {180 - d}
+            </text>
+          </g>
+        );
+      })}
+      <circle cx={cx} cy={cy} r={3.5} fill={INK} />
+      {/* The first arm, along the base. */}
+      <line x1={cx} y1={cy} x2={base === "right" ? cx + r + 14 : cx - r - 14} y2={cy} stroke={INK} strokeWidth={3.5} strokeLinecap="round" />
+      {theta !== undefined && theta !== null && <line x1={cx} y1={cy} x2={at(theta, r + 14)[0]} y2={at(theta, r + 14)[1]} stroke={color} strokeWidth={3.5} strokeLinecap="round" />}
+    </g>
+  );
+}
+
+/** A protractor laid on an angle of `degrees`, its first arm pointing `base`: an angle to read. */
+export function ProtractorPicture({ degrees, base }: { degrees: number; base: "right" | "left" }) {
+  const { width, height } = PROTRACTOR;
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full max-w-md" role="img" aria-label={t("scene.protractor.label")}>
+      <ProtractorDrawing base={base} theta={base === "right" ? degrees : 180 - degrees} color={INK} />
+    </svg>
+  );
+}
+
+/** The quadrilaterals' corners, in a 100 × 80 box - none of them with marks that give away a right angle. */
+const QUAD_CORNERS: Record<Quad, [number, number][]> = {
+  square: [[22, 10], [82, 10], [82, 70], [22, 70]],
+  rectangle: [[5, 20], [95, 20], [95, 60], [5, 60]],
+  rhombus: [[50, 4], [86, 40], [50, 76], [14, 40]],
+  parallelogram: [[22, 20], [96, 20], [78, 60], [4, 60]],
+  trapezoid: [[28, 18], [72, 18], [96, 62], [4, 62]],
+  kite: [[50, 4], [80, 28], [50, 76], [20, 28]],
+};
+
+/** A quadrilateral, turned `turn` degrees about its middle. */
+export function QuadPicture({ shape, turn, size = 120 }: { shape: Quad; turn: number; size?: number }) {
+  return (
+    <svg viewBox="-12 -22 124 124" width={size} role="img" aria-label={t(`scene.quad.${shape}`)}>
+      <polygon points={QUAD_CORNERS[shape].map((p) => p.join(",")).join(" ")} transform={`rotate(${turn} 50 40)`} fill={FILL} stroke={INK} strokeWidth={2.5} strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** A net: squares joined edge to edge. */
+export function NetPicture({ cells, size = 16 }: { cells: [number, number][]; size?: number }) {
+  const w = Math.max(...cells.map((c) => c[0])) + 1;
+  const h = Math.max(...cells.map((c) => c[1])) + 1;
+  return (
+    <svg viewBox={`-2 -2 ${w * size + 4} ${h * size + 4}`} width={w * size + 4} role="img" aria-label={t("scene.net.label")}>
+      {cells.map(([c, r]) => (
+        <rect key={`${c},${r}`} x={c * size} y={r * size} width={size} height={size} fill={FILL} stroke={INK} strokeWidth={1.5} />
+      ))}
+    </svg>
+  );
+}
+
+/** A polygon on squared paper, its corners on the grid points. */
+export function GridShapePicture({ w, h, points }: { w: number; h: number; points: [number, number][] }) {
+  const S = Math.min(36, Math.floor(320 / w));
+  return (
+    <svg viewBox={`-2 -2 ${w * S + 4} ${h * S + 4}`} width={w * S + 4} className="max-w-full" role="img" aria-label={t("scene.gridShape.label")}>
+      {Array.from({ length: w + 1 }, (_, i) => (
+        <line key={`v${i}`} x1={i * S} y1={0} x2={i * S} y2={h * S} stroke="#cbd5e1" strokeWidth={1} />
+      ))}
+      {Array.from({ length: h + 1 }, (_, i) => (
+        <line key={`h${i}`} x1={0} y1={i * S} x2={w * S} y2={i * S} stroke="#cbd5e1" strokeWidth={1} />
+      ))}
+      <polygon points={points.map(([x, y]) => `${x * S},${y * S}`).join(" ")} fill={FILL} fillOpacity={0.8} stroke={INK} strokeWidth={2.5} strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** A triangle with its sides marked: a = BC, b = CA, c = AB along the bottom - then turned, and mirrored when `flip`. */
+export function TrianglePicture({ sides, turn, flip, size = 150 }: { sides: [number, number, number]; turn: number; flip: boolean; size?: number }) {
+  const [a, b, c] = sides;
+  const unit = 100 / Math.max(...sides);
+  // Mirrored, then turned about the middle - computed, so the numbers stay upright.
+  const place = ([x, y]: [number, number]): [number, number] => {
+    const mx = flip ? -x : x;
+    return [mx * Math.cos(rad(turn)) - y * Math.sin(rad(turn)), mx * Math.sin(rad(turn)) + y * Math.cos(rad(turn))];
+  };
+  const raw = corners(a, b, c, unit);
+  const mid0 = [(raw[0][0] + raw[1][0] + raw[2][0]) / 3, (raw[0][1] + raw[1][1] + raw[2][1]) / 3];
+  const pts = raw.map(([x, y]) => place([x - mid0[0], y - mid0[1]]));
+  const ends: [number, number][] = [
+    [1, 2],
+    [2, 0],
+    [0, 1],
+  ];
+  return (
+    <svg viewBox="-80 -80 160 160" width={size} role="img" aria-label={t("scene.triangle.label", { a, b, c })}>
+      <polygon points={pts.map((p) => p.join(",")).join(" ")} fill={FILL} stroke={INK} strokeWidth={2.5} strokeLinejoin="round" />
+      {sides.map((side, i) => {
+        const [p, q] = ends[i].map((j) => pts[j]);
+        const mid = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+        const len = Math.hypot(mid[0], mid[1]) || 1;
+        return (
+          <text key={i} x={mid[0] + (mid[0] / len) * 13} y={mid[1] + (mid[1] / len) * 13} textAnchor="middle" dominantBaseline="central" fontSize={14} fontWeight={800} fill={INK}>
+            {side}
+          </text>
+        );
+      })}
     </svg>
   );
 }

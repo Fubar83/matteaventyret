@@ -20,6 +20,9 @@ three of four parts, −7 is left of −5, √50 is just past 7.
 | 2.6.8 | Bråk på tallinjen | 0–1 or 0–2, a tick every 1/p | 3/4, 5/4 — never a whole | 1/p | exact |
 | 2.16.5 | Decimaltal på tallinjen | a whole number to the next, ticks every 0,1 | 2,7 exactly, or 2,35 between ticks | 0,1 (0,01) | exact (± 0,02) |
 | 2.17.3 | Negativa tal på tallinjen | −10–10, numbered every 5 | −1 to −9 | 1 | exact |
+| 2.16.7 | Inzoomade tallinjer | 3,4–3,5 in hundredths, or 340–350 in ones, numbered at the ends | 3,47, 346 | 0,01 (1) | exact |
+| 2.11.4 | Dubbel tallinje | 0–100 % above, 0–240 kr below (the `second` row) | 60 kr — where in percent | 5 | exact |
+| 2.9.10 | Tidslinjen | four hours in quarters, numbered every hour | a time, or when a film ends — never on the hour | 15 min | exact |
 | 3.1.7 | Uppskatta på tallinjen | 0–10 (or −10–0), every whole number | √50, π, 2π, 22/7, −√20 | 0,1 | ± 0,2 |
 
 ## The question
@@ -30,6 +33,7 @@ three of four parts, −7 is left of −5, √50 is just past 7.
 | `value` | where it really is |
 | `from`, `to`, `step` | the line and its ticks |
 | `labels` | the numbered ticks, each with its LaTeX label |
+| `second` | a double number line's other scale, under the first (kr under %) |
 | `snap` | where the marker can stand: multiples of it from `from` |
 | `tolerance` | how near is right: 0 where the place is on a tick, more where it's estimated between |
 | `tip`, `explanation` | the help ladder |
@@ -43,6 +47,8 @@ the player and the tests use the same judgement.
 
 - The line is drawn like the reading line (`MeasurePictures.tsx`'s
   `NumberLine`), and every place the marker can stand is an unseen tap target.
+- The marker can be dragged along the line (`useDragPoint`); it snaps to the
+  nearest place. A double line shows its second row of labels under the first.
 - ◀ ▶ nudge the marker one `snap` — for fine adjustment and the keyboard.
 - **Rätta**: a wrong place says which way to go ("lite för långt åt vänster").
   After **two** wrong checks the right place is shown, the marker green.

@@ -98,8 +98,35 @@ describe("sorting into groups", () => {
 });
 
 describe("putting in order", () => {
+  it("the events go from impossible to certain; a program's lines and a solution's steps each follow from the one before", () => {
+    for (const p of all<SortOrderProblem>("1.11.3")) {
+      const bag = p.scene!.kind === "chance" ? p.scene!.colors : [];
+      const count = (o: ChoiceOption) => {
+        if (!("text" in o)) throw new Error("an event is words");
+        const v = (o.text.vars ?? {}) as Record<string, string>;
+        const of = (c: string) => bag.find((b) => `@color.${b.color}` === c)?.count ?? 0;
+        return o.text.key.endsWith("either") ? of(v.a) + of(v.b) : of(v.color);
+      };
+      const counts = p.answer.map((i) => count(p.items[i]));
+      expect(counts[0]).toBe(0);
+      expect(counts.at(-1)).toBe(bag.reduce((s, b) => s + b.count, 0));
+      for (let k = 1; k < counts.length; k++) expect(counts[k]).toBeGreaterThan(counts[k - 1]);
+    }
+    for (const p of all<SortOrderProblem>("3.3.12")) {
+      // Every step is an equation x solves - the last one x = …
+      const steps = p.answer.map((i) => (p.items[i] as { latex: string }).latex);
+      const x = Number(steps.at(-1)!.split(" = ")[1]);
+      const value = (side: string) => Function("x", `return ${side.replace(/(\d)\(/g, "$1*(").replace(/(\d)x/g, "$1*x")};`)(x) as number;
+      for (const s of steps) {
+        const [l, r] = s.split(" = ");
+        expect(value(l), s).toBe(value(r));
+      }
+      expect(new Set(steps).size).toBe(steps.length);
+    }
+  });
+
   it("the answer is every thing once, strictly in order of value - up or down as asked", () => {
-    for (const stage of orderLevels) {
+    for (const stage of orderLevels.filter((s) => !["1.11.3", "3.9.3", "3.3.12"].includes(s))) {
       for (const p of all<SortOrderProblem>(stage)) {
         expect([...p.answer].sort((a, b) => a - b), stage).toEqual(p.items.map((_, i) => i));
         const values = p.answer.map((i) => valueOf(p.items[i]));

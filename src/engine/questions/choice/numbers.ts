@@ -4,16 +4,18 @@
  *   åk 1-3  1.8.2 större än, mindre än (<, >, =)   1.8.3 udda och jämna tal
  *   åk 4-6  2.16.1 decimaltalens positionssystem   2.16.2 gånger och delat med 10, 100, 1000
  *           2.16.3 storleksordna decimaltal        2.17.1 negativa tal: termometern
+ *           2.10.4 rimligt svar: estimate first - 48 · 21 is about 1 000
+ *           2.15.4 primtalsfaktorisering: 60 = 2 · 2 · 3 · 5
  *   åk 7-9  3.1.4 kvadratrötter: √49, √50 between 7 and 8, x² = 49
  *
  * The wrong options are the classic mistakes: 3/1 for 3 of 4 parts, 0,45 >
  * 0,5 because it's longer, 3,500 for 3,5 · 100, −3 + 5 = 8.
  */
-import { randInt, type Rng } from "../../rng";
+import { pick, randInt, shuffle, type Rng } from "../../rng";
 import { tex } from "../written/problem";
 import { fixedOptions, shuffledOptions, text, type ChoiceOption, type ChoiceProblem, type Slip } from "./problem";
 
-export type NumberChoiceStageId = "1.8.2" | "1.8.3" | "2.16.1" | "2.16.2" | "2.16.3" | "2.17.1" | "3.1.4";
+export type NumberChoiceStageId = "1.8.2" | "1.8.3" | "2.16.1" | "2.16.2" | "2.16.3" | "2.17.1" | "3.1.4" | "2.10.4" | "2.15.4";
 
 const latex = (s: string): ChoiceOption => ({ latex: s });
 const num = (n: number): ChoiceOption => latex(tex(n));
@@ -290,6 +292,75 @@ function squareRoots(rng: Rng): ChoiceProblem {
   };
 }
 
+/** A number written out the Swedish way: 1 008, 193,05. */
+const written = (n: number) => {
+  const [whole, frac] = String(Math.round(n * 100) / 100).split(".");
+  return whole.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + (frac ? `,${frac}` : "");
+};
+
+/** 2.10.4: which answer is reasonable - estimate, and the others are ten times too big or small. */
+function reasonable(rng: Rng): ChoiceProblem {
+  if (rng() < 0.5) {
+    const a = randInt(rng, 12, 98);
+    const b = randInt(rng, 12, 98);
+    const right = a * b;
+    const round = (n: number) => Math.round(n / 10) * 10;
+    return {
+      stageId: "2.10.4",
+      kind: "choice",
+      prompt: text("choice.reasonable.prompt"),
+      display: `${a} \\cdot ${b}`,
+      ...shuffledOptions(rng, { plain: written(right) }, [
+        { option: { plain: written(right * 10) }, why: text("choice.reasonable.whyBig", { e: written(round(a) * round(b)) }) },
+        { option: { plain: written(right / 10) }, why: text("choice.reasonable.whySmall", { e: written(round(a) * round(b)) }) },
+        { option: { plain: written(a + b) }, why: text("choice.reasonable.whyAdd") },
+      ]),
+      tip: text("choice.reasonable.tip"),
+      explanation: text("choice.reasonable.explain", { a: round(a), b: round(b), e: written(round(a) * round(b)), r: written(right) }),
+    };
+  }
+  // A price per kilo times kilos.
+  const kg = randInt(rng, 12, 49) / 10;
+  const price = pick(rng, [19.5, 29.9, 39.5, 49.5, 59.9, 89]);
+  const right = Math.round(kg * price * 100) / 100;
+  const kr = (n: number) => ({ plain: `${written(n)} kr` });
+  return {
+    stageId: "2.10.4",
+    kind: "choice",
+    prompt: text("choice.reasonable.price", { kg: written(kg), p: written(price) }),
+    ...shuffledOptions(rng, kr(right), [
+      { option: kr(right * 10), why: text("choice.reasonable.whyBig", { e: written(Math.round(kg) * Math.round(price)) }) },
+      { option: kr(right / 10), why: text("choice.reasonable.whySmall", { e: written(Math.round(kg) * Math.round(price)) }) },
+      { option: kr(kg + price), why: text("choice.reasonable.whyAdd") },
+    ]),
+    tip: text("choice.reasonable.tip"),
+    explanation: text("choice.reasonable.explain", { a: Math.round(kg), b: Math.round(price), e: written(Math.round(kg) * Math.round(price)), r: written(right) }),
+  };
+}
+
+/** 2.15.4: a number as a product of primes - only primes, and all of them. */
+function primeFactors(rng: Rng): ChoiceProblem {
+  const factors = shuffle(rng, [2, 2, 2, 3, 3, 5, 7]).slice(0, randInt(rng, 3, 4)).sort((x, y) => x - y);
+  const n = factors.reduce((p, f) => p * f, 1);
+  const product = (fs: number[]) => ({ latex: [...fs].sort((x, y) => x - y).join(" \\cdot ") });
+  // Two factors joined: not all primes.
+  const joined = [factors[0] * factors[1], ...factors.slice(2)];
+  const missing = factors.slice(1);
+  return {
+    stageId: "2.15.4",
+    kind: "choice",
+    prompt: text("choice.factors.prompt"),
+    display: String(n),
+    ...shuffledOptions(rng, product(factors), [
+      { option: product(joined), why: text("choice.factors.whyNotPrime", { f: factors[0] * factors[1] }) },
+      { option: product(missing), why: text("choice.factors.whyProduct", { p: missing.reduce((p, f) => p * f, 1), n }) },
+      { option: product([...factors, 2]), why: text("choice.factors.whyProduct", { p: n * 2, n }) },
+    ]),
+    tip: text("choice.factors.tip"),
+    explanation: text("choice.factors.explain", { n, f: factors.join(" · ") }),
+  };
+}
+
 export const NUMBER_CHOICES: Record<NumberChoiceStageId, (rng: Rng) => ChoiceProblem> = {
   "1.8.2": compare,
   "1.8.3": parity,
@@ -298,4 +369,6 @@ export const NUMBER_CHOICES: Record<NumberChoiceStageId, (rng: Rng) => ChoicePro
   "2.16.3": orderDecimals,
   "2.17.1": temperature,
   "3.1.4": squareRoots,
+  "2.10.4": reasonable,
+  "2.15.4": primeFactors,
 };

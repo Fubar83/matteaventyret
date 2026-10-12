@@ -48,6 +48,12 @@ Topic modules in `engine/questions/choice/`:
 | 2.12.2 | Vinkeltyper | `measuring.ts` | spetsig, rät, trubbig or rak; about how big (the slip: the angle on the other side of the arm) |
 | 2.12.3 | Skala: förstora och förminska | `measuring.ts` | a map in 1:1000 (centimetres to metres), a drawing in 1:20, an insect drawn 5:1 |
 | 2.19.3 | Programmering: villkor | `code.ts` | om … annars: halve an even number, change an odd one; "Vinst!" only for more points than needed (equal isn't more); counting the even numbers in a loop |
+| 2.12.4 | Mät med gradskiva | `measuring.ts` | a protractor on an angle: the reading on the scale with 0 at the first arm (the slip: 180° − v) |
+| 2.4.7 | Area på rutat papper | `geometry.ts` | a triangle or parallelogram on squared paper — half the rectangle round a triangle |
+| 2.4.8 | Kubens nät | `geometry.ts` | which net folds into a cube — or which doesn't (2 × 2 blocks, five or six in a row) |
+| 2.10.4 | Rimligt svar? | `numbers.ts` | 48 · 21 or 3,9 kg at 49,50 kr/kg — the others ten times off, or the numbers added |
+| 2.15.4 | Primtalsfaktorisering | `numbers.ts` | 60 = 2 · 2 · 3 · 5 — not 4 · 3 · 5, not missing a factor |
+| 2.9.11 | Liter och kubikdecimeter | `measuring.ts` | a box in dm (or cm): how many litres — 1 dm³ = 1 l |
 | 2.18.1 | Sannolikhet | `chance.ts` | the chance as a fraction: marbles, a spinner, a die |
 | 1.12.1 | Programmering: följ instruktionerna | `programming.ts` | where an arrow program takes the robot (lettered squares); which program goes to the star — Lgr22 åk 1–3's step-by-step instructions |
 | 2.19.2 | Programmering med loopar | `programming.ts` | a program with "upprepa n gånger": where it ends up, how many steps |
@@ -61,6 +67,9 @@ Topic modules in `engine/questions/choice/`:
 | 3.7.3 | Medelvärde eller median? | `data.ts` | salaries or race times with an outlier: which measure is typical, which value is the outlier, what removing it does to the mean or median |
 | 3.7.4 | Missvisande diagram | `data.ts` | three bar charts of the same sales: which misleads (an axis cut above 0), which is fair; C looks 3 times A — how many percent bigger is it really |
 | 3.9.2 | Programmering: vilken rad saknas? | `code.ts` | a program with a line missing (?????) and what it should print: the sum (s = s + i, not + 1), doubling (x · 2, not + 2), counting even numbers (the condition on i, not the counter) |
+| 3.4.15 | Kongruens | `geometry.ts` | which triangle has the same three sides — turned or mirrored; not the similar one twice as big |
+| 3.2.5 | Rea och moms | `percent.ts` | 25 % off; 25 % VAT on; the price without VAT — divided by 1,25, not 25 % off |
+| 3.2.6 | Lån och amortering | `percent.ts` | the same paid back each month; the first month's interest |
 | 3.9.1 | Programmering: variabler och loopar | `code.ts` | doubling in a loop, a running sum over i, medan (while), and a = b; b = a — not a swap |
 | 3.10.1 | Grafer och formler | `functions.ts` | a line on a grid: its formula y = kx + m, its k, its m, a y off it |
 | 3.10.2 | Tabeller och mönster | `functions.ts` | the formula for an x–y table; matchsticks in figure n, and in figure 100 |
@@ -145,6 +154,8 @@ questions can use them too.
 | `lengths`, `weigh` | `EarlyPictures.tsx` | lettered ribbons over squares; a balance, the heavier side down |
 | `kitchenScale`, `jug` | `MeasurePictures.tsx` | a dial in grams (numbered every 100 g, 200 g past 1 000); a jug marked every dl, numbered every 2 dl and 1 l |
 | `tally`, `pie`, `timetable` | `DataPictures.tsx` | a table of tally marks; a pie chart and its legend; a bus timetable |
+| `protractor`, `triangle`, `quad`, `net`, `gridShape` | `GeometryPictures.tsx` | a protractor on an angle (both scales); a triangle with its sides marked, turned or mirrored; a quadrilateral; a net of squares; a polygon on squared paper |
+| `clock` | `QuestionScene.tsx` (`ClockFace`) | an analog clock, small as a card to match |
 | `bars` | `DataPictures.tsx` | a bar chart of A, B, C, its axis from `from` (0, or cut above it) — small as an option |
 | `graph` | `DataPictures.tsx` | a coordinate system, grid lines every step, lines clipped to it; small and unlabelled as an option |
 | `code` | `DataPictures.tsx` | a numbered program, blocks indented, conditions and loops coloured |

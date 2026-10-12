@@ -4,11 +4,16 @@
  * kinds and when two of its questions are the same live in its own module
  * (see questions/questionType.ts) - adding a type is adding it to the list.
  */
+import { BALANCE_QUESTIONS } from "./questions/balance";
+import { BLOCKS_QUESTIONS } from "./questions/blocks";
 import { CHART_QUESTIONS } from "./questions/chart";
 import { CHOICE_QUESTIONS } from "./questions/choice";
 import { CLOCK_QUESTIONS } from "./questions/clock";
 import { COLUMN_QUESTIONS } from "./questions/column";
+import { CONSTRUCT_QUESTIONS } from "./questions/construct";
+import { EXPERIMENT_QUESTIONS } from "./questions/experiment";
 import { GRID_QUESTIONS } from "./questions/grid";
+import { MATCH_QUESTIONS } from "./questions/match";
 import { MUL_GUIDED_QUESTIONS } from "./questions/multiply";
 import { NUMBER_LINE_QUESTIONS } from "./questions/numberLine";
 import { PLACE_VALUE_QUESTIONS } from "./questions/placeValue";
@@ -37,6 +42,11 @@ export const QUESTION_TYPES = [
   SORT_QUESTIONS,
   NUMBER_LINE_QUESTIONS,
   GRID_QUESTIONS,
+  MATCH_QUESTIONS,
+  BLOCKS_QUESTIONS,
+  BALANCE_QUESTIONS,
+  EXPERIMENT_QUESTIONS,
+  CONSTRUCT_QUESTIONS,
 ] as const;
 
 type AnyType = (typeof QUESTION_TYPES)[number];

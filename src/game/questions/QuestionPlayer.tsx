@@ -3,11 +3,16 @@ import type { GeneratedProblem, QuestionKind } from "../../engine/generator";
 import type { ColumnProblem } from "../../engine/questions/column";
 import type { Phase } from "../../engine/types";
 import type { WritingLevel } from "../../recognition/levels";
+import { BalancePlayer } from "./balance/BalancePlayer";
+import { BlocksPlayer } from "./blocks/BlocksPlayer";
 import { ChartPlayer } from "./chart/ChartPlayer";
 import { ChoicePlayer } from "./choice/ChoicePlayer";
 import { ClockPlayer } from "./clock/ClockPlayer";
 import { ColumnProblemPlayer, type ColumnProblemSummary } from "./column/ColumnProblemPlayer";
+import { ConstructPlayer } from "./construct/ConstructPlayer";
+import { ExperimentPlayer } from "./experiment/ExperimentPlayer";
 import { GridCellsPlayer, GridPointsPlayer } from "./grid/GridPlayer";
+import { MatchPlayer } from "./match/MatchPlayer";
 import { MulPlayer } from "./multiplication/MulPlayer";
 import { NumberLinePlayer } from "./numberLine/NumberLinePlayer";
 import { PlaceValuePlayer } from "./placeValue/PlaceValuePlayer";
@@ -64,6 +69,11 @@ const PLAYERS: { [K in QuestionKind]: Player<K> } = {
   placeOnLine: ({ problem, onSolved }) => <NumberLinePlayer problem={problem} onSolved={onSolved} />,
   gridCells: ({ problem, onSolved }) => <GridCellsPlayer problem={problem} onSolved={onSolved} />,
   gridPoints: ({ problem, onSolved }) => <GridPointsPlayer problem={problem} onSolved={onSolved} />,
+  match: ({ problem, onSolved }) => <MatchPlayer problem={problem} onSolved={onSolved} />,
+  buildNumber: ({ problem, onSolved }) => <BlocksPlayer problem={problem} onSolved={onSolved} />,
+  balanceSolve: ({ problem, onSolved }) => <BalancePlayer problem={problem} onSolved={onSolved} />,
+  experiment: ({ problem, onSolved }) => <ExperimentPlayer problem={problem} onSolved={onSolved} />,
+  construct: ({ problem, onSolved }) => <ConstructPlayer problem={problem} onSolved={onSolved} />,
 };
 
 /** Every kind of question a player can be picked for. */

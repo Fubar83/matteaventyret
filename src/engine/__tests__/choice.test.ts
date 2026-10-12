@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CHOICE_QUESTIONS } from "../questions/choice";
 import { optionKey, type ChoiceOption, type ChoiceProblem } from "../questions/choice/problem";
 import { runProgram, type CodeLine, type QuestionScene } from "../questions/scene";
+import { SORT_QUESTIONS } from "../questions/sort";
 import { makeRng } from "../rng";
 
 const N = 300;
@@ -636,6 +637,105 @@ describe("misleading charts and missing lines", () => {
         const program = lines.map((l, j) => (j === at ? { indent: l.indent, key: k, vars: v } : l));
         expect(JSON.stringify(runCode(program)) === JSON.stringify(want), `${k} ${JSON.stringify(v)}`).toBe(i === p.correct);
       });
+    }
+  });
+});
+
+describe("batch five: measuring, geometry, numbers, money", () => {
+  it("2.12.4: the reading is on the scale that starts at the first arm", () => {
+    for (const p of all("2.12.4")) expect(amount(right(p))).toBe(scene(p, "protractor").degrees);
+  });
+
+  it("2.4.7: the area is half the box round a triangle, base times height for a parallelogram", () => {
+    for (const p of all("2.4.7")) {
+      const pts = scene(p, "gridShape").points;
+      const twice = Math.abs(pts.reduce((s, [x, y], i) => s + x * pts[(i + 1) % pts.length][1] - pts[(i + 1) % pts.length][0] * y, 0));
+      expect(valueOf(right(p))).toBe(twice / 2);
+    }
+  });
+
+  it("2.4.8: the net that folds into a cube has no 2 × 2 block and no five in a row - and the others do", () => {
+    const folds = (cells: [number, number][]) => {
+      const has = (c: number, r: number) => cells.some(([x, y]) => x === c && y === r);
+      const block = cells.some(([c, r]) => has(c + 1, r) && has(c, r + 1) && has(c + 1, r + 1));
+      const five = cells.some(([c, r]) => [1, 2, 3, 4].every((d) => has(c + d, r)) || [1, 2, 3, 4].every((d) => has(c, r + d)));
+      return cells.length === 6 && !block && !five;
+    };
+    for (const p of all("2.4.8")) {
+      const nets = p.options.map((o) => ("scene" in o && o.scene.kind === "net" ? o.scene.cells : []));
+      const want = p.prompt.key.endsWith("whichNot") ? false : true;
+      nets.forEach((n, i) => expect(folds(n), JSON.stringify(n)).toBe(i === p.correct ? want : !want));
+    }
+  });
+
+  it("3.4.15: the congruent triangle has the same three sides; the others don't", () => {
+    const sorted = (s: number[]) => [...s].sort((x, y) => x - y).join();
+    for (const p of all("3.4.15")) {
+      const sides = sorted(scene(p, "triangle").sides);
+      p.options.forEach((o, i) => expect(sorted(("scene" in o && o.scene.kind === "triangle" ? o.scene.sides : []) as number[]) === sides).toBe(i === p.correct));
+    }
+  });
+
+  it("2.10.4: the reasonable answer is the product; the others are ten times off or a sum", () => {
+    for (const p of all("2.10.4")) {
+      if (p.display) {
+        const [a, b] = p.display.split(" \\cdot ").map(Number);
+        expect(amount(right(p))).toBe(a * b);
+      } else {
+        const v = vars(p) as Record<string, string>;
+        const num = (s: string) => Number(s.replace(/\s/g, "").replace(",", "."));
+        expect(amount(right(p))).toBeCloseTo(num(v.kg) * num(v.p), 2);
+      }
+    }
+  });
+
+  it("2.15.4: the factorisation is all primes and multiplies to the number; no wrong one is both", () => {
+    const isPrime = (n: number) => n > 1 && Array.from({ length: n - 2 }, (_, i) => i + 2).every((d) => n % d !== 0);
+    for (const p of all("2.15.4")) {
+      const n = Number(p.display);
+      const ok = (o: ChoiceOption) => {
+        const fs = (o as { latex: string }).latex.split(" \\cdot ").map(Number);
+        return fs.every(isPrime) && fs.reduce((x, y) => x * y, 1) === n;
+      };
+      p.options.forEach((o, i) => expect(ok(o)).toBe(i === p.correct));
+    }
+  });
+
+  it("3.2.5: the sale price, the price with VAT, and the price without (divided by 1,25)", () => {
+    for (const p of all("3.2.5")) {
+      const v = vars(p) as Record<string, number>;
+      const want = p.prompt.key.endsWith("sale.prompt") ? v.k * (1 - v.p / 100) : p.prompt.key.endsWith("add") ? v.k * 1.25 : v.k / 1.25;
+      expect(amount(right(p))).toBeCloseTo(want, 2);
+    }
+  });
+
+  it("3.2.6: the monthly repayment, and a month's interest", () => {
+    for (const p of all("3.2.6")) {
+      const v = vars(p) as Record<string, string | number>;
+      const k = Number(String(v.k).replace(/\s/g, ""));
+      const want = p.prompt.key.endsWith("amortise") ? k / (12 * Number(v.y)) : (k * Number(v.r)) / 100 / 12;
+      expect(amount(right(p))).toBeCloseTo(want, 2);
+    }
+  });
+
+  it("2.9.11: litres are the volume in dm³", () => {
+    for (const p of all("2.9.11")) {
+      const { l, w, h, unit } = scene(p, "cuboid");
+      expect(amount(right(p))).toBeCloseTo(unit === "cm" ? (l * w * h) / 1000 : l * w * h, 6);
+    }
+  });
+});
+
+describe("ordering a program", () => {
+  it("3.9.3: in the answer's order the program prints the number asked", () => {
+    const rng = makeRng(1);
+    for (let i = 0; i < 300; i++) {
+      const p = SORT_QUESTIONS.levels["3.9.3"](rng);
+      const lines = p.answer.map((k) => {
+        const o = p.items[k] as { text: { key: string; vars: CodeLine["vars"] } };
+        return { indent: 0, key: o.text.key, vars: o.text.vars };
+      });
+      expect(runCode(lines)).toEqual([Number(p.prompt.vars!.r)]);
     }
   });
 });

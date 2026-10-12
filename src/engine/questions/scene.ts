@@ -42,6 +42,12 @@
  *   similar     - two similar triangles, their sides marked, one side x
  *   cuboid      - a box, its length, width and height marked
  *   code        - a program in words (om … annars, upprepa, skriv)
+ *   clock       - an analog clock showing a time (a card to match)
+ *   protractor  - a protractor laid on an angle, to read
+ *   quad        - a quadrilateral: square, rectangle, rhombus, parallelogram, trapezoid, kite
+ *   net         - squares joined edge to edge: a net that may fold into a cube
+ *   gridShape   - a polygon on squared paper, its corners on the grid points
+ *   triangle    - a triangle with its sides marked, turned and maybe flipped
  */
 export type ScaleTerm = { kind: "unknown"; label: string } | { kind: "weight"; value: number };
 
@@ -130,7 +136,22 @@ export type QuestionScene =
   /** A box: length, width, height, in `unit`. */
   | { kind: "cuboid"; l: number; w: number; h: number; unit: string }
   /** A program in words, a line at a time. */
-  | { kind: "code"; lines: CodeLine[] };
+  | { kind: "code"; lines: CodeLine[] }
+  /** An analog clock at h:m (12-hour face). */
+  | { kind: "clock"; h: number; m: number }
+  /** A protractor on an angle of `degrees`, its first arm pointing `base`. */
+  | { kind: "protractor"; degrees: number; base: "right" | "left" }
+  /** A quadrilateral, turned `turn` degrees. */
+  | { kind: "quad"; shape: Quad; turn: number }
+  /** Squares of a net, [column, row]. */
+  | { kind: "net"; cells: [number, number][] }
+  /** A polygon on a `w` × `h` squared paper, its corners on grid points (x right, y down). */
+  | { kind: "gridShape"; w: number; h: number; points: [number, number][] }
+  /** A triangle with sides a, b, c (c along the bottom before turning) marked, turned `turn` degrees, mirrored when `flip`. */
+  | { kind: "triangle"; sides: [number, number, number]; turn: number; flip: boolean };
+
+export type Quad = "square" | "rectangle" | "rhombus" | "parallelogram" | "trapezoid" | "kite";
+export const QUADS: readonly Quad[] = ["square", "rectangle", "rhombus", "parallelogram", "trapezoid", "kite"];
 
 /** Animals that queue - each a sprite, and a name (`animal.<name>`) in both languages. */
 export type Animal = "bear" | "rabbit" | "pig" | "frog" | "owl" | "cow" | "monkey" | "penguin" | "elephant" | "giraffe" | "dog" | "duck";

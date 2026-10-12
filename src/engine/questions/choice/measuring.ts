@@ -5,6 +5,8 @@
  *           1.10.3 litermått: read the jug in decilitres; how much more makes a litre
  *   åk 4-6  2.12.2 vinkeltyper: spetsig, rät, trubbig or rak - and about how big
  *           2.12.3 skala: a map in 1:1000, a drawing in 1:20, an ant enlarged 5:1
+ *           2.12.4 gradskivan: read an angle - on the scale that starts at the first arm
+ *           2.9.11 liter och kubikdecimeter: an aquarium 5 × 3 × 4 dm holds 60 l
  *
  * The slips are the usual ones: a tick read as 100 g when it's 50, the jug read
  * from the top, centimetres taken for metres, an enlargement multiplied.
@@ -13,7 +15,7 @@ import { pick, randInt, shuffle, type Rng } from "../../rng";
 import { tex } from "../written/problem";
 import { fixedOptions, plainOption, shuffledOptions, text, textOption, type ChoiceProblem, type Slip } from "./problem";
 
-export type MeasuringChoiceStageId = "1.10.2" | "1.10.3" | "2.12.2" | "2.12.3";
+export type MeasuringChoiceStageId = "1.10.2" | "1.10.3" | "2.12.2" | "2.12.3" | "2.12.4" | "2.9.11";
 
 /** A measure as it's written: "350 g", "1,5 kg". */
 const measure = (n: number, unit: string) => plainOption(`${tex(n).replace("{,}", ",")} ${unit}`);
@@ -211,7 +213,51 @@ function scaleDrawings(rng: Rng): ChoiceProblem {
   };
 }
 
+/** 2.12.4: read a protractor - the scale that starts at 0 on the first arm, not the other one. */
+function readProtractor(rng: Rng): ChoiceProblem {
+  const degrees = 5 * pick(rng, [4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 22, 23, 24, 25, 26, 27, 28, 30, 32]);
+  const base = rng() < 0.5 ? "right" : "left";
+  const deg = (d: number) => plainOption(`${d}°`);
+  return {
+    stageId: "2.12.4",
+    kind: "choice",
+    prompt: text("choice.protractor.prompt"),
+    scene: { kind: "protractor", degrees, base },
+    ...shuffledOptions(rng, deg(degrees), [
+      { option: deg(180 - degrees), why: text("choice.protractor.whyScale") },
+      { option: deg(degrees + 10), why: text("choice.protractor.whyTens") },
+      { option: deg(degrees - 10), why: text("choice.protractor.whyTens") },
+    ]),
+    tip: text(base === "right" ? "choice.protractor.tipRight" : "choice.protractor.tipLeft"),
+    explanation: text("choice.protractor.explain", { d: degrees, scale: `@construct.scale.${base === "right" ? "outer" : "inner"}` }),
+  };
+}
+
+/** 2.9.11: litres and cubic decimetres - 1 dm³ is 1 l, so a box's volume in dm³ is what it holds in litres. */
+function litres(rng: Rng): ChoiceProblem {
+  const inCm = rng() < 0.35;
+  const [l, w, h] = inCm ? [10 * randInt(rng, 2, 6), 10 * randInt(rng, 1, 3), 10 * randInt(rng, 1, 3)] : [randInt(rng, 3, 8), randInt(rng, 2, 5), randInt(rng, 2, 5)];
+  const dm3 = inCm ? (l * w * h) / 1000 : l * w * h;
+  const litre = (n: number) => measure(n, "l");
+  return {
+    stageId: "2.9.11",
+    kind: "choice",
+    prompt: text("choice.litres.prompt"),
+    scene: { kind: "cuboid", l, w, h, unit: inCm ? "cm" : "dm" },
+    ...shuffledOptions(rng, litre(dm3), [
+      ...(inCm ? [{ option: litre(dm3 * 1000), why: text("choice.litres.whyCm") }, { option: litre(dm3 * 10), why: text("choice.litres.whyCm") }] : []),
+      { option: litre(inCm ? (l + w + h) / 10 : l + w + h), why: text("choice.litres.whyAdd") },
+      { option: litre(inCm ? (l * w) / 100 : l * w), why: text("choice.litres.whyBase") },
+      { option: litre(inCm ? (2 * (l * w + l * h + w * h)) / 100 : 2 * (l * w + l * h + w * h)), why: text("choice.litres.whySurface") },
+    ]),
+    tip: text(inCm ? "choice.litres.tipCm" : "choice.litres.tip"),
+    explanation: text(inCm ? "choice.litres.explainCm" : "choice.litres.explain", { l, w, h, v: tex(dm3).replace("{,}", ","), lw: l / 10, ww: w / 10, hw: h / 10 }),
+  };
+}
+
 export const MEASURING_CHOICES: Record<MeasuringChoiceStageId, (rng: Rng) => ChoiceProblem> = {
+  "2.12.4": readProtractor,
+  "2.9.11": litres,
   "1.10.2": weighing,
   "1.10.3": jug,
   "2.12.2": angleTypes,

@@ -28,7 +28,9 @@ export interface QuestionStoryProps {
 }
 
 /** How far on from the seed to look for a question that matches. */
-const SEARCH = 500;
+/** How many seeds a story tries for a question like the one it shows. */
+export const SEARCH_SEEDS = 500;
+const SEARCH = SEARCH_SEEDS;
 
 /** The first seed from `seed` on whose question matches - or null when the level never makes one. */
 export function seedMatching(stage: StageId, seed: number, match: (p: GeneratedProblem) => boolean): number | null {

@@ -8,6 +8,7 @@
  * numbers in LaTeX, characters, small pictures.
  */
 import type { ChoiceOption, ChoiceText } from "../choice/problem";
+import type { QuestionScene } from "../scene";
 import type { SortStageId } from ".";
 
 export type { ChoiceOption as SortItem } from "../choice/problem";
@@ -17,7 +18,14 @@ export interface SortGroupsProblem {
   stageId: SortStageId;
   kind: "sortGroups";
   prompt: ChoiceText;
+  /** A picture over it all, when there is one (the bag the events are about). */
+  scene?: QuestionScene;
   items: ChoiceOption[];
+  /**
+   * Two properties drawn as a Venn diagram, when it is one: the groups are then
+   * [only the first, both, only the second, neither].
+   */
+  venn?: [ChoiceText, ChoiceText];
   /** The groups' names, or pictures. */
   groups: ChoiceOption[];
   /** Each thing's group, by index. */
@@ -33,6 +41,7 @@ export interface SortOrderProblem {
   stageId: SortStageId;
   kind: "sortOrder";
   prompt: ChoiceText;
+  scene?: QuestionScene;
   items: ChoiceOption[];
   /** The things' indexes, in the right order. */
   answer: number[];

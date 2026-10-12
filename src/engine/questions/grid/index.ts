@@ -6,9 +6,12 @@
  *             1.9.4 färglägg en del: 3/4 of a grid of 12
  *     åk 4-6  2.6.9 procent av en figur: 35 % of 20 squares
  *             2.4.5 rita en rektangel: area 12 and perimeter 14 - or any with area 12
+ *             2.12.6 förstora en figur: the same figure twice as big, anywhere
  *   gridPoints
  *     åk 4-6  2.13.2 pricka in punkter: (3, 5); the fourth corner of a rectangle
  *     åk 7-9  3.4.12 spegling och förflyttning: a triangle reflected or moved
+ *             3.4.14 vridning: a triangle turned a quarter or half turn about the origin
+ *             3.10.4 rita linjen: y = 2x - 1 by two points on it
  *
  * The check is here, not in the player, so the tests check the same thing
  * the child is checked on - and it says why an answer isn't right: 2 squares
@@ -20,7 +23,7 @@ import { pick, randInt, shuffle, type Rng } from "../../rng";
 import { text, type ChoiceText } from "../choice/problem";
 import { questionType, retry } from "../questionType";
 
-export type GridStageId = "1.2.6" | "1.9.4" | "2.6.9" | "2.4.5" | "2.13.2" | "3.4.12";
+export type GridStageId = "1.2.6" | "1.9.4" | "2.6.9" | "2.4.5" | "2.13.2" | "3.4.12" | "3.4.14" | "2.12.6" | "3.10.4";
 
 /** A square: [column, row], row 0 at the top. */
 export type Cell = [number, number];
@@ -28,7 +31,12 @@ export type Cell = [number, number];
 export type Point = [number, number];
 
 /** What the coloured squares must be: these exactly, this many, or a rectangle of this area (and perimeter). */
-export type CellRule = { type: "exact"; cells: Cell[] } | { type: "count"; n: number } | { type: "rectangle"; area: number; perimeter?: number };
+export type CellRule =
+  | { type: "exact"; cells: Cell[] }
+  | { type: "count"; n: number }
+  | { type: "rectangle"; area: number; perimeter?: number }
+  /** The figure `cells` made `k` times as big, anywhere on the grid. */
+  | { type: "scaled"; cells: Cell[]; k: number };
 
 export interface GridCellsProblem {
   stageId: GridStageId;
@@ -62,6 +70,8 @@ export interface GridPointsProblem {
   answer: Point[];
   /** Wrong answers that are a known slip, and what to say about them. */
   slips: { points: Point[]; why: ChoiceText }[];
+  /** Instead of exactly `answer`: any two points on the line y = kx + m - and lines that are a known slip. */
+  line?: { k: number; m: number; slips: { k: number; m: number; why: ChoiceText }[] };
   tip: ChoiceText;
   explanation: ChoiceText;
 }
@@ -87,6 +97,16 @@ export function checkCells(p: GridCellsProblem, cells: Cell[]): { ok: boolean; w
     const extra = all.filter((c) => !want.has(key(c))).length;
     return { ok: false, why: text("grid.why.exact", { missing, extra }) };
   }
+  if (rule.type === "scaled") {
+    // The same shape, k times as big, wherever it was drawn: both moved to the top left corner.
+    const corner = (cs: Cell[]) => {
+      const [c0, r0] = [Math.min(...cs.map((c) => c[0])), Math.min(...cs.map((c) => c[1]))];
+      return cs.map(([c, r]): Cell => [c - c0, r - r0]);
+    };
+    const want = corner(rule.cells).flatMap(([c, r]) => Array.from({ length: rule.k * rule.k }, (_, i): Cell => [c * rule.k + (i % rule.k), r * rule.k + Math.floor(i / rule.k)]));
+    if (cells.length > 0 && sameSet(corner(cells), want)) return { ok: true, why: null };
+    return { ok: false, why: text(cells.length === want.length ? "grid.why.shape" : "grid.why.scaledCount", { k: cells.length, n: want.length }) };
+  }
   if (rule.type === "count") return cells.length === rule.n ? { ok: true, why: null } : { ok: false, why: text(cells.length > rule.n ? "grid.why.tooMany" : "grid.why.tooFew", { k: cells.length, n: rule.n }) };
   // A rectangle: its squares fill their bounding box.
   if (cells.length === 0) return { ok: false, why: text("grid.why.notRectangle") };
@@ -101,6 +121,13 @@ export function checkCells(p: GridCellsProblem, cells: Cell[]): { ok: boolean; w
 
 /** Are the marked points right - and if not, why. */
 export function checkPoints(p: GridPointsProblem, points: Point[]): { ok: boolean; why: ChoiceText | null } {
+  if (p.line) {
+    const on = (k: number, m: number) => points.length === 2 && key(points[0]) !== key(points[1]) && points.every(([x, y]) => y === k * x + m);
+    if (on(p.line.k, p.line.m)) return { ok: true, why: null };
+    if (points.length !== 2) return { ok: false, why: text("grid.why.pointCount", { k: points.length, n: 2 }) };
+    const slip = p.line.slips.find((s) => on(s.k, s.m));
+    return { ok: false, why: slip ? slip.why : text("grid.why.notOnLine") };
+  }
   if (sameSet(points, p.answer)) return { ok: true, why: null };
   const slip = p.slips.find((s) => sameSet(points, s.points));
   if (slip) return { ok: false, why: slip.why };
@@ -309,6 +336,95 @@ function transform(rng: Rng): GridPointsProblem {
   };
 }
 
+/** 3.4.14: a triangle turned about the origin - a quarter turn either way, or a half turn. */
+function rotate(rng: Rng): GridPointsProblem {
+  const turn = pick(rng, ["left", "right", "half"] as const);
+  const apply = (t: typeof turn, [x, y]: Point): Point => (t === "left" ? [-y, x] : t === "right" ? [y, -x] : [-x, -y]);
+  const triangle = retry("3.4.14", () => {
+    const t: Point[] = Array.from({ length: 3 }, () => [randInt(rng, 1, 5), randInt(rng, 1, 5)] as Point);
+    const area = Math.abs((t[1][0] - t[0][0]) * (t[2][1] - t[0][1]) - (t[2][0] - t[0][0]) * (t[1][1] - t[0][1]));
+    return area > 0 ? t : null;
+  });
+  const answer = triangle.map((q) => apply(turn, q));
+  const other = turn === "left" ? "right" : turn === "right" ? "left" : null;
+  const slips = [
+    ...(other ? [{ points: triangle.map((q) => apply(other, q)), why: text("grid.turn.whyDirection") }] : []),
+    { points: triangle.map(([x, y]): Point => [-x, y]), why: text("grid.turn.whyReflect") },
+  ];
+  return {
+    stageId: "3.4.14",
+    kind: "gridPoints",
+    prompt: text(`grid.turn.${turn}`),
+    x: [-6, 6],
+    y: [-6, 6],
+    shown: [{ points: triangle, closed: true }],
+    answer,
+    slips: wrongOnly(answer, slips),
+    tip: text(turn === "half" ? "grid.turn.tipHalf" : "grid.turn.tipQuarter"),
+    explanation: text(`grid.turn.explain.${turn}`),
+  };
+}
+
+/** 2.12.6: a figure made twice as big - every square becomes two by two. */
+function enlarge(rng: Rng): GridCellsProblem {
+  // A figure of 3-5 squares inside 3 × 3, all touching.
+  const figure = retry("2.12.6", () => {
+    const shape: Cell[] = [[randInt(rng, 0, 2), randInt(rng, 0, 2)]];
+    const target = randInt(rng, 3, 5);
+    for (let tries = 0; shape.length < target && tries < 40; tries++) {
+      const [c, r] = pick(rng, shape);
+      const [dc, dr] = pick(rng, [[1, 0], [-1, 0], [0, 1], [0, -1]] as const);
+      const next: Cell = [c + dc, r + dr];
+      if (next[0] >= 0 && next[0] < 3 && next[1] >= 0 && next[1] < 3 && !shape.some((s) => key(s) === key(next))) shape.push(next);
+    }
+    return shape.length === target ? shape : null;
+  });
+  const given = figure.map(([c, r]): Cell => [c, r + 1]);
+  const solution = figure.flatMap(([c, r]) => [[0, 0], [1, 0], [0, 1], [1, 1]].map(([dc, dr]): Cell => [7 + 2 * c + dc, 2 * r + dr]));
+  return {
+    stageId: "2.12.6",
+    kind: "gridCells",
+    prompt: text("grid.enlarge.prompt"),
+    w: 14,
+    h: 7,
+    given,
+    rule: { type: "scaled", cells: figure, k: 2 },
+    solution,
+    tip: text("grid.enlarge.tip"),
+    explanation: text("grid.enlarge.explain", { n: figure.length, m: 4 * figure.length }),
+  };
+}
+
+/** 3.10.4: draw a line from its formula - two points on it are enough. */
+function drawLine(rng: Rng): GridPointsProblem {
+  const k = pick(rng, [-2, -1, 1, 2, 3]);
+  const m = randInt(rng, -3, 3);
+  // Two points on the grid, for showing the answer.
+  const xs = [-3, -2, -1, 0, 1, 2, 3].filter((x) => Math.abs(k * x + m) <= 6);
+  const answer: Point[] = [xs[0], xs[xs.length - 1]].map((x): Point => [x, k * x + m]);
+  return {
+    stageId: "3.10.4",
+    kind: "gridPoints",
+    prompt: text("grid.line.prompt", { f: `y = ${k === 1 ? "" : k === -1 ? "-" : k}x${m === 0 ? "" : m > 0 ? ` + ${m}` : ` - ${-m}`}` }),
+    x: [-6, 6],
+    y: [-6, 6],
+    shown: [],
+    answer,
+    slips: [],
+    line: {
+      k,
+      m,
+      slips: [
+        ...(m !== 0 && m !== k ? [{ k: m, m: k, why: text("grid.line.whySwapped") }] : []),
+        { k: -k, m, why: text("grid.line.whySign") },
+        ...(m !== 0 ? [{ k, m: -m, why: text("grid.line.whyM") }] : []),
+      ],
+    },
+    tip: text("grid.line.tip"),
+    explanation: text("grid.line.explain", { k, m }),
+  };
+}
+
 export const GRID_QUESTIONS = questionType<"grid", GridProblem, GridStageId>({
   id: "grid",
   kinds: ["gridCells", "gridPoints"],
@@ -319,6 +435,9 @@ export const GRID_QUESTIONS = questionType<"grid", GridProblem, GridStageId>({
     "2.4.5": drawRectangle,
     "2.13.2": plotPoints,
     "3.4.12": transform,
+    "3.4.14": rotate,
+    "2.12.6": enlarge,
+    "3.10.4": drawLine,
   },
   key: (p) => `grid:${p.stageId}:${JSON.stringify(p.prompt)}:${p.kind === "gridCells" ? JSON.stringify([p.w, p.h, p.given]) : JSON.stringify(p.shown)}`,
 });

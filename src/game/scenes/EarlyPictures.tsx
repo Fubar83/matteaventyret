@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { Animal, ChanceColor, GroupThing, PatternItem, ShelfThing } from "../../engine/questions/scene";
 import { t } from "../../i18n";
 import { SpriteImage } from "./Sprite";
@@ -172,29 +173,41 @@ export function Ribbons({ ribbons }: { ribbons: { letter: string; start: number;
   );
 }
 
-/** A balance with a thing on each pan: the heavier side down, or level when they weigh the same. */
+/** A balance with a thing on each pan: it starts level and settles - the heavier side down, or level when they weigh the same. */
 export function WeighBalance({ left, right, heavier }: { left: ShelfThing; right: ShelfThing; heavier: "left" | "right" | "same" }) {
-  const tilt = heavier === "same" ? 0 : heavier === "left" ? -14 : 14;
+  const target = heavier === "same" ? 0 : heavier === "left" ? -14 : 14;
+  // Level at first, then it tips - the moving part that shows which is heavier.
+  const [tilt, setTilt] = useState(0);
+  useEffect(() => {
+    const id = setTimeout(() => setTilt(target), 300);
+    return () => clearTimeout(id);
+  }, [target]);
   const rad = (tilt * Math.PI) / 180;
   const half = 100;
-  // The beam's ends, turned about the middle; the pans hang straight down from them.
-  const ends = [-1, 1].map((s) => [160 + s * half * Math.cos(rad), 70 + s * half * Math.sin(rad)] as const);
+  const move = { transition: "transform 0.9s cubic-bezier(.3,1.5,.5,1)" };
   return (
     <svg viewBox="0 0 320 200" className="w-full max-w-sm" role="img" aria-label={t("scene.weigh.label", { a: t(`thing.${left}`), b: t(`thing.${right}`) })}>
       <polygon points="160,72 140,180 180,180" fill="#94a3b8" stroke={INK} strokeWidth={2} />
       <rect x={110} y={178} width={100} height={10} rx={4} fill="#64748b" />
-      <line x1={ends[0][0]} y1={ends[0][1]} x2={ends[1][0]} y2={ends[1][1]} stroke={INK} strokeWidth={6} strokeLinecap="round" />
+      <g style={{ ...move, transform: `rotate(${tilt}deg)`, transformOrigin: "160px 70px", transformBox: "view-box" }}>
+        <line x1={160 - half} y1={70} x2={160 + half} y2={70} stroke={INK} strokeWidth={6} strokeLinecap="round" />
+      </g>
       <circle cx={160} cy={70} r={6} fill={INK} />
-      {ends.map(([x, y], i) => (
-        <g key={i}>
-          <line x1={x} y1={y} x2={x - 26} y2={y + 50} stroke={INK} strokeWidth={1.5} />
-          <line x1={x} y1={y} x2={x + 26} y2={y + 50} stroke={INK} strokeWidth={1.5} />
-          <path d={`M${x - 34} ${y + 50} Q ${x} ${y + 72} ${x + 34} ${y + 50} Z`} fill="#cbd5e1" stroke={INK} strokeWidth={2} />
-          <text x={x} y={y + 40} textAnchor="middle" fontSize={34}>
-            {THING_EMOJI[i === 0 ? left : right]}
-          </text>
-        </g>
-      ))}
+      {[-1, 1].map((side, i) => {
+        // Each pan hangs from its end of the beam, wherever the beam has turned it.
+        const [dx, dy] = [side * half * (Math.cos(rad) - 1), side * half * Math.sin(rad)];
+        const x = 160 + side * half;
+        return (
+          <g key={side} style={{ ...move, transform: `translate(${dx}px, ${dy}px)` }}>
+            <line x1={x} y1={70} x2={x - 26} y2={120} stroke={INK} strokeWidth={1.5} />
+            <line x1={x} y1={70} x2={x + 26} y2={120} stroke={INK} strokeWidth={1.5} />
+            <path d={`M${x - 34} 120 Q ${x} 142 ${x + 34} 120 Z`} fill="#cbd5e1" stroke={INK} strokeWidth={2} />
+            <text x={x} y={110} textAnchor="middle" fontSize={34}>
+              {THING_EMOJI[i === 0 ? left : right]}
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }

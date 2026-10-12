@@ -6,19 +6,23 @@
  *   åk 4-6        2.16.4 bråk, decimaltal och procent: 1/4, 0,3, 35 %, 1/2
  *                 2.17.2 negativa tal: −10 is less than −2
  *                 2.9.8 längder i olika enheter: 95 cm, 1 050 mm, 11 dm, 1,2 m
+ *                 1.11.3 från omöjligt till säkert: what can be drawn from a bag
  *   åk 7-9        3.1.6 grundpotensform: 9 · 10³ is less than 2 · 10⁴
+ *                 3.9.3 ordna programmet: its lines in an order that prints the number asked
+ *                 3.3.12 ordna lösningen: an equation's steps, from the equation to x
  *
  * The things are chosen so the slip gives the wrong order: the longer number
  * isn't always the bigger, −10 isn't bigger than −2, the mantissa doesn't
  * decide before the power.
  */
 import { pick, randInt, shuffle, type Rng } from "../../rng";
-import { GROUP_THINGS, type QuestionScene } from "../scene";
+import { CHANCE_COLORS, GROUP_THINGS, type CodeLine, type QuestionScene } from "../scene";
 import { tex } from "../written/problem";
-import { fractionOption, numberOption, plainOption, text, type ChoiceOption } from "../choice/problem";
+import { linearExpression } from "../choice/functions";
+import { fractionOption, numberOption, plainOption, text, textOption, type ChoiceOption } from "../choice/problem";
 import type { SortOrderProblem } from "./problem";
 
-export type SortOrderStageId = "0.1.5" | "1.8.6" | "2.16.4" | "2.17.2" | "2.9.8" | "3.1.6";
+export type SortOrderStageId = "0.1.5" | "1.8.6" | "2.16.4" | "2.17.2" | "2.9.8" | "3.1.6" | "1.11.3" | "3.9.3" | "3.3.12";
 
 /** A thing, its value, and how it's written in a sentence. */
 interface Valued {
@@ -182,6 +186,99 @@ function standardForm(rng: Rng): SortOrderProblem {
   };
 }
 
+/** 1.11.3: what can be drawn from a bag, from impossible to certain. */
+function impossibleToCertain(rng: Rng): SortOrderProblem {
+  const [many, few, none] = shuffle(rng, CHANCE_COLORS).slice(0, 3);
+  const [m, f] = [randInt(rng, 5, 7), randInt(rng, 1, 3)];
+  const event = (key: string, vars: Record<string, string>, value: number) => ({ item: textOption(key, vars), value, say: "" });
+  const things = [
+    event("sort.event.color", { color: `@color.${none}` }, 0),
+    event("sort.event.color", { color: `@color.${few}` }, f),
+    event("sort.event.color", { color: `@color.${many}` }, m),
+    event("sort.event.either", { a: `@color.${many}`, b: `@color.${few}` }, m + f),
+  ];
+  const { list: _, ...rest } = ordered(rng, things, false);
+  return {
+    stageId: "1.11.3",
+    kind: "sortOrder",
+    prompt: text("sort.events.prompt"),
+    scene: { kind: "chance", device: "bag", colors: [{ color: many, count: m }, { color: few, count: f }] },
+    ...rest,
+    ends: [text("sort.end.impossible"), text("sort.end.certain")],
+    tip: text("sort.events.tip"),
+    explanation: text("sort.events.explain", { none: `@color.${none}`, few: `@color.${few}`, many: `@color.${many}` }),
+  };
+}
+
+const codeOption = (l: CodeLine): ChoiceOption => textOption(l.key, l.vars);
+
+/** 3.9.3: a program's lines in order - each uses what the line before made, so only one order prints the number. */
+function orderProgram(rng: Rng): SortOrderProblem {
+  const a = randInt(rng, 2, 6);
+  const b = randInt(rng, 2, 6);
+  const sum = rng() < 0.5;
+  // x = a; y = x + b; x = y · 2; print x - or s = 0; s = s + a; s = s · b; print s.
+  const lines: CodeLine[] = sum
+    ? [
+        { indent: 0, key: "code.set", vars: { v: "x", n: a } },
+        { indent: 0, key: "code.setOp", vars: { v: "y", w: "x", op: "+", n: b } },
+        { indent: 0, key: "code.setOp", vars: { v: "x", w: "y", op: "·", n: 2 } },
+        { indent: 0, key: "code.print", vars: { v: "x" } },
+      ]
+    : [
+        { indent: 0, key: "code.set", vars: { v: "s", n: 1 } },
+        { indent: 0, key: "code.setOp", vars: { v: "s", w: "s", op: "+", n: a } },
+        { indent: 0, key: "code.setOp", vars: { v: "s", w: "s", op: "·", n: b } },
+        { indent: 0, key: "code.print", vars: { v: "s" } },
+      ];
+  const r = sum ? (a + b) * 2 : (1 + a) * b;
+  const { list: _, ...rest } = ordered(
+    rng,
+    lines.map((l, i) => ({ item: codeOption(l), value: i, say: "" })),
+    false
+  );
+  return {
+    stageId: "3.9.3",
+    kind: "sortOrder",
+    prompt: text("sort.program.prompt", { r }),
+    ...rest,
+    ends: [text("sort.end.first"), text("sort.end.last")],
+    tip: text("sort.program.tip"),
+    explanation: text("sort.program.explain", { r }),
+  };
+}
+
+/** 3.3.12: an equation's solution, step by step - each step follows from the one before. */
+function orderSolution(rng: Rng): SortOrderProblem {
+  const x = randInt(rng, 2, 9);
+  const a = randInt(rng, 2, 5);
+  const b = randInt(rng, 1, 6);
+  const brackets = rng() < 0.5;
+  const steps = brackets
+    ? [`${a}(x + ${b}) = ${a * (x + b)}`, `${a}x + ${a * b} = ${a * (x + b)}`, `${a}x = ${a * x}`, `x = ${x}`]
+    : (() => {
+        // At least 2x left after taking cx off: otherwise "x = …" would come twice.
+        const c = randInt(rng, 1, Math.max(1, a - 2));
+        const k = Math.max(2, a - c);
+        const d = k * x + b;
+        return [`${linearExpression(c + k, b)} = ${linearExpression(c, d)}`, `${linearExpression(k, b)} = ${d}`, `${linearExpression(k, 0)} = ${d - b}`, `x = ${x}`];
+      })();
+  const { list: _, ...rest } = ordered(
+    rng,
+    steps.map((s, i) => ({ item: { latex: s }, value: i, say: "" })),
+    false
+  );
+  return {
+    stageId: "3.3.12",
+    kind: "sortOrder",
+    prompt: text("sort.solution.prompt"),
+    ...rest,
+    ends: [text("sort.end.first"), text("sort.end.last")],
+    tip: text("sort.solution.tip"),
+    explanation: text("sort.solution.explain", { x }),
+  };
+}
+
 export const SORT_ORDER: Record<SortOrderStageId, (rng: Rng) => SortOrderProblem> = {
   "0.1.5": fewestToMost,
   "1.8.6": orderNumbers,
@@ -189,4 +286,7 @@ export const SORT_ORDER: Record<SortOrderStageId, (rng: Rng) => SortOrderProblem
   "2.17.2": negatives,
   "2.9.8": mixedUnits,
   "3.1.6": standardForm,
+  "1.11.3": impossibleToCertain,
+  "3.9.3": orderProgram,
+  "3.3.12": orderSolution,
 };
