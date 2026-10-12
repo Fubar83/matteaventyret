@@ -24,7 +24,7 @@ player.
 | `clock` | reading and setting clocks | 1.5.1, 1.5.3–1.5.7 | [clock.md](clock.md) |
 | `shop` | paying and giving change | 1.6.2–1.6.4, 2.9.6 | [shop.md](shop.md) |
 | `written` | everything written on the free board, åk 1 – gymnasiet | 75 levels | [written.md](written.md) |
-| `choice` | recognise, compare, pick, förskoleklass to åk 9: counting, patterns, position words, fractions (pizza, chocolate), shapes, measuring, tables and charts, chance, graphs and formulas, percent, geometry, programming | 56 levels | [choice.md](choice.md) |
+| `choice` | recognise, compare, pick, förskoleklass to åk 9: counting, patterns, position words, fractions (pizza, chocolate), shapes, measuring, tables and charts, chance, graphs and formulas, percent, geometry, programming | 58 levels | [choice.md](choice.md) |
 | `sort` | sorting into groups and putting in order, förskoleklass to åk 9: shapes, odd and even, primes, fractions around a half, rational numbers; numbers, fractions and percent, negatives, lengths in different units, standard form | 17 levels | [sort.md](sort.md) |
 | `numberLine` | placing a number on a number line: whole numbers, fractions, decimals, negatives, estimating roots and π | 9 levels | [numberLine.md](numberLine.md) |
 | `grid` | drawing on a grid: finishing a symmetric figure, colouring a fraction or percent, a rectangle of given area and perimeter, plotting points, reflections and translations | 9 levels | [grid.md](grid.md) |
@@ -33,6 +33,9 @@ player.
 | `balance` | solving equations on a balance, step by step | 3 levels | [balance.md](balance.md) |
 | `experiment` | chance experiments: guess, throw, compare | 3 levels | [experiment.md](experiment.md) |
 | `construct` | constructing with ruler, protractor and compasses | 3 levels | [construct.md](construct.md) |
+| `program` | writing a program for the robot: arrows and loops, run square by square | 3 levels | [program.md](program.md) |
+| `gauge` | setting a measuring jug or a thermometer by dragging | 3 levels | [gauge.md](gauge.md) |
+| `drawChart` | drawing a bar chart or a line chart from tally marks or a table | 3 levels | [drawChart.md](drawChart.md) |
 
 ## What every type shares
 

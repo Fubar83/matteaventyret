@@ -19,6 +19,9 @@ import { PlaceValuePlayer } from "./placeValue/PlaceValuePlayer";
 import type { QuestionOutcome } from "./questionOutcome";
 import { ShopPlayer } from "./shop/ShopPlayer";
 import { SortGroupsPlayer, SortOrderPlayer } from "./sort/SortPlayer";
+import { DrawChartPlayer } from "./drawChart/DrawChartPlayer";
+import { GaugePlayer } from "./gauge/GaugePlayer";
+import { ProgramPlayer } from "./program/ProgramPlayer";
 import { StatisticsPlayer } from "./statistics/StatisticsPlayer";
 import { TrappanPlayer } from "./trappan/TrappanPlayer";
 import { ExpressionPlayer } from "./written/ExpressionPlayer";
@@ -74,6 +77,9 @@ const PLAYERS: { [K in QuestionKind]: Player<K> } = {
   balanceSolve: ({ problem, onSolved }) => <BalancePlayer problem={problem} onSolved={onSolved} />,
   experiment: ({ problem, onSolved }) => <ExperimentPlayer problem={problem} onSolved={onSolved} />,
   construct: ({ problem, onSolved }) => <ConstructPlayer problem={problem} onSolved={onSolved} />,
+  program: ({ problem, onSolved }) => <ProgramPlayer problem={problem} onSolved={onSolved} />,
+  gauge: ({ problem, onSolved }) => <GaugePlayer problem={problem} onSolved={onSolved} />,
+  drawChart: ({ problem, onSolved }) => <DrawChartPlayer problem={problem} onSolved={onSolved} />,
 };
 
 /** Every kind of question a player can be picked for. */

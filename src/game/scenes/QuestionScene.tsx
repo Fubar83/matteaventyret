@@ -6,8 +6,8 @@ import { t } from "../../i18n";
 import { Sprite } from "./Sprite";
 import { UnitStairs } from "./UnitStairs";
 import { FractionPicture, Jug, KitchenScale, NumberLine, Ruler, Thermometer } from "./MeasurePictures";
-import { CountPicture, PatternRow, Queue, Ribbons, Shelf, WeighBalance } from "./EarlyPictures";
-import { BarsPicture, CodeBlock, Graph, PieChart, TallyTable, Timetable } from "./DataPictures";
+import { CountPicture, Jar, PatternRow, Queue, Ribbons, Shelf, WeighBalance } from "./EarlyPictures";
+import { BarsPicture, Budget, CodeBlock, Graph, PieChart, TallyTable, Timetable } from "./DataPictures";
 import { AnglePicture, Crossing, Cuboid, GridShapePicture, NetPicture, ProtractorPicture, QuadPicture, SimilarTriangles, TrianglePicture } from "./GeometryPictures";
 import { RobotGrid } from "./RobotGrid";
 import { ChocolateBar, Pizzas } from "./FoodPictures";
@@ -391,6 +391,10 @@ export function ScenePicture({ scene, small = false }: { scene: Scene; small?: b
       return <Jug dl={scene.dl} />;
     case "tally":
       return <TallyTable rows={scene.rows} />;
+    case "jar":
+      return <Jar thing={scene.thing} at={scene.at} />;
+    case "budget":
+      return <Budget income={scene.income} costs={scene.costs} />;
     case "pie":
       return <PieChart sectors={scene.sectors} total={scene.total} />;
     case "timetable":

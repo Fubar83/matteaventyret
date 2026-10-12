@@ -32,6 +32,9 @@ export const STORY_FILES: readonly StoryFile[] = [
   { file: "Balance.stories.tsx", types: ["balance"] },
   { file: "Experiment.stories.tsx", types: ["experiment"] },
   { file: "Construct.stories.tsx", types: ["construct"] },
+  { file: "Program.stories.tsx", types: ["program"] },
+  { file: "Gauge.stories.tsx", types: ["gauge"] },
+  { file: "DrawChart.stories.tsx", types: ["drawChart"] },
 ];
 
 /** The levels a story file shows: those of its types the game has, in the game's order. */

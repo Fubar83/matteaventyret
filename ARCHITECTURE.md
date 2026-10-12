@@ -98,6 +98,9 @@ Three words with precise meanings:
 | `balance` | `questions/balance/` | balanceSolve | `balance/BalancePlayer` (an equation on a balance that tips, step by step) |
 | `experiment` | `questions/experiment/` | experiment | `experiment/ExperimentPlayer` (guess, spin or roll, compare) |
 | `construct` | `questions/construct/` | construct | `construct/ConstructPlayer` (ruler, protractor, compasses; drag to draw) |
+| `program` | `questions/program/` | program | `program/ProgramPlayer` (arrow cards and loops, dragged into a program; the robot runs it) |
+| `gauge` | `questions/gauge/` | gauge | `gauge/GaugePlayer` (drag a jug's water or a thermometer's line) |
+| `drawChart` | `questions/drawChart/` | drawChart | `drawChart/DrawChartPlayer` (drag bars or a line's points) |
 
 The pictures a question can show (a balance, a number line, a fraction, a
 thermometer, a robot grid…) are one shared model, `engine/questions/scene.ts`,

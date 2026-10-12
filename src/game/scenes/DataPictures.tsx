@@ -230,3 +230,31 @@ export function BarsPicture({ values, from, to, step, small = false }: { values:
     </svg>
   );
 }
+
+/** A month's budget: what comes in, what goes out - each row in kronor, the sums left to the reader. */
+export function Budget({ income, costs }: { income: { label: string; kr: number }[]; costs: { label: string; kr: number }[] }) {
+  // 18 000 kr: a space in the thousands that never breaks the line.
+  const kr = (n: number) => `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0")} kr`;
+  const row = (r: { label: string; kr: number }, sign: string, color: string) => (
+    <tr key={r.label} className="border-b last:border-b-0 border-slate-200">
+      <th className="px-3 py-1 text-left font-semibold text-slate-700">{t(r.label)}</th>
+      <td className={`px-3 py-1 text-right font-bold tabular-nums ${color}`}>
+        {sign} {kr(r.kr)}
+      </td>
+    </tr>
+  );
+  return (
+    <table className="bg-white rounded-xl border-2 border-slate-200 text-base min-w-64" aria-label={t("scene.budget.label")}>
+      <tbody>
+        <tr className="bg-emerald-50 border-b border-slate-200">
+          <th colSpan={2} className="px-3 py-1 text-left text-sm text-emerald-800">{t("scene.budget.in")}</th>
+        </tr>
+        {income.map((r) => row(r, "+", "text-emerald-700"))}
+        <tr className="bg-rose-50 border-b border-slate-200">
+          <th colSpan={2} className="px-3 py-1 text-left text-sm text-rose-800">{t("scene.budget.out")}</th>
+        </tr>
+        {costs.map((r) => row(r, "−", "text-rose-700"))}
+      </tbody>
+    </table>
+  );
+}

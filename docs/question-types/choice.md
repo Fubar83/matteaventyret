@@ -26,6 +26,7 @@ Topic modules in `engine/questions/choice/`:
 | 0.3.2 | Längst och tyngst | `early.ts` | the longest or shortest of three ribbons over squares (not always starting together); the heavier or lighter thing on a balance, or the same |
 | 1.8.2 | Större än, mindre än | `numbers.ts` | 47 □ 74: <, > or = — digits swapped, same tens, equal, up to 1000 |
 | 1.8.3 | Udda och jämna tal | `numbers.ts` | is n odd or even; which of four is odd (even) |
+| 1.8.8 | Uppskatta antal | `numbers.ts` | a jar of 15–60 things: about how many — the other options a third or less, and 2½ times or more |
 | 1.9.1 | Bråk: halva, tredjedel, fjärdedel | `fractions.ts` | how much is coloured (circle, bar, square; 2–4 parts, sometimes 6 or 8); which picture shows a half, a third, a quarter, three quarters, two thirds; del av antal — a quarter of 12, with the sharing picture |
 | 1.9.2 | Bråk: pizza och choklad | `fractions.ts` | how much of a pizza is left or eaten (2–8 slices, the eaten ones gone from the plate); how much of a chocolate bar is eaten; k friends share a pizza — how much each one gets |
 | 1.9.3 | Bråk: vem fick mest? | `fractions.ts` | two named children's pizza: one slice each of pizzas cut differently (1/3 or 1/5), slices of the same size (3/8 or 5/8), or the same amount cut differently (1/2 and 2/4); options are the two names and "Lika mycket" |
@@ -70,6 +71,7 @@ Topic modules in `engine/questions/choice/`:
 | 3.4.15 | Kongruens | `geometry.ts` | which triangle has the same three sides — turned or mirrored; not the similar one twice as big |
 | 3.2.5 | Rea och moms | `percent.ts` | 25 % off; 25 % VAT on; the price without VAT — divided by 1,25, not 25 % off |
 | 3.2.6 | Lån och amortering | `percent.ts` | the same paid back each month; the first month's interest |
+| 3.2.7 | Budget | `percent.ts` | a month's salary and costs: what's left (a cost forgotten), months of saving it for something (rounded up — one month short isn't enough), the rent's share of the salary (not of the costs) |
 | 3.9.1 | Programmering: variabler och loopar | `code.ts` | doubling in a loop, a running sum over i, medan (while), and a = b; b = a — not a swap |
 | 3.10.1 | Grafer och formler | `functions.ts` | a line on a grid: its formula y = kx + m, its k, its m, a y off it |
 | 3.10.2 | Tabeller och mönster | `functions.ts` | the formula for an x–y table; matchsticks in figure n, and in figure 100 |
@@ -121,6 +123,11 @@ right option are.
   - **Förskoleklass** questions have three options, mostly in a fixed order
     (A, B, Lika många), and pictures that never show the answer: no numbers
     on the things, no places in the queue.
+  - **Estimating** (1.8.8) scatters the things in a `jar` scene, far enough apart
+    to see each one; the options are "ungefär n" with the right one the
+    nearest ten, so an estimate tells them apart without counting.
+  - **The budget** (3.2.7) is a `budget` scene: money in and out, row by row,
+    the sums left to the child. The rent is a whole percent of the salary.
   - **Programming** uses absolute arrows (↑ ↓ ← →), each one square. A program
     stays on the 5 × 5 grid all the way. The lettered squares are where the
     slips lead: a step missed, left/right or up/down swapped, a loop run once

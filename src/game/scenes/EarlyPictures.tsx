@@ -211,3 +211,20 @@ export function WeighBalance({ left, right, heavier }: { left: ShelfThing; right
     </svg>
   );
 }
+
+/** A glass jar with things scattered in it - more than are counted at a glance. */
+export function Jar({ thing, at }: { thing: GroupThing; at: [number, number][] }) {
+  const size = at.length > 40 ? 17 : at.length > 25 ? 20 : 23;
+  return (
+    <svg viewBox="0 0 240 290" width={220} role="img" aria-label={t("scene.jar.label", { thing: t(`countThing.${thing}`) })}>
+      <rect x={70} y={8} width={100} height={22} rx={6} fill="#a16207" stroke={INK} strokeWidth={2} />
+      <path d="M78 30 L78 44 Q30 52 30 96 L30 262 Q30 282 50 282 L190 282 Q210 282 210 262 L210 96 Q210 52 162 44 L162 30 Z" fill="#e0f2fe" fillOpacity={0.55} stroke={INK} strokeWidth={2.5} />
+      <path d="M44 100 Q40 180 46 250" fill="none" stroke="#ffffff" strokeWidth={5} strokeLinecap="round" opacity={0.7} />
+      {at.map(([x, y], i) => (
+        <text key={i} x={42 + x * 156} y={88 + y * 182} textAnchor="middle" dominantBaseline="central" fontSize={size}>
+          {GROUP_EMOJI[thing]}
+        </text>
+      ))}
+    </svg>
+  );
+}

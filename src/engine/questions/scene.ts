@@ -31,6 +31,8 @@
  *   kitchenScale - a dial scale in grams, the needle to read
  *   jug         - a measuring jug in decilitres, up to a litre
  *   tally       - tally marks in a table
+ *   jar         - things scattered in a jar: too many to count at a glance, to estimate
+ *   budget      - a month's money in and out, a row each
  *   pie         - a pie chart and its legend
  *   timetable   - a bus timetable: the stops, and when each departure is there
  *   graph       - a coordinate system with lines (straight or not) through points
@@ -119,6 +121,10 @@ export type QuestionScene =
   | { kind: "jug"; dl: number }
   /** Tally marks, one row per thing (its name an i18n key). */
   | { kind: "tally"; rows: { label: string; count: number }[] }
+  /** Things scattered in a jar, at `at` (0-1 across and down the inside) - to estimate, not count. */
+  | { kind: "jar"; thing: GroupThing; at: [number, number][] }
+  /** A month's budget: money in and money out, each row named by an i18n key, in kronor. */
+  | { kind: "budget"; income: { label: string; kr: number }[]; costs: { label: string; kr: number }[] }
   /** A pie chart: each sector `parts` of the whole's `total`, named by an i18n key. */
   | { kind: "pie"; sectors: { label: string; parts: number }[]; total: number }
   /** A timetable: a row per stop, a column per departure ("08:15"). */

@@ -1,13 +1,16 @@
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { GeneratedProblem } from "../../engine/generator";
 import { applyStep, BALANCE_QUESTIONS, solvedValue, type BalanceStageId, type BalanceStep, type Pan } from "../../engine/questions/balance";
 import { BLOCKS_QUESTIONS, blocksOf, type BlocksStageId } from "../../engine/questions/blocks";
 import { CONSTRUCT_QUESTIONS, thirdCorner, type ConstructStageId } from "../../engine/questions/construct";
+import { DRAW_CHART_QUESTIONS, type DrawChartStageId } from "../../engine/questions/drawChart";
+import { GAUGE_QUESTIONS, type GaugeStageId } from "../../engine/questions/gauge";
 import { afterQuestion, EXPERIMENT_QUESTIONS, runExperiment, type ExperimentStageId } from "../../engine/questions/experiment";
 import { MATCH_QUESTIONS, type MatchStageId } from "../../engine/questions/match";
+import { flatten, PROGRAM_QUESTIONS, type ProgramStageId } from "../../engine/questions/program";
 import { makeRng } from "../../engine/rng";
 import { t } from "../../i18n";
 import { QuestionPlayer } from "../questions/QuestionPlayer";
@@ -55,7 +58,7 @@ const unmount = (page: Element) => {
 function playBoth(problem: GeneratedProblem, right: (page: Element) => void, wrong: (page: Element) => void, label: string) {
   let outcome: QuestionOutcome | null = null;
   let page = render(problem, (o) => (outcome = o));
-  expect(page.textContent, label).not.toMatch(/\b(match|blocks|balance|exp|construct|sort)\.[a-zA-Z.]+/);
+  expect(page.textContent, label).not.toMatch(/\b(match|blocks|balance|exp|construct|sort|program|gauge|drawChart)\.[a-zA-Z.]+/);
   right(page);
   expect(outcome, label).toEqual(expect.objectContaining({ helped: false, fullSetup: true }));
   unmount(page);
@@ -213,6 +216,95 @@ describe("the new types on screen", () => {
         },
         stage
       );
+    }
+  });
+
+  it("programming the robot: built by tapping, run, and the robot walks it", () => {
+    vi.useFakeTimers();
+    try {
+      for (const stage of Object.keys(PROGRAM_QUESTIONS.levels) as ProgramStageId[]) {
+        for (const seed of [1, 2, 3]) {
+          const p = PROGRAM_QUESTIONS.levels[stage](makeRng(seed));
+          const card = (page: Element, c: string) => click(page.querySelector(`[data-card="${c}"]`)!);
+          const run = (page: Element) => {
+            click(page.querySelector("[data-run]")!);
+            // A step at a time: each one's timer is set when the step before has been drawn.
+            for (let k = 0; k < flatten(p.solution).length + 4; k++) act(() => void vi.advanceTimersByTime(400));
+          };
+          playBoth(
+            p,
+            (page) => {
+              for (const s of p.solution) {
+                if (typeof s === "string") card(page, s);
+                else {
+                  card(page, "loop");
+                  const loop = [...page.querySelectorAll("[data-loop]")].at(-1)!;
+                  for (let n = 2; n < s.repeat; n++) click(loop.querySelector("[data-repeat-plus]")!);
+                  s.moves.forEach((m) => card(page, m));
+                  // Back to the program itself for what comes after the loop.
+                  click(page.querySelector('[data-drop="main"]')!);
+                }
+              }
+              run(page);
+            },
+            (page) => {
+              card(page, p.solution.find((s) => typeof s === "string") ?? "up");
+              for (const _ of [1, 2, 3]) run(page);
+            },
+            `${stage} seed ${seed}`
+          );
+        }
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("setting a jug or a thermometer, by ▲ ▼", () => {
+    for (const stage of Object.keys(GAUGE_QUESTIONS.levels) as GaugeStageId[]) {
+      for (const seed of [1, 2, 3, 4]) {
+        const p = GAUGE_QUESTIONS.levels[stage](makeRng(seed));
+        playBoth(
+          p,
+          (page) => {
+            const way = p.target > p.start ? "up" : "down";
+            for (let i = 0; i < Math.abs(p.target - p.start); i++) click(page.querySelector(`[data-nudge="${way}"]`)!);
+            check(page);
+          },
+          (page) => {
+            check(page);
+            check(page);
+          },
+          `${stage} seed ${seed}`
+        );
+      }
+    }
+  });
+
+  it("drawing a chart, by ▲ ▼ - and the right bars stay after a wrong check", () => {
+    for (const stage of Object.keys(DRAW_CHART_QUESTIONS.levels) as DrawChartStageId[]) {
+      for (const seed of [1, 2, 3]) {
+        const p = DRAW_CHART_QUESTIONS.levels[stage](makeRng(seed));
+        const nudge = (page: Element, i: number, to: number) => {
+          const way = to > p.start ? "up" : "down";
+          for (let k = 0; k < Math.abs(to - p.start) / p.step; k++) click(page.querySelector(`[data-col="${i}"][data-dir="${way}"]`)!);
+        };
+        playBoth(
+          p,
+          (page) => {
+            p.values.forEach((v, i) => nudge(page, i, v));
+            check(page);
+          },
+          (page) => {
+            // All right but the last: the first check keeps the right ones.
+            p.values.slice(0, -1).forEach((v, i) => nudge(page, i, v));
+            check(page);
+            expect(page.querySelector('[data-col="0"][data-dir="up"]')!.hasAttribute("disabled")).toBe(true);
+            check(page);
+          },
+          `${stage} seed ${seed}`
+        );
+      }
     }
   });
 

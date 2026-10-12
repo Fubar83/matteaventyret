@@ -2,6 +2,7 @@
  * Numbers to recognise and compare, as single-choice questions:
  *
  *   åk 1-3  1.8.2 större än, mindre än (<, >, =)   1.8.3 udda och jämna tal
+ *           1.8.8 uppskatta antal: a jar of 15-60 things - about 10, 30 or 100?
  *   åk 4-6  2.16.1 decimaltalens positionssystem   2.16.2 gånger och delat med 10, 100, 1000
  *           2.16.3 storleksordna decimaltal        2.17.1 negativa tal: termometern
  *           2.10.4 rimligt svar: estimate first - 48 · 21 is about 1 000
@@ -12,10 +13,11 @@
  * 0,5 because it's longer, 3,500 for 3,5 · 100, −3 + 5 = 8.
  */
 import { pick, randInt, shuffle, type Rng } from "../../rng";
+import { GROUP_THINGS } from "../scene";
 import { tex } from "../written/problem";
 import { fixedOptions, shuffledOptions, text, type ChoiceOption, type ChoiceProblem, type Slip } from "./problem";
 
-export type NumberChoiceStageId = "1.8.2" | "1.8.3" | "2.16.1" | "2.16.2" | "2.16.3" | "2.17.1" | "3.1.4" | "2.10.4" | "2.15.4";
+export type NumberChoiceStageId = "1.8.8" | "1.8.2" | "1.8.3" | "2.16.1" | "2.16.2" | "2.16.3" | "2.17.1" | "3.1.4" | "2.10.4" | "2.15.4";
 
 const latex = (s: string): ChoiceOption => ({ latex: s });
 const num = (n: number): ChoiceOption => latex(tex(n));
@@ -361,7 +363,52 @@ function primeFactors(rng: Rng): ChoiceProblem {
   };
 }
 
+/** Where things lie in a jar, 0-1 across and down: apart enough to be seen, too many to count at a glance. */
+function scatter(rng: Rng, n: number): [number, number][] {
+  let gap = 0.8 / Math.sqrt(n);
+  for (;;) {
+    const at: [number, number][] = [];
+    for (let tries = 0; at.length < n && tries < n * 60; tries++) {
+      const p: [number, number] = [rng(), rng()];
+      if (at.every(([x, y]) => Math.hypot(x - p[0], y - p[1]) >= gap)) at.push(p);
+    }
+    if (at.length === n) return at.map(([x, y]) => [Math.round(x * 1000) / 1000, Math.round(y * 1000) / 1000]);
+    gap *= 0.9;
+  }
+}
+
+/** The amounts to estimate with: far apart, so it's guessed well, not counted. */
+const ESTIMATES = [5, 10, 20, 30, 40, 50, 60, 100, 200];
+
+/**
+ * 1.8.8: things in a jar, 15-60 of them - about how many? The other options
+ * are a third or less and two and a half times or more: an estimate tells
+ * them apart without counting.
+ */
+function estimate(rng: Rng): ChoiceProblem {
+  const n = randInt(rng, 15, 60);
+  const thing = pick(rng, GROUP_THINGS);
+  const about = Math.round(n / 10) * 10;
+  const few = pick(rng, ESTIMATES.filter((e) => e <= n / 3));
+  const many = pick(rng, ESTIMATES.filter((e) => e >= n * 2.5));
+  const option = (e: number) => ({ text: text("choice.estimate.about", { n: e }) });
+  return {
+    stageId: "1.8.8",
+    kind: "choice",
+    prompt: text("choice.estimate.prompt", { thing: `@countThing.${thing}` }),
+    scene: { kind: "jar", thing, at: scatter(rng, n) },
+    ...fixedOptions(
+      [few, about, many].map(option),
+      1,
+      [text("choice.estimate.whyFew"), null, text("choice.estimate.whyMany")]
+    ),
+    tip: text("choice.estimate.tip"),
+    explanation: text("choice.estimate.explain", { n, about }),
+  };
+}
+
 export const NUMBER_CHOICES: Record<NumberChoiceStageId, (rng: Rng) => ChoiceProblem> = {
+  "1.8.8": estimate,
   "1.8.2": compare,
   "1.8.3": parity,
   "2.16.1": decimalPlace,

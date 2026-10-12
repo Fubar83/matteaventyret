@@ -11,12 +11,15 @@ import { CHOICE_QUESTIONS } from "./questions/choice";
 import { CLOCK_QUESTIONS } from "./questions/clock";
 import { COLUMN_QUESTIONS } from "./questions/column";
 import { CONSTRUCT_QUESTIONS } from "./questions/construct";
+import { DRAW_CHART_QUESTIONS } from "./questions/drawChart";
 import { EXPERIMENT_QUESTIONS } from "./questions/experiment";
+import { GAUGE_QUESTIONS } from "./questions/gauge";
 import { GRID_QUESTIONS } from "./questions/grid";
 import { MATCH_QUESTIONS } from "./questions/match";
 import { MUL_GUIDED_QUESTIONS } from "./questions/multiply";
 import { NUMBER_LINE_QUESTIONS } from "./questions/numberLine";
 import { PLACE_VALUE_QUESTIONS } from "./questions/placeValue";
+import { PROGRAM_QUESTIONS } from "./questions/program";
 import { MAX_ATTEMPTS } from "./questions/questionType";
 import { SHOP_QUESTIONS } from "./questions/shop";
 import { SHORT_DIVISION_QUESTIONS } from "./questions/shortDivision";
@@ -47,6 +50,9 @@ export const QUESTION_TYPES = [
   BALANCE_QUESTIONS,
   EXPERIMENT_QUESTIONS,
   CONSTRUCT_QUESTIONS,
+  PROGRAM_QUESTIONS,
+  GAUGE_QUESTIONS,
+  DRAW_CHART_QUESTIONS,
 ] as const;
 
 type AnyType = (typeof QUESTION_TYPES)[number];

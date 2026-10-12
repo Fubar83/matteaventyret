@@ -5,14 +5,16 @@
  *   3.2.4 ränta: a year's interest, and ränta på ränta over two years
  *   3.2.5 rea och moms: 25 % off, 25 % VAT on - and the price without VAT (not 75 %)
  *   3.2.6 lån och amortering: paying back each month, the month's interest
+ *   3.2.7 budget: what's left of the salary, months of saving (rounded up), the rent's share
  *
  * The slips: procentenheter taken for procent, 3 % as 1,3 instead of 1,03,
  * the second year's interest without the first year's on top.
  */
 import { pick, randInt, type Rng } from "../../rng";
+import { retry } from "../questionType";
 import { plainOption, shuffledOptions, text, textOption, type ChoiceProblem, type Slip } from "./problem";
 
-export type PercentChoiceStageId = "3.2.3" | "3.2.4" | "3.2.5" | "3.2.6";
+export type PercentChoiceStageId = "3.2.3" | "3.2.4" | "3.2.5" | "3.2.6" | "3.2.7";
 
 /** A Swedish number in words' company: 2 121,80 - spaces in the thousands, a comma for the öre. */
 export function swedish(n: number, decimals = 0): string {
@@ -188,7 +190,90 @@ function loans(rng: Rng): ChoiceProblem {
   };
 }
 
+/** A salary, and the share of it the rent takes - a whole number of percent, in whole hundreds of kronor. */
+const SALARY_RENT: [number, number][] = [
+  [18000, 35], [20000, 30], [20000, 35], [22000, 30], [24000, 25], [24000, 30], [25000, 28], [25000, 32], [26000, 25],
+];
+
+/**
+ * 3.2.7: a month's budget - salary in, rent, food, phone, travel and fun out.
+ * What's left over; how many months of saving that to buy something (whole
+ * months, so rounded up); what share of the salary the rent is.
+ */
+function budget(rng: Rng): ChoiceProblem {
+  return retry("budget 3.2.7", () => {
+    const [salary, rentPct] = pick(rng, SALARY_RENT);
+    const costs = [
+      { label: "choice.budget.rent", kr: (salary * rentPct) / 100 },
+      { label: "choice.budget.food", kr: 100 * randInt(rng, 30, 45) },
+      { label: "choice.budget.phone", kr: 100 * randInt(rng, 2, 4) },
+      { label: "choice.budget.travel", kr: 100 * randInt(rng, 5, 9) },
+      { label: "choice.budget.fun", kr: 100 * randInt(rng, 10, 20) },
+    ];
+    const out = costs.reduce((s, c) => s + c.kr, 0);
+    const left = salary - out;
+    if (left < 1500 || left > 6000) return null;
+    const scene = { kind: "budget" as const, income: [{ label: "choice.budget.salary", kr: salary }], costs };
+    const ask = pick(rng, ["left", "months", "rent"] as const);
+    if (ask === "left") {
+      const smallest = Math.min(...costs.map((c) => c.kr));
+      return {
+        stageId: "3.2.7",
+        kind: "choice",
+        prompt: text("choice.budget.left"),
+        scene,
+        ...shuffledOptions(rng, kronor(left), [
+          { option: kronor(left + smallest), why: text("choice.budget.whyForgot") },
+          { option: kronor(out), why: text("choice.budget.whyOut") },
+          { option: kronor(left - 1000), why: text("choice.budget.whyCount") },
+        ]),
+        tip: text("choice.budget.tipLeft"),
+        explanation: text("choice.budget.explainLeft", { s: swedish(salary), o: swedish(out), l: swedish(left) }),
+      };
+    }
+    if (ask === "months") {
+      const months = randInt(rng, 2, 5);
+      // A price that isn't saved in a whole number of months: the last month is needed too.
+      const price = 500 * Math.round((left * (months - 0.5)) / 500);
+      if (Math.ceil(price / left) !== months || price % left === 0) return null;
+      // Something that costs about that: a phone, a bike, a trip.
+      const goal = price <= 6000 ? "phone" : price <= 12000 ? "bike" : "trip";
+      const monthsOption = (n: number) => textOption(n === 1 ? "choice.budget.oneMonth" : "choice.budget.nMonths", { n });
+      return {
+        stageId: "3.2.7",
+        kind: "choice",
+        prompt: text("choice.budget.months", { p: swedish(price), goal: `@choice.budget.goal.${goal}` }),
+        scene,
+        ...shuffledOptions(rng, monthsOption(months), [
+          { option: monthsOption(months - 1), why: text("choice.budget.whyDown", { n: months - 1, s: swedish((months - 1) * left) }) },
+          { option: monthsOption(months + 1), why: text("choice.budget.whyCount") },
+          { option: monthsOption(Math.max(1, Math.round(price / salary))), why: text("choice.budget.whySalary") },
+        ]),
+        tip: text("choice.budget.tipMonths"),
+        explanation: text("choice.budget.explainMonths", { l: swedish(left), p: swedish(price), n: months, s: swedish(months * left) }),
+      };
+    }
+    const ofOut = Math.round((100 * costs[0].kr) / out);
+    const pct = (n: number) => plainOption(`${n}\u00a0%`);
+    if (ofOut === rentPct) return null;
+    return {
+      stageId: "3.2.7",
+      kind: "choice",
+      prompt: text("choice.budget.rentShare"),
+      scene,
+      ...shuffledOptions(rng, pct(rentPct), [
+        { option: pct(ofOut), why: text("choice.budget.whyOfOut") },
+        { option: pct(100 - rentPct), why: text("choice.budget.whyRest") },
+        { option: plainOption(`0,${rentPct}\u00a0%`), why: text("choice.budget.whyHundred") },
+      ]),
+      tip: text("choice.budget.tipShare"),
+      explanation: text("choice.budget.explainShare", { r: swedish(costs[0].kr), s: swedish(salary), p: rentPct }),
+    };
+  });
+}
+
 export const PERCENT_CHOICES: Record<PercentChoiceStageId, (rng: Rng) => ChoiceProblem> = {
+  "3.2.7": budget,
   "3.2.3": percentagePoints,
   "3.2.4": interest,
   "3.2.5": salesAndVat,

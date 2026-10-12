@@ -739,3 +739,40 @@ describe("ordering a program", () => {
     }
   });
 });
+
+describe("estimating and a budget", () => {
+  const of = (stage: "1.8.8" | "3.2.7") => {
+    const rng = makeRng(5);
+    return Array.from({ length: 300 }, () => CHOICE_QUESTIONS.levels[stage](rng));
+  };
+  const amount = (o: ChoiceOption) => Number(("text" in o ? o.text.vars!.n : ("plain" in o ? o.plain : "")).toString().replace(/[^\d,]/g, "").replace(",", "."));
+
+  it("1.8.8: the jar holds the count, the right estimate is the nearest ten, and the others are far off", () => {
+    for (const p of of("1.8.8")) {
+      const n = p.scene?.kind === "jar" ? p.scene.at.length : 0;
+      expect(n).toBeGreaterThanOrEqual(15);
+      const values = p.options.map(amount);
+      expect(values[p.correct]).toBe(Math.round(n / 10) * 10);
+      values.forEach((v, i) => i !== p.correct && expect(v <= n / 3 || v >= n * 2.5).toBe(true));
+      // Every thing can be seen: none lies on another.
+      const at = (p.scene as Extract<QuestionScene, { kind: "jar" }>).at;
+      for (let i = 0; i < at.length; i++) for (let j = i + 1; j < at.length; j++) expect(Math.hypot(at[i][0] - at[j][0], at[i][1] - at[j][1])).toBeGreaterThan(0.05);
+    }
+  });
+
+  it("3.2.7: the right answer is what the budget says", () => {
+    for (const p of of("3.2.7")) {
+      const scene = p.scene as Extract<QuestionScene, { kind: "budget" }>;
+      const salary = scene.income[0].kr;
+      const out = scene.costs.reduce((s, c) => s + c.kr, 0);
+      const right = p.options[p.correct];
+      if (p.prompt.key === "choice.budget.left") expect(amount(right)).toBe(salary - out);
+      if (p.prompt.key === "choice.budget.months") {
+        const price = Number(String(p.prompt.vars!.p).replace(/\D/g, ""));
+        expect(amount(right)).toBe(Math.ceil(price / (salary - out)));
+      }
+      if (p.prompt.key === "choice.budget.rentShare") expect(amount(right)).toBe((100 * scene.costs[0].kr) / salary);
+      expect(new Set(p.options.map(optionKey)).size).toBe(p.options.length);
+    }
+  });
+});

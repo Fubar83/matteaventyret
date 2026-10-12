@@ -192,6 +192,10 @@ export const CHOICE = {
   loanMonthly: choice("3.2.6", prompted("amortise")),
   loanInterest: choice("3.2.6", prompted("loan.interest")),
   litres: choice("2.9.11"),
+  estimate: choice("1.8.8"),
+  budgetLeft: choice("3.2.7", prompted("budget.left")),
+  budgetMonths: choice("3.2.7", prompted("budget.months")),
+  budgetRent: choice("3.2.7", prompted("budget.rentShare")),
 } satisfies Record<string, Match>;
 
 /** Sorting: one variant per level - each asks one thing. */
@@ -290,4 +294,27 @@ export const CONSTRUCT = {
   triangle: ofLevel("construct", "3.4.13"),
 } satisfies Record<string, Match>;
 
-export const ALL_VARIANTS: Record<string, Record<string, Match>> = { COLUMN, STATISTICS, CHARTS, CLOCK, SHOP, WRITTEN, TRAPPAN, MULTIPLICATION, CHOICE, SORT, NUMBER_LINE, GRID, MATCH, BLOCKS, BALANCE, EXPERIMENT, CONSTRUCT };
+export const PROGRAM = {
+  toTheStar: ofLevel("program", "1.12.2"),
+  loops: ofLevel("program", "2.19.4"),
+  gems: ofLevel("program", "3.9.4"),
+} satisfies Record<string, Match>;
+
+export const GAUGE = {
+  jugDl: ofLevel("gauge", "1.10.5", (p) => p.kind === "gauge" && p.change === null),
+  jugMore: ofLevel("gauge", "1.10.5", (p) => p.kind === "gauge" && p.change !== null),
+  jugLitres: ofLevel("gauge", "2.9.12", (p) => p.kind === "gauge" && p.prompt.key !== "gauge.jug.recipe"),
+  recipe: ofLevel("gauge", "2.9.12", (p) => p.kind === "gauge" && p.prompt.key === "gauge.jug.recipe"),
+  thermometer: ofLevel("gauge", "2.17.4", (p) => p.kind === "gauge" && p.change === null),
+  colder: ofLevel("gauge", "2.17.4", (p) => p.kind === "gauge" && p.change !== null && p.change < 0),
+  warmer: ofLevel("gauge", "2.17.4", (p) => p.kind === "gauge" && p.change !== null && p.change > 0),
+} satisfies Record<string, Match>;
+
+export const DRAW_CHART = {
+  tally: ofLevel("drawChart", "1.13.2"),
+  table: ofLevel("drawChart", "2.8.7"),
+  line: ofLevel("drawChart", "2.8.8", (p) => p.kind === "drawChart" && Math.min(...p.values) > 0),
+  lineMinus: ofLevel("drawChart", "2.8.8", (p) => p.kind === "drawChart" && Math.min(...p.values) < 0),
+} satisfies Record<string, Match>;
+
+export const ALL_VARIANTS: Record<string, Record<string, Match>> = { COLUMN, STATISTICS, CHARTS, CLOCK, SHOP, WRITTEN, TRAPPAN, MULTIPLICATION, CHOICE, SORT, NUMBER_LINE, GRID, MATCH, BLOCKS, BALANCE, EXPERIMENT, CONSTRUCT, PROGRAM, GAUGE, DRAW_CHART };
