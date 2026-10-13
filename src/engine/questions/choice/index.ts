@@ -6,6 +6,7 @@
  * How it works, and what must stay true: docs/question-types/choice.md.
  */
 import { questionType } from "../questionType";
+import { ALGEBRA_RULE_CHOICES, type AlgebraRuleStageId } from "./algebraRules";
 import { CHANCE_CHOICES, type ChanceChoiceStageId } from "./chance";
 import { CODE_CHOICES, type CodeChoiceStageId } from "./code";
 import { DATA_CHOICES, type DataChoiceStageId } from "./data";
@@ -20,6 +21,7 @@ import { PERCENT_CHOICES, type PercentChoiceStageId } from "./percent";
 import { optionKey } from "./problem";
 import { PROGRAMMING_CHOICES, type ProgrammingChoiceStageId } from "./programming";
 import { SHAPE_CHOICES, type ShapeChoiceStageId } from "./shapes";
+import { TRIG_CHOICES, type TrigChoiceStageId } from "./trig";
 
 /** Every single-choice question's level. */
 export type ChoiceStageId =
@@ -35,7 +37,9 @@ export type ChoiceStageId =
   | PercentChoiceStageId
   | GeometryChoiceStageId
   | ProgrammingChoiceStageId
-  | CodeChoiceStageId;
+  | CodeChoiceStageId
+  | TrigChoiceStageId
+  | AlgebraRuleStageId;
 
 export const CHOICE_QUESTIONS = questionType({
   id: "choice",
@@ -54,6 +58,8 @@ export const CHOICE_QUESTIONS = questionType({
     ...GEOMETRY_CHOICES,
     ...PROGRAMMING_CHOICES,
     ...CODE_CHOICES,
+    ...TRIG_CHOICES,
+    ...ALGEBRA_RULE_CHOICES,
   },
   key: (p) => `choice:${p.stageId}:${JSON.stringify(p.prompt)}:${p.display ?? ""}:${JSON.stringify(p.scene ?? null)}:${optionKey(p.options[p.correct])}`,
 });

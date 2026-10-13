@@ -49,6 +49,13 @@ export const BildAvrundning: Story = { name: "Bild: avrundning", args: { ...firs
 export const BildEnheter: Story = { name: "Bild: enhetstrappan", args: { ...firstMatching(LEVELS, WRITTEN.units), match: WRITTEN.units } };
 
 export const GeometriMedFigur: Story = { name: "Geometri med figur", args: { ...firstMatching(LEVELS, WRITTEN.figure), match: WRITTEN.figure } };
+export const TrigSida: Story = { name: "Trigonometri: en sida", args: { ...firstMatching(LEVELS, WRITTEN.trigSide), match: WRITTEN.trigSide } };
+export const TrigVinkel: Story = { name: "Trigonometri: en vinkel", args: { ...firstMatching(LEVELS, WRITTEN.trigAngle), match: WRITTEN.trigAngle } };
+export const TrigEkvation: Story = { name: "Trigonometriska ekvationer", args: { ...firstMatching(LEVELS, WRITTEN.trigEquation), match: WRITTEN.trigEquation } };
+export const PotenslagarSkrivna: Story = { name: "Räkna med potenslagarna", args: { ...firstMatching(LEVELS, WRITTEN.powerLawsWritten), match: WRITTEN.powerLawsWritten } };
+export const BrytaUt: Story = { name: "Bryta ut", args: { ...firstMatching(LEVELS, WRITTEN.factorOut), match: WRITTEN.factorOut } };
+export const Parenteser: Story = { name: "Multiplicera parenteser", args: { ...firstMatching(LEVELS, WRITTEN.brackets), match: WRITTEN.brackets } };
+export const FaktoriseraAndragrad: Story = { name: "Faktorisera andragradsuttryck", args: { ...firstMatching(LEVELS, WRITTEN.factorQuadratic), match: WRITTEN.factorQuadratic } };
 export const SvarMedEnhet: Story = { name: "Svar med enhet", args: { ...firstMatching(LEVELS, WRITTEN.unit), match: WRITTEN.unit } };
 
 /** Number sense: the number line, measuring with a ruler, patterns and sequences. */

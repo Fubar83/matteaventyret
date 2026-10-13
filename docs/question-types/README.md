@@ -24,11 +24,11 @@ player.
 | `clock` | reading and setting clocks | 1.5.1, 1.5.3–1.5.7 | [clock.md](clock.md) |
 | `shop` | paying and giving change | 1.6.2–1.6.4, 2.9.6 | [shop.md](shop.md) |
 | `written` | everything written on the free board, åk 1 – gymnasiet | 75 levels | [written.md](written.md) |
-| `choice` | recognise, compare, pick, förskoleklass to åk 9: counting, patterns, position words, fractions (pizza, chocolate), shapes, measuring, tables and charts, chance, graphs and formulas, percent, geometry, programming | 58 levels | [choice.md](choice.md) |
-| `sort` | sorting into groups and putting in order, förskoleklass to åk 9: shapes, odd and even, primes, fractions around a half, rational numbers; numbers, fractions and percent, negatives, lengths in different units, standard form | 17 levels | [sort.md](sort.md) |
+| `choice` | recognise, compare, pick, förskoleklass to åk 9: counting, patterns, position words, fractions (pizza, chocolate), shapes, measuring, tables and charts, chance, graphs and formulas, percent, geometry, programming | 67 levels | [choice.md](choice.md) |
+| `sort` | sorting into groups and putting in order, förskoleklass to åk 9: shapes, odd and even, primes, fractions around a half, rational numbers, the algebra rules that always hold; numbers, fractions and percent, negatives, lengths in different units, standard form | 18 levels | [sort.md](sort.md) |
 | `numberLine` | placing a number on a number line: whole numbers, fractions, decimals, negatives, estimating roots and π | 9 levels | [numberLine.md](numberLine.md) |
 | `grid` | drawing on a grid: finishing a symmetric figure, colouring a fraction or percent, a rectangle of given area and perimeter, plotting points, reflections and translations | 9 levels | [grid.md](grid.md) |
-| `match` | matching pairs: a picture and its number, number friends, clocks, fractions and percent, units, expressions, graphs and formulas | 7 levels | [match.md](match.md) |
+| `match` | matching pairs: a picture and its number, number friends, clocks, fractions and percent, units, expressions, powers, graphs and formulas | 8 levels | [match.md](match.md) |
 | `blocks` | building numbers with base-ten blocks, changing a ten into ten ones, decimals | 4 levels | [blocks.md](blocks.md) |
 | `balance` | solving equations on a balance, step by step | 3 levels | [balance.md](balance.md) |
 | `experiment` | chance experiments: guess, throw, compare | 3 levels | [experiment.md](experiment.md) |
@@ -36,6 +36,13 @@ player.
 | `program` | writing a program for the robot: arrows and loops, run square by square | 3 levels | [program.md](program.md) |
 | `gauge` | setting a measuring jug or a thermometer by dragging | 3 levels | [gauge.md](gauge.md) |
 | `drawChart` | drawing a bar chart or a line chart from tally marks or a table | 3 levels | [drawChart.md](drawChart.md) |
+| `rightTriangle` | naming a right triangle's sides from v, and building sin, cos and tan from them — by dragging | 2 levels | [rightTriangle.md](rightTriangle.md) |
+| `unitCircle` | the unit circle by hand: angles, exact values, radians | 3 levels | [unitCircle.md](unitCircle.md) |
+| `tenFrame` | the ten frame: showing a number, filling to ten, adding over ten | 3 levels | [tenFrame.md](tenFrame.md) |
+| `shareOut` | division as dealing out onto plates, with and without a remainder | 2 levels | [shareOut.md](shareOut.md) |
+| `pyramid` | number pyramids: adding up, subtracting down, the algebra pyramid's x | 3 levels | [pyramid.md](pyramid.md) |
+| `tree` | tree diagrams for two draws, with and without replacement | 2 levels | [tree.md](tree.md) |
+| `graphShape` | shaping a line, a parabola or an exponential by its handles | 3 levels | [graphShape.md](graphShape.md) |
 
 ## What every type shares
 

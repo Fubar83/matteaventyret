@@ -50,7 +50,10 @@
  *   net         - squares joined edge to edge: a net that may fold into a cube
  *   gridShape   - a polygon on squared paper, its corners on the grid points
  *   triangle    - a triangle with its sides marked, turned and maybe flipped
+ *   rightTriangle - a right triangle any way round, the angle v marked, its sides named or measured
  */
+import type { TriangleShape } from "./rightTriangle";
+
 export type ScaleTerm = { kind: "unknown"; label: string } | { kind: "weight"; value: number };
 
 /** What's in the groups, and what holds each group. */
@@ -123,6 +126,8 @@ export type QuestionScene =
   | { kind: "tally"; rows: { label: string; count: number }[] }
   /** Things scattered in a jar, at `at` (0-1 across and down the inside) - to estimate, not count. */
   | { kind: "jar"; thing: GroupThing; at: [number, number][] }
+  /** A right triangle (rightTriangle/index.ts's shape): each side's label - [leg 1, leg 2, hypotenuse] - and the marked angle's. */
+  | { kind: "rightTriangle"; shape: TriangleShape; labels: [string | null, string | null, string | null]; angle: string }
   /** A month's budget: money in and money out, each row named by an i18n key, in kronor. */
   | { kind: "budget"; income: { label: string; kr: number }[]; costs: { label: string; kr: number }[] }
   /** A pie chart: each sector `parts` of the whole's `total`, named by an i18n key. */

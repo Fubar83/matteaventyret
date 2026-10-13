@@ -9,6 +9,8 @@
  *                 2.15.3 venndiagram: divisible by 2, by 3, by both, by neither
  *                 2.12.7 fyrhörningar: four right angles or not, two pairs of parallel sides or not
  *   åk 7-9        3.1.5 rationella och irrationella tal: √9 and 3,14 against √2 and π
+ *                 3.3.17 stämmer alltid?: the rules, and the rules that only look like rules -
+ *                        (a + b)² = a² + b², √(a + b) = √a + √b
  *
  * The things that are easy to get wrong are always among them: 2 is a prime,
  * 51 isn't, 4/8 is a half, √16 is rational, 3,14 isn't π.
@@ -19,7 +21,7 @@ import { CHANCE_COLORS, PLANE_SHAPES, QUADS, SOLIDS, type PatternItem, type Quad
 import { fractionOption, numberOption, text, textOption, type ChoiceOption, type ChoiceText } from "../choice/problem";
 import type { SortGroupsProblem } from "./problem";
 
-export type SortGroupsStageId = "0.4.1" | "1.8.5" | "1.2.5" | "2.15.2" | "2.6.7" | "3.1.5" | "2.15.3" | "2.12.7";
+export type SortGroupsStageId = "0.4.1" | "1.8.5" | "1.2.5" | "2.15.2" | "2.6.7" | "3.1.5" | "2.15.3" | "2.12.7" | "3.3.17";
 
 /** A thing, the group it goes in, and why it goes there. */
 interface Sorted {
@@ -201,6 +203,50 @@ function rationalOrNot(rng: Rng): SortGroupsProblem {
   };
 }
 
+/** Equalities that always hold - the rules. */
+const ALWAYS: string[] = [
+  "(a + b)^{2} = a^{2} + 2ab + b^{2}",
+  "(a + b)(a - b) = a^{2} - b^{2}",
+  "(ab)^{2} = a^{2}b^{2}",
+  "a(b + c) = ab + ac",
+  "-(a - b) = b - a",
+  "\\frac{a + b}{c} = \\frac{a}{c} + \\frac{b}{c}",
+  "x^{a} \\cdot x^{b} = x^{a + b}",
+  "(a - b)^{2} = (b - a)^{2}",
+  "\\frac{a}{b} \\cdot \\frac{c}{d} = \\frac{ac}{bd}",
+];
+/** Equalities that look like rules and aren't - each with the numbers that show it. */
+const LOOKS_LIKE: { latex: string; why: string }[] = [
+  { latex: "(a + b)^{2} = a^{2} + b^{2}", why: "square" },
+  { latex: "\\sqrt{a + b} = \\sqrt{a} + \\sqrt{b}", why: "rootSum" },
+  { latex: "\\frac{a}{b + c} = \\frac{a}{b} + \\frac{a}{c}", why: "splitBottom" },
+  { latex: "-a^{2} = (-a)^{2}", why: "minusSquare" },
+  { latex: "\\frac{a + b}{a} = b", why: "cancelTerm" },
+  { latex: "x^{a} \\cdot x^{b} = x^{ab}", why: "powerTimes" },
+  { latex: "(x^{a})^{b} = x^{a + b}", why: "powerPlus" },
+  { latex: "a - (b + c) = a - b + c", why: "minusBracket" },
+  { latex: "\\frac{a}{b} + \\frac{c}{d} = \\frac{a + c}{b + d}", why: "addFractions" },
+];
+
+/** Fractions at full size on a card. */
+const full = (latex: string) => latex.replace(/\\frac/g, "\\dfrac");
+
+/** 3.3.17: which equalities always hold - three rules among three that only look like rules. */
+function alwaysTrue(rng: Rng): SortGroupsProblem {
+  return {
+    stageId: "3.3.17",
+    kind: "sortGroups",
+    prompt: text("sort.always.prompt"),
+    groups: [textOption("sort.group.always"), textOption("sort.group.notAlways")],
+    ...sorted(rng, [
+      ...shuffle(rng, ALWAYS).slice(0, 3).map((latex) => ({ item: { latex: full(latex) }, group: 0, why: text("sort.why.always") })),
+      ...shuffle(rng, LOOKS_LIKE).slice(0, 3).map((f) => ({ item: { latex: full(f.latex) }, group: 1, why: text(`sort.why.not.${f.why}`) })),
+    ]),
+    tip: text("sort.always.tip"),
+    explanation: text("sort.always.explain"),
+  };
+}
+
 /** Pairs of divisors for a Venn diagram - different enough that every part of it gets numbers. */
 const DIVISORS: [number, number][] = [
   [2, 3],
@@ -274,4 +320,5 @@ export const SORT_GROUPS: Record<SortGroupsStageId, (rng: Rng) => SortGroupsProb
   "3.1.5": rationalOrNot,
   "2.15.3": venn,
   "2.12.7": quadrilaterals,
+  "3.3.17": alwaysTrue,
 };

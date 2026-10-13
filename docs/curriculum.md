@@ -13,7 +13,7 @@ Lgr22's förskoleklass chapter: the mathematical thinking that åk 1 builds on.
 
 | Area | Content | Levels | |
 |---|---|---|---|
-| Tal | Counting things, how many | 0.1.1 Räkna, 0.1.7 Para ihop: antal och siffra, 0.1.8 Bygg talet till 20 | ✓ |
+| Tal | Counting things, how many | 0.1.1 Räkna, 0.1.7 Para ihop: antal och siffra, 0.1.8 Bygg talet till 20, 0.1.9 Tiorutan | ✓ |
 | | Comparing amounts: more, fewer, the same | 0.1.2 Fler, färre, lika många | ✓ |
 | | The order of the numbers: before, after, between | 0.1.3 Före och efter, 0.1.6 Var på tallinjen? | ✓ |
 | | Ordinal numbers | 0.1.4 Ordningstal | ✓ |
@@ -29,7 +29,7 @@ Lgr22's förskoleklass chapter: the mathematical thinking that åk 1 builds on.
 | Taluppfattning | Natural numbers: how they're split up, used for amounts and order | 1.1.1 Positionssystemet, 1.8.1 Tallinjen, 1.8.2 Större än, mindre än, 1.8.3 Udda och jämna, 1.8.5 Sortera: udda och jämna, 1.8.6 Storleksordna tal, 1.8.7 Tallinjen till 100 och 1000, 0.1.4 Ordningstal | ✓ |
 | | The place-value system | 1.1.1, 1.14.1 Bygg tresiffriga tal, 1.14.2 Växla och ta bort | ✓ |
 | | Part of a whole and of an amount; simple fractions (halv, tredjedel, fjärdedel) | 1.9.1 Bråk (pictures, del av antal), 1.9.2 Bråk: pizza och choklad, 1.9.3 Bråk: vem fick mest?, 1.9.4 Färglägg en del | ✓ |
-| | The four operations, mental arithmetic | 1.7.1 Tiokamrater, 1.7.2 Plus och minus inom 20, 1.7.3 Dubbelt och hälften, 1.7.4 Huvudräkning med tiotal, 1.4.1 Gångertabellen, 1.4.2 Dela lika, 1.7.5 Para ihop talkamrater | ✓ |
+| | The four operations, mental arithmetic | 1.7.1 Tiokamrater, 1.7.2 Plus och minus inom 20, 1.7.3 Dubbelt och hälften, 1.7.4 Huvudräkning med tiotal, 1.4.1 Gångertabellen, 1.4.2 Dela lika, 1.4.4 Dela ut lika, 1.4.5 Dela med rest, 1.7.5 Para ihop talkamrater, 1.7.6 Tiorutan: till tio, 1.7.7 Över tiotalet, 1.7.8 Talpyramider | ✓ |
 | | Written methods | 1.1.2–1.1.7 Uppställning | ✓ |
 | | Estimation and reasonableness | 1.8.8 Uppskatta antal, (2.10.3 Överslag, 2.10.4 Rimligt svar?, åk 4–6) | ✓ |
 | Algebra | Equality and the equals sign | 1.4.3 Vilket tal saknas? (the balance) | ✓ |
@@ -52,7 +52,7 @@ Lgr22's förskoleklass chapter: the mathematical thinking that åk 1 builds on.
 | Taluppfattning | Positive rational numbers; place value with decimals | 2.16.1 Decimaltalens positionssystem, 2.16.3 Storleksordna decimaltal, 2.16.4 Bråk, decimaltal och procent i ordning, 2.16.5 Decimaltal på tallinjen, 2.16.6 Bygg decimaltal, 2.16.7 Inzoomade tallinjer | ✓ |
 | | Fractions, decimals and percent, and how they relate | 2.6.1–2.6.4, 2.6.5 Lika stora bråk, 2.6.6 Bråk i vardagen, 2.6.7 Bråk kring en halv, 2.6.8 Bråk på tallinjen, 2.6.9 Procent av en figur, 2.6.10 Para ihop bråk, decimaltal och procent | ✓ |
 | | Negative numbers in everyday situations | 2.17.1 Negativa tal: termometern, 2.17.2 Storleksordna negativa tal, 2.17.3 Negativa tal på tallinjen, 2.17.4 Ställ termometern | ✓ |
-| | Mental, estimated and written calculation with natural numbers and decimals | 2.1.1–2.1.6, 2.3.3–2.3.4, 2.5.1–2.5.8 Trappan, 2.16.2 · och / med 10, 100, 1000, 2.10.3 Överslag, 2.10.4 Rimligt svar? | ✓ |
+| | Mental, estimated and written calculation with natural numbers and decimals | 2.1.1–2.1.6, 2.3.3–2.3.4, 2.5.1–2.5.8 Trappan, 2.16.2 · och / med 10, 100, 1000, 2.10.3 Överslag, 2.10.4 Rimligt svar?, 2.1.7 Talpyramider till 100 | ✓ |
 | | Divisibility and primes | 2.15.1, 2.15.2 Sortera: primtal, 2.15.3 Venndiagram, 2.15.4 Primtalsfaktorisering | ✓ |
 | Algebra | Unknown numbers, simple expressions and equations | 2.14.1, 2.10.1 Räkneordning, 2.14.2 Ekvationsvågen | ✓ |
 | | Patterns in number sequences | 2.20.1 Talföljder | ✓ |
@@ -76,10 +76,10 @@ Lgr22's förskoleklass chapter: the mathematical thinking that åk 1 builds on.
 | Area | Lgr22 content | Levels | |
 |---|---|---|---|
 | Taluppfattning | Real numbers and their properties: negative numbers, square roots | 3.1.1 Negativa tal, 3.1.4 Kvadratrötter, 3.1.5 Rationella och irrationella tal, 3.1.7 Uppskatta på tallinjen | ✓ |
-| | Powers and standard form | 3.1.2 Potenser, 3.1.3 Grundpotensform, 3.1.6 Grundpotensform i storleksordning | ✓ |
+| | Powers and standard form | 3.1.2 Potenser, 3.1.3 Grundpotensform, 3.1.6 Grundpotensform i storleksordning, 3.1.8 Potenslagar, 3.1.9 Räkna med potenslagarna, 3.1.11 Para ihop: potenser, 3.1.10 Räkneregler för rötter | ✓ |
 | | Fractions: multiplying and dividing | 3.5.1 | ✓ |
 | | Percent, procentenheter, change factor, interest | 3.2.1 Procent av, 3.2.2 Förändringsfaktor, 3.2.3 Procentenheter, 3.2.4 Ränta, 3.2.5 Rea och moms, 3.2.6 Lån och amortering, 3.2.7 Budget | ✓ |
-| Algebra | Variables, expressions, formulas, equations and inequalities | 3.3.1 Förenkla uttryck, 3.3.2–3.3.3 Ekvationer, 3.3.8 Olikheter, 3.3.9 Para ihop uttryck, 3.3.10–3.3.11 Ekvationsvågen, 3.3.12 Ordna lösningen, 3.3.4–3.3.6 (towards gymnasiet) | ✓ |
+| Algebra | Variables, expressions, formulas, equations and inequalities | 3.3.1 Förenkla uttryck, 3.3.2–3.3.3 Ekvationer, 3.3.8 Olikheter, 3.3.9 Para ihop uttryck, 3.3.10–3.3.11 Ekvationsvågen, 3.3.12 Ordna lösningen, 3.3.13 Minus framför parentes, 3.3.14 Bryta ut, 3.3.18 Multiplicera parenteser, 3.3.16 Lösa ut ur formler, 3.3.17 Stämmer alltid?, 3.3.19 Algebrapyramid, 3.3.4–3.3.6 (towards gymnasiet) | ✓ |
 | | Patterns expressed algebraically | 3.3.7 Mönster och talföljder, 3.10.2 Tabeller och mönster | ✓ |
 | | Algorithms and programming: variables, loops, conditions | 3.9.1 Programmering: variabler och loopar, 3.9.2 Vilken rad saknas?, 3.9.3 Ordna programmet, 3.9.4 Programmera: samla diamanterna | ◐ block programs are written; text programs are read, completed and ordered, not written |
 | Geometri | Area and volume, the circle, surface area | 3.4.3–3.4.8, 3.4.11 Begränsningsarea | ✓ |
@@ -87,9 +87,9 @@ Lgr22's förskoleklass chapter: the mathematical thinking that åk 1 builds on.
 | | Angles: vertical, adjacent, in a triangle | 2.12.1 Vinklar, 3.4.10 Vertikalvinklar och sidovinklar | ✓ |
 | | Similarity, congruence, symmetry, reflections and translations; scale | 3.4.9 Likformighet, 3.4.12 Spegling och förflyttning, 3.6.2 Skala, 3.4.14 Vridning, 3.4.15 Kongruens | ✓ |
 | | Constructions | 3.4.12 (points on a grid), 3.4.13 Konstruera en triangel (ruler and compasses) | ✓ |
-| Samband och förändring | Functions and linear functions: tables, graphs, formulas | 3.4.2 Räta linjens ekvation, 3.10.1 Grafer och formler, 3.10.2, 3.10.3 Para ihop graf och formel, 3.10.4 Rita linjen | ✓ |
+| Samband och förändring | Functions and linear functions: tables, graphs, formulas | 3.4.2 Räta linjens ekvation, 3.10.1 Grafer och formler, 3.10.2, 3.10.3 Para ihop graf och formel, 3.10.4 Rita linjen, 3.10.5 Forma linjen | ✓ |
 | | Speed, distance, time | 3.6.1 | ✓ |
-| Sannolikhet och statistik | Probability, in one and two steps | 3.7.1, 3.7.2, 3.7.5 Två tärningar | ✓ |
+| Sannolikhet och statistik | Probability, in one and two steps | 3.7.1, 3.7.2, 3.7.5 Två tärningar, 3.7.6 Träddiagram, 3.7.7 Träddiagram utan återläggning | ✓ |
 | | Measures of centre and spread; reviewing statistics | 2.7.1–2.7.5, 3.7.3 Medelvärde eller median?, 3.7.4 Missvisande diagram | ✓ |
 | Problemlösning | Problems with percent, ratios and equations | 3.8.1, 3.8.2 Textuppgifter | ✓ |
 

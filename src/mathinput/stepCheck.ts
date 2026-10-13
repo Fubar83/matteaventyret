@@ -81,7 +81,9 @@ function endsInNumber(latex: string): boolean {
   const plain = (e: typeof side) => e.kind === "num" || (e.kind === "neg" && e.arg.kind === "num");
   // A percentage written out ("46 %" reads as 46 / 100) is a number too.
   const percent = side.kind === "bin" && side.op === "/" && plain(side.left) && side.right.kind === "num" && side.right.value === 100;
-  return plain(side) || percent;
+  // So is an angle ("v = 30°").
+  const degrees = side.kind === "deg" && plain(side.arg);
+  return plain(side) || percent || degrees;
 }
 
 export type StepVerdict =

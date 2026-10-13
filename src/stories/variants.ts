@@ -78,6 +78,13 @@ export const WRITTEN = {
   units: scene("units"),
   figure: expression((p) => !!p.figure),
   unit: expression((p) => !!p.unit && !p.figure && !p.scene),
+  trigSide: expression((p) => p.stageId === "4.2.8" && p.promptKey === "adv.prompt.trigSide"),
+  trigAngle: expression((p) => p.stageId === "4.2.8" && p.promptKey === "adv.prompt.trigAngle"),
+  trigEquation: expression((p) => p.stageId === "4.2.12"),
+  powerLawsWritten: expression((p) => p.stageId === "3.1.9"),
+  factorOut: expression((p) => p.stageId === "3.3.14"),
+  brackets: expression((p) => p.stageId === "3.3.18"),
+  factorQuadratic: expression((p) => p.stageId === "4.1.6"),
 } satisfies Record<string, Match>;
 
 export const TRAPPAN = {
@@ -196,6 +203,22 @@ export const CHOICE = {
   budgetLeft: choice("3.2.7", prompted("budget.left")),
   budgetMonths: choice("3.2.7", prompted("budget.months")),
   budgetRent: choice("3.2.7", prompted("budget.rentShare")),
+  trigExact: choice("4.2.6", prompted("trig.exact")),
+  trigAngle: choice("4.2.6", prompted("trig.whichAngle")),
+  trigTriangle: choice("4.2.6", prompted("trig.fromTriangle")),
+  trigSupplement: choice("4.2.7", (p) => prompted("trig.equalTo")(p) && /^.sin \d/.test(p.display ?? "")),
+  trigComplement: choice("4.2.7", (p) => prompted("trig.equalTo")(p) && /^.cos \d/.test(p.display ?? "")),
+  trigNegative: choice("4.2.7", (p) => p.display?.includes("(-") === true),
+  trigPythagoras: choice("4.2.7", prompted("trig.pythagoras")),
+  trigTan: choice("4.2.7", prompted("trig.tanFrom")),
+  trigSquares: choice("4.2.7", prompted("trig.calculateExact")),
+  powerLaws: choice("3.1.8"),
+  rootRules: choice("3.1.10"),
+  minusBracket: choice("3.3.13"),
+  algebraFractions: choice("3.3.15"),
+  rearrange: choice("3.3.16"),
+  exponents: choice("4.1.4"),
+  logLaws: choice("4.1.5"),
 } satisfies Record<string, Match>;
 
 /** Sorting: one variant per level - each asks one thing. */
@@ -207,6 +230,7 @@ export const SORT = {
   primes: sortLevel("2.15.2"),
   aroundAHalf: sortLevel("2.6.7"),
   rational: sortLevel("3.1.5"),
+  always: sortLevel("3.3.17"),
   fewestToMost: sortLevel("0.1.5"),
   numbers: sortLevel("1.8.6"),
   mixedForms: sortLevel("2.16.4"),
@@ -264,6 +288,7 @@ export const MATCH = {
   forms: ofLevel("match", "2.6.10"),
   units: ofLevel("match", "2.9.9"),
   expressions: ofLevel("match", "3.3.9"),
+  powers: ofLevel("match", "3.1.11"),
   graphs: ofLevel("match", "3.10.3"),
 } satisfies Record<string, Match>;
 
@@ -317,4 +342,50 @@ export const DRAW_CHART = {
   lineMinus: ofLevel("drawChart", "2.8.8", (p) => p.kind === "drawChart" && Math.min(...p.values) < 0),
 } satisfies Record<string, Match>;
 
-export const ALL_VARIANTS: Record<string, Record<string, Match>> = { COLUMN, STATISTICS, CHARTS, CLOCK, SHOP, WRITTEN, TRAPPAN, MULTIPLICATION, CHOICE, SORT, NUMBER_LINE, GRID, MATCH, BLOCKS, BALANCE, EXPERIMENT, CONSTRUCT, PROGRAM, GAUGE, DRAW_CHART };
+export const RIGHT_TRIANGLE = {
+  name: ofLevel("rightTriangle", "4.2.4"),
+  sin: ofLevel("rightTriangle", "4.2.5", (p) => p.kind === "rightTriangle" && p.fn === "sin"),
+  cos: ofLevel("rightTriangle", "4.2.5", (p) => p.kind === "rightTriangle" && p.fn === "cos"),
+  tan: ofLevel("rightTriangle", "4.2.5", (p) => p.kind === "rightTriangle" && p.fn === "tan"),
+} satisfies Record<string, Match>;
+
+export const TEN_FRAME = {
+  show: ofLevel("tenFrame", "0.1.9"),
+  toTen: ofLevel("tenFrame", "1.7.6"),
+  overTen: ofLevel("tenFrame", "1.7.7"),
+} satisfies Record<string, Match>;
+
+export const SHARE_OUT = {
+  exact: ofLevel("shareOut", "1.4.4"),
+  rest: ofLevel("shareOut", "1.4.5"),
+} satisfies Record<string, Match>;
+
+export const PYRAMID = {
+  small: ofLevel("pyramid", "1.7.8"),
+  wide: ofLevel("pyramid", "2.1.7", (p) => p.kind === "pyramid" && p.values[0].length === 4),
+  subtract: ofLevel("pyramid", "2.1.7", (p) => p.kind === "pyramid" && p.values[0].length === 3),
+  algebra: ofLevel("pyramid", "3.3.19"),
+} satisfies Record<string, Match>;
+
+export const TREE = {
+  back: ofLevel("tree", "3.7.6"),
+  kept: ofLevel("tree", "3.7.7"),
+  mixed: ofLevel("tree", "3.7.7", (p) => p.kind === "tree" && p.ask === "mixed"),
+} satisfies Record<string, Match>;
+
+export const GRAPH_SHAPE = {
+  lineFormula: ofLevel("graphShape", "3.10.5", (p) => p.kind === "graphShape" && p.given === "formula"),
+  lineGraph: ofLevel("graphShape", "3.10.5", (p) => p.kind === "graphShape" && p.given === "graph"),
+  parabola: ofLevel("graphShape", "4.1.7"),
+  exponential: ofLevel("graphShape", "4.1.8"),
+} satisfies Record<string, Match>;
+
+export const UNIT_CIRCLE = {
+  angle: ofLevel("unitCircle", "4.2.9", (p) => p.kind === "unitCircle" && p.about.type === "angle"),
+  signs: ofLevel("unitCircle", "4.2.9", (p) => p.kind === "unitCircle" && p.about.type === "signs"),
+  value: ofLevel("unitCircle", "4.2.10", (p) => p.kind === "unitCircle" && p.about.type === "value"),
+  same: ofLevel("unitCircle", "4.2.10", (p) => p.kind === "unitCircle" && p.about.type === "same"),
+  radians: ofLevel("unitCircle", "4.2.11"),
+} satisfies Record<string, Match>;
+
+export const ALL_VARIANTS: Record<string, Record<string, Match>> = { COLUMN, STATISTICS, CHARTS, CLOCK, SHOP, WRITTEN, TRAPPAN, MULTIPLICATION, CHOICE, SORT, NUMBER_LINE, GRID, MATCH, BLOCKS, BALANCE, EXPERIMENT, CONSTRUCT, PROGRAM, GAUGE, DRAW_CHART, RIGHT_TRIANGLE, UNIT_CIRCLE, TEN_FRAME, SHARE_OUT, PYRAMID, TREE, GRAPH_SHAPE };

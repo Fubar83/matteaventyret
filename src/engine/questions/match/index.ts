@@ -8,6 +8,7 @@
  *                 2.9.9 lika mycket i olika enheter: 1,5 m and 150 cm, 2 kg and 2 000 g
  *   åk 7-9        3.3.9 uttryck: 2(x + 3) and 2x + 6, x · x and x²
  *                 3.10.3 graf och formel: a line and its y = kx + m
+ *                 3.1.11 potenser: x³ · x² and x⁵, (x²)³ and x⁶, x⁻¹ and 1/x
  *
  * Each card belongs to exactly one other: the pairs are chosen so no card
  * could go with two.
@@ -22,7 +23,7 @@ import { GROUP_THINGS, type QuestionScene } from "../scene";
 import { questionType, retry } from "../questionType";
 import { tex } from "../written/problem";
 
-export type MatchStageId = "0.1.7" | "1.7.5" | "1.5.10" | "2.6.10" | "2.9.9" | "3.3.9" | "3.10.3";
+export type MatchStageId = "0.1.7" | "1.7.5" | "1.5.10" | "2.6.10" | "2.9.9" | "3.3.9" | "3.10.3" | "3.1.11";
 
 export interface MatchProblem {
   stageId: MatchStageId;
@@ -205,6 +206,47 @@ const EXPRESSIONS: ((rng: Rng) => [string, string])[] = [
   },
 ];
 
+/**
+ * 3.1.11: powers and the one power they are - each law once, and every
+ * answer a different power of x, so no card could go with two.
+ */
+function powers(rng: Rng): MatchProblem {
+  const pairs = retry("3.1.11", () => {
+    const made: [string, number][] = shuffle(rng, [
+      () => {
+        const [a, b] = [randInt(rng, 2, 5), randInt(rng, 2, 4)];
+        return [`x^{${a}} \\cdot x^{${b}}`, a + b] as [string, number];
+      },
+      () => {
+        const [a, b] = [randInt(rng, 2, 3), randInt(rng, 2, 3)];
+        return [`(x^{${a}})^{${b}}`, a * b] as [string, number];
+      },
+      () => {
+        const [a, b] = [randInt(rng, 6, 10), randInt(rng, 2, 4)];
+        return [`\\dfrac{x^{${a}}}{x^{${b}}}`, a - b] as [string, number];
+      },
+      () => [pick(rng, ["x^{0}", "\\dfrac{x^{4}}{x^{4}}"]), 0] as [string, number],
+      () => ["x^{-1}", -1] as [string, number],
+      () => ["\\sqrt{x}", 0.5] as [string, number],
+    ])
+      .slice(0, 4)
+      .map((make) => make());
+    return new Set(made.map(([, n]) => n)).size === 4 ? made : null;
+  });
+  const power = (n: number): ChoiceOption => ({ latex: n === 0 ? "1" : n === 1 ? "x" : n === -1 ? "\\dfrac{1}{x}" : n === 0.5 ? "x^{\\frac{1}{2}}" : `x^{${n}}` });
+  return {
+    stageId: "3.1.11",
+    kind: "match",
+    prompt: text("match.powers.prompt"),
+    cards: cards(
+      rng,
+      pairs.map(([shown, n]) => [{ latex: shown }, power(n)])
+    ),
+    tip: text("match.powers.tip"),
+    explanation: text("match.powers.explain"),
+  };
+}
+
 /** 3.3.9: an expression and its simplified form. */
 function expressions(rng: Rng): MatchProblem {
   const pairs = retry("3.3.9", () => {
@@ -261,6 +303,7 @@ export const MATCH_QUESTIONS = questionType<"match", MatchProblem, MatchStageId>
     "2.9.9": units,
     "3.3.9": expressions,
     "3.10.3": graphs,
+    "3.1.11": powers,
   },
   key: (p) => `match:${p.stageId}:${p.cards.map((c) => JSON.stringify(c.option)).sort().join("|")}`,
 });

@@ -10,6 +10,7 @@ import { CountPicture, Jar, PatternRow, Queue, Ribbons, Shelf, WeighBalance } fr
 import { BarsPicture, Budget, CodeBlock, Graph, PieChart, TallyTable, Timetable } from "./DataPictures";
 import { AnglePicture, Crossing, Cuboid, GridShapePicture, NetPicture, ProtractorPicture, QuadPicture, SimilarTriangles, TrianglePicture } from "./GeometryPictures";
 import { RobotGrid } from "./RobotGrid";
+import { RightTriangle } from "./TrigPictures";
 import { ChocolateBar, Pizzas } from "./FoodPictures";
 import { ChanceDevice, ShapePicture, SymmetryGrid } from "./ShapePictures";
 import type { SpriteName } from "./spriteNames";
@@ -391,6 +392,8 @@ export function ScenePicture({ scene, small = false }: { scene: Scene; small?: b
       return <Jug dl={scene.dl} />;
     case "tally":
       return <TallyTable rows={scene.rows} />;
+    case "rightTriangle":
+      return <RightTriangle shape={scene.shape} labels={{ leg1: scene.labels[0], leg2: scene.labels[1], hyp: scene.labels[2] }} angle={scene.angle} width={small ? 160 : 340} />;
     case "jar":
       return <Jar thing={scene.thing} at={scene.at} />;
     case "budget":

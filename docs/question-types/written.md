@@ -1,7 +1,7 @@
 # Written questions — `written`
 
 Everything answered by writing on the free board, from åk 1's mental
-arithmetic to gymnasiet's integrals: 75 levels of `kind: "expression"`. Facts to know, like
+arithmetic to gymnasiet's integrals: 81 levels of `kind: "expression"`. Facts to know, like
 the times tables, ask for just the answer instead.
 
 ## Levels
@@ -16,7 +16,7 @@ One type; its levels come from six topic modules in
 | `wordProblems.ts` | 1.3.1, 1.3.2, 2.11.1, 2.11.2, 3.8.1, 3.8.2 | textuppgifter, one step to several, percent, equations from the words |
 | `geometry.ts` | 1.2.1, 2.4.1–2.4.4, 3.4.3–3.4.6, 4.2.2, 4.2.3 | perimeter and area with a figure: rectangles to composite shapes, circles, sectors, the area rule |
 | `examTopics.ts` | 2.6.1–2.6.4, 2.9.1–2.9.3, 2.10.1, 2.10.2, 3.3.7, 3.4.7, 3.4.8, 3.5.1, 3.6.1, 3.6.2, 3.7.1, 3.7.2, 4.1.3 | the national tests' topics: fractions, units, order of operations, rounding, speed, scale, probability, volume, sequences, equation systems |
-| `advanced.ts` | 3.1.1–3.1.3, 3.2.1, 3.2.2, 3.3.1–3.3.6, 3.4.1, 3.4.2, 4.1.1, 4.1.2, 4.2.1, 4.3.1, 4.3.2 | åk 7–9 and gymnasiet: negative numbers, powers, percent, algebra, the square rules, quadratics, Pythagoras, lines, pq, logarithms, trigonometry, derivatives, integrals |
+| `advanced.ts` | 3.1.1–3.1.3, 3.1.9, 3.2.1, 3.2.2, 3.3.1–3.3.6, 3.3.14, 3.3.18, 3.4.1, 3.4.2, 4.1.1, 4.1.2, 4.1.6, 4.2.1, 4.2.8, 4.2.12, 4.3.1, 4.3.2 | åk 7–9 and gymnasiet: negative numbers, powers and the power laws, percent, algebra (factoring out, multiplying brackets), the square rules, quadratics (and factoring them), Pythagoras, lines, pq, logarithms, trigonometry (exact values, sides and angles without a calculator, equations), derivatives, integrals |
 
 Each level's title is `stage.<id>` in `i18n/`.
 
@@ -32,7 +32,7 @@ Each level's title is `stage.<id>` in `i18n/`.
 | `tipKey`, `firstStep`, `solution` | the help ladder: a tip, the first step, the whole worked solution (LaTeX lines) |
 | `steps` | the solution as guided steps; `stepsOf` makes them from `solution` when absent |
 | `figure` | geometry: the shape, its measurements marked (`GeometryFigure`) |
-| `scene` | a picture (`engine/questions/scene.ts`): a `balance`, `groups`, `share`, `rounding`, `units` (the unit staircase), a `numberLine` or a `ruler` |
+| `scene` | a picture (`engine/questions/scene.ts`): a `balance`, `groups`, `share`, `rounding`, `units` (the unit staircase), a `numberLine`, a `ruler` or a `rightTriangle` |
 | `unit` | the answer's unit ("cm", "m²"), written after it but not part of the number |
 | `answerOnly` | a fact to know: just the answer, picked among `choices` or written |
 
@@ -42,7 +42,7 @@ Each level's title is `stage.<id>` in `i18n/`.
 |---|---|
 | `value` | the number, with Swedish decimals. `approx` answers (π, sin) may be written with ≈ and must be the exact value correctly rounded (π as 3,14 allowed). `fraction`: a fraction in its lowest terms (2/3, not 4/6 or 0,666…) |
 | `solutions` | every solution of an equation (`x = 2` and `x = −3`); some still missing is not wrong, just not done |
-| `expression` | an expression equal to `latex`, in its required `form`: `expanded` (utveckla) or `factored` (faktorisera) |
+| `expression` | an expression equal to `latex`, in its required `form`: `expanded` (utveckla) or `factored` (faktorisera). Factored means all the way: no bracket keeps a common factor (6x + 15 is 3(2x + 5), not 2(3x + 7,5)), and nothing common to every term in it |
 | `system` | an equation system's values, one per variable |
 
 Two questions are the same when their level, display, prompt values and worked
@@ -64,6 +64,30 @@ solution are; a geometry question is all in its figure.
   read; counting on from the nearest numbered tick is the worked step.
 - On the ruler, the thing starts at 0, or at a whole centimetre (then it's
   the end minus the start; the end alone is a slip offered).
+- **2.4.4**'s L-shape never cuts away exactly half the rectangle: the corner's
+  area would then already be the answer. Such a corner is drawn again - only
+  those seeds' questions changed (2026-10).
+- **The power laws with numbers** (3.1.9): one base (2, 3, 5 or 10), a
+  quotient, a product, a power of a power, a negative exponent or both laws,
+  always ending at a power small enough to work out (2⁶, 3⁴, 5³, 10⁴).
+- **Factoring out** (3.3.14): a number (k(ax + b), a and b without a common
+  factor), x (x(x + b)) or both (kx(ax + b)) - the bracket left has nothing in
+  common, so the factoring is complete.
+- **Multiplying brackets** (3.3.18): a(x + b) − c(x + d), where the minus
+  changes every sign in the second bracket; or (x + a)(x + b), four products.
+- **Factoring quadratics** (4.1.6): x² + bx + c with two different whole
+  roots, not opposite (that's the conjugate rule's).
+- **Trigonometry without a calculator** (4.2.8) draws the right triangle
+  (`rightTriangle` scene, turned and mirrored, v at either corner). A side:
+  the triangle is a Pythagorean triple times 2–4, the ratio is given exact
+  (sin v = 3/5) and x is the top of the ratio (x = 20 · 3/5) or, less often,
+  its bottom (x = 9 · 5/3). An angle: two sides in a table ratio - 1 : 2 is
+  sin 30° or cos 60°, equal legs tan 45° - drawn true to shape. The answer is
+  written "v = 30°": a degree sign after a number is a number.
+- **Trigonometric equations** (4.2.12), 0° ≤ v < 360°: sin, cos or tan equal to
+  ±1/2, ±√2/2, ±√3/2 (tan: ±1/√3, ±1, ±√3), sometimes as 2 sin v = 1 to divide
+  first. The worked steps: the acute angle with the value, then both
+  solutions ("v = 150°, v = 210°"), each from the unit circle.
 
 ## How it's played
 

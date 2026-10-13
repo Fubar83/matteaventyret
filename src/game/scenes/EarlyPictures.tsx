@@ -13,7 +13,7 @@ import { SpriteImage } from "./Sprite";
 const INK = "#334155";
 const COLOR: Record<ChanceColor, string> = { red: "#ef4444", blue: "#3b82f6", yellow: "#facc15", green: "#22c55e" };
 
-const GROUP_EMOJI: Record<GroupThing, string> = { cookies: "🍪", eggs: "🥚", apples: "🍎", fish: "🐟", flowers: "🌸", stars: "⭐" };
+export const GROUP_EMOJI: Record<GroupThing, string> = { cookies: "🍪", eggs: "🥚", apples: "🍎", fish: "🐟", flowers: "🌸", stars: "⭐" };
 export const THING_EMOJI: Record<ShelfThing, string> = {
   ball: "⚽",
   teddy: "🧸",

@@ -22,6 +22,13 @@ import { SortGroupsPlayer, SortOrderPlayer } from "./sort/SortPlayer";
 import { DrawChartPlayer } from "./drawChart/DrawChartPlayer";
 import { GaugePlayer } from "./gauge/GaugePlayer";
 import { ProgramPlayer } from "./program/ProgramPlayer";
+import { RightTrianglePlayer } from "./rightTriangle/RightTrianglePlayer";
+import { UnitCirclePlayer } from "./unitCircle/UnitCirclePlayer";
+import { TenFramePlayer } from "./tenFrame/TenFramePlayer";
+import { ShareOutPlayer } from "./shareOut/ShareOutPlayer";
+import { PyramidPlayer } from "./pyramid/PyramidPlayer";
+import { TreePlayer } from "./tree/TreePlayer";
+import { GraphShapePlayer } from "./graphShape/GraphShapePlayer";
 import { StatisticsPlayer } from "./statistics/StatisticsPlayer";
 import { TrappanPlayer } from "./trappan/TrappanPlayer";
 import { ExpressionPlayer } from "./written/ExpressionPlayer";
@@ -80,6 +87,13 @@ const PLAYERS: { [K in QuestionKind]: Player<K> } = {
   program: ({ problem, onSolved }) => <ProgramPlayer problem={problem} onSolved={onSolved} />,
   gauge: ({ problem, onSolved }) => <GaugePlayer problem={problem} onSolved={onSolved} />,
   drawChart: ({ problem, onSolved }) => <DrawChartPlayer problem={problem} onSolved={onSolved} />,
+  rightTriangle: ({ problem, onSolved }) => <RightTrianglePlayer problem={problem} onSolved={onSolved} />,
+  unitCircle: ({ problem, onSolved }) => <UnitCirclePlayer problem={problem} onSolved={onSolved} />,
+  tenFrame: ({ problem, onSolved }) => <TenFramePlayer problem={problem} onSolved={onSolved} />,
+  shareOut: ({ problem, onSolved }) => <ShareOutPlayer problem={problem} onSolved={onSolved} />,
+  pyramid: ({ problem, onSolved }) => <PyramidPlayer problem={problem} onSolved={onSolved} />,
+  tree: ({ problem, onSolved }) => <TreePlayer problem={problem} onSolved={onSolved} />,
+  graphShape: ({ problem, onSolved }) => <GraphShapePlayer problem={problem} onSolved={onSolved} />,
 };
 
 /** Every kind of question a player can be picked for. */

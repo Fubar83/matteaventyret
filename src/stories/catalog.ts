@@ -35,6 +35,13 @@ export const STORY_FILES: readonly StoryFile[] = [
   { file: "Program.stories.tsx", types: ["program"] },
   { file: "Gauge.stories.tsx", types: ["gauge"] },
   { file: "DrawChart.stories.tsx", types: ["drawChart"] },
+  { file: "RightTriangle.stories.tsx", types: ["rightTriangle"] },
+  { file: "UnitCircle.stories.tsx", types: ["unitCircle"] },
+  { file: "TenFrame.stories.tsx", types: ["tenFrame"] },
+  { file: "ShareOut.stories.tsx", types: ["shareOut"] },
+  { file: "Pyramid.stories.tsx", types: ["pyramid"] },
+  { file: "Tree.stories.tsx", types: ["tree"] },
+  { file: "GraphShape.stories.tsx", types: ["graphShape"] },
 ];
 
 /** The levels a story file shows: those of its types the game has, in the game's order. */

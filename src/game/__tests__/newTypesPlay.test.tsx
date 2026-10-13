@@ -8,6 +8,8 @@ import { BLOCKS_QUESTIONS, blocksOf, type BlocksStageId } from "../../engine/que
 import { CONSTRUCT_QUESTIONS, thirdCorner, type ConstructStageId } from "../../engine/questions/construct";
 import { DRAW_CHART_QUESTIONS, type DrawChartStageId } from "../../engine/questions/drawChart";
 import { GAUGE_QUESTIONS, type GaugeStageId } from "../../engine/questions/gauge";
+import { RATIO, RIGHT_TRIANGLE_QUESTIONS, roleOf, sideOf, SIDES, type RightTriangleStageId } from "../../engine/questions/rightTriangle";
+import { UNIT_CIRCLE_QUESTIONS, type UnitCircleStageId } from "../../engine/questions/unitCircle";
 import { afterQuestion, EXPERIMENT_QUESTIONS, runExperiment, type ExperimentStageId } from "../../engine/questions/experiment";
 import { MATCH_QUESTIONS, type MatchStageId } from "../../engine/questions/match";
 import { flatten, PROGRAM_QUESTIONS, type ProgramStageId } from "../../engine/questions/program";
@@ -58,7 +60,7 @@ const unmount = (page: Element) => {
 function playBoth(problem: GeneratedProblem, right: (page: Element) => void, wrong: (page: Element) => void, label: string) {
   let outcome: QuestionOutcome | null = null;
   let page = render(problem, (o) => (outcome = o));
-  expect(page.textContent, label).not.toMatch(/\b(match|blocks|balance|exp|construct|sort|program|gauge|drawChart)\.[a-zA-Z.]+/);
+  expect(page.textContent, label).not.toMatch(/\b(match|blocks|balance|exp|construct|sort|program|gauge|drawChart|rt|uc)\.[a-zA-Z.]+/);
   right(page);
   expect(outcome, label).toEqual(expect.objectContaining({ helped: false, fullSetup: true }));
   unmount(page);
@@ -300,6 +302,62 @@ describe("the new types on screen", () => {
             p.values.slice(0, -1).forEach((v, i) => nudge(page, i, v));
             check(page);
             expect(page.querySelector('[data-col="0"][data-dir="up"]')!.hasAttribute("disabled")).toBe(true);
+            check(page);
+          },
+          `${stage} seed ${seed}`
+        );
+      }
+    }
+  });
+
+  it("the right triangle: names dragged onto sides, lengths into a fraction", () => {
+    for (const stage of Object.keys(RIGHT_TRIANGLE_QUESTIONS.levels) as RightTriangleStageId[]) {
+      for (const seed of [1, 2, 3, 4]) {
+        const p = RIGHT_TRIANGLE_QUESTIONS.levels[stage](makeRng(seed));
+        const at = p.shape.angleAt;
+        const name = (page: Element, shift: number) =>
+          SIDES.forEach((s, i) => {
+            const role = roleOf(at, SIDES[(i + shift) % 3]);
+            click(page.querySelector(`[data-role="${role}"]`)!);
+            click(page.querySelector(`[data-side="${s}"]`)!);
+          });
+        const fraction = (page: Element, upside: boolean) => {
+          const [top, bottom] = RATIO[p.fn!].map((r) => sideOf(at, r));
+          for (const s of upside ? [bottom, top] : [top, bottom]) click(page.querySelector(`[data-length="${s}"]`)!);
+        };
+        playBoth(
+          p,
+          (page) => {
+            if (p.mode === "name") name(page, 0);
+            else fraction(page, false);
+            check(page);
+          },
+          (page) => {
+            for (const _ of [1, 2]) {
+              if (p.mode === "name") name(page, 1);
+              else fraction(page, true);
+              check(page);
+            }
+          },
+          `${stage} seed ${seed}`
+        );
+      }
+    }
+  });
+
+  it("the unit circle: turned to the answer", () => {
+    for (const stage of Object.keys(UNIT_CIRCLE_QUESTIONS.levels) as UnitCircleStageId[]) {
+      for (const seed of [1, 2, 3, 4, 5]) {
+        const p = UNIT_CIRCLE_QUESTIONS.levels[stage](makeRng(seed));
+        playBoth(
+          p,
+          (page) => {
+            const steps = (((p.answers[0] - p.start) % 360) + 360) % 360 / 15;
+            for (let i = 0; i < steps; i++) click(page.querySelector('[data-turn="ccw"]')!);
+            check(page);
+          },
+          (page) => {
+            check(page);
             check(page);
           },
           `${stage} seed ${seed}`

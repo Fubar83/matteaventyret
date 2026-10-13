@@ -300,9 +300,13 @@ function compositeBasic(rng: Rng): WrittenProblem {
   const H = randInt(rng, 4, 9);
 
   if (kind === "lShape") {
-    // A rectangle with its top-right corner cut away.
-    const cw = randInt(rng, 2, W - 2);
-    const ch = randInt(rng, 1, H - 2);
+    // A rectangle with its top-right corner cut away - never exactly half of it, or the corner's
+    // area would already be the answer. Drawn again only then, so other questions stay as they were.
+    let cw: number, ch: number;
+    do {
+      cw = randInt(rng, 2, W - 2);
+      ch = randInt(rng, 1, H - 2);
+    } while (2 * cw * ch === W * H);
     const pts: Point[] = [
       [0, 0],
       [W - cw, 0],

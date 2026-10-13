@@ -101,6 +101,13 @@ Three words with precise meanings:
 | `program` | `questions/program/` | program | `program/ProgramPlayer` (arrow cards and loops, dragged into a program; the robot runs it) |
 | `gauge` | `questions/gauge/` | gauge | `gauge/GaugePlayer` (drag a jug's water or a thermometer's line) |
 | `drawChart` | `questions/drawChart/` | drawChart | `drawChart/DrawChartPlayer` (drag bars or a line's points) |
+| `rightTriangle` | `questions/rightTriangle/` | rightTriangle | `rightTriangle/RightTrianglePlayer` (drag names onto the sides, lengths into sin, cos, tan) |
+| `unitCircle` | `questions/unitCircle/` | unitCircle | `unitCircle/UnitCirclePlayer` (drag the point round the unit circle) |
+| `tenFrame` | `questions/tenFrame/` | tenFrame | `tenFrame/TenFramePlayer` (counters into a ten frame) |
+| `shareOut` | `questions/shareOut/` | shareOut | `shareOut/ShareOutPlayer` (deal things onto plates) |
+| `pyramid` | `questions/pyramid/` | pyramid | `pyramid/PyramidPlayer` (number pyramids, written brick by brick) |
+| `tree` | `questions/tree/` | tree | `tree/TreePlayer` (probabilities onto a tree diagram's branches) |
+| `graphShape` | `questions/graphShape/` | graphShape | `graphShape/GraphShapePlayer` (drag a graph's handles) |
 
 The pictures a question can show (a balance, a number line, a fraction, a
 thermometer, a robot grid…) are one shared model, `engine/questions/scene.ts`,
@@ -246,7 +253,9 @@ It shows up in Storybook's "Nivå" setting automatically.
    number gets its tries from `useAnswerTries`. `HelpLadder` gives help and
    `NextSheet` moves on after a shown answer. Where things are moved, let them
    be dragged: `useDragDrop` (things onto targets) and `useDragPoint` (a point
-   in a drawing) in `dragDrop.tsx` keep a tap working alongside.
+   in a drawing) in `dragDrop.tsx` keep a tap working alongside. A "do it,
+   then Rätta" question gets its tries, help and shown answer from
+   `useCheckTries`.
 3. Its levels in `game/stages.ts` and their texts in `i18n/`.
 4. A story file in `src/stories/`, listed in `catalog.ts`, with the type's
    variants as stories (`variants.ts`) and its settings as controls.

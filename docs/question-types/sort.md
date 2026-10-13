@@ -32,6 +32,7 @@ Engine modules in `engine/questions/sort/`:
 | 2.17.2 | Storleksordna negativa tal | order | `order.ts` | 5 whole numbers, two or more negative, up or down |
 | 2.9.8 | Längder i olika enheter | order | `order.ts` | 4 lengths around a metre, each in its own unit (m, dm, cm, mm) |
 | 3.1.5 | Rationella och irrationella tal | groups | `groups.ts` | 4 rational (√16, 3,14, 0,333…, 22/7, −5) and 3 irrational (√2, π) |
+| 3.3.17 | Stämmer alltid? | groups | `groups.ts` | 3 rules that always hold ((a + b)² = a² + 2ab + b², −(a − b) = b − a …) and 3 that only look like rules ((a + b)² = a² + b², √(a + b) = √a + √b, xᵃ · xᵇ = xᵃᵇ …), each wrong one with the numbers that disprove it |
 | 3.1.6 | Grundpotensform i storleksordning | order | `order.ts` | 4 numbers, mostly as a · 10ᵏ, some written out — 9 · 10³ < 2 · 10⁴ |
 | 1.11.3 | Från omöjligt till säkert | order | `order.ts` | four events about a bag (shown): a colour not in it, the few, the many, either — impossible to certain |
 | 2.15.3 | Venndiagram | groups (Venn) | `groups.ts` | 8 numbers to 60 into divisible by 2, by 3, by both, by neither — two in each part |

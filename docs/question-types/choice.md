@@ -71,6 +71,15 @@ Topic modules in `engine/questions/choice/`:
 | 3.4.15 | Kongruens | `geometry.ts` | which triangle has the same three sides — turned or mirrored; not the similar one twice as big |
 | 3.2.5 | Rea och moms | `percent.ts` | 25 % off; 25 % VAT on; the price without VAT — divided by 1,25, not 25 % off |
 | 3.2.6 | Lån och amortering | `percent.ts` | the same paid back each month; the first month's interest |
+| 3.1.8 | Potenslagar | `algebraRules.ts` | xᵃ · xᵇ (not xᵃᵇ), xᵃ/xᵇ, (xᵃ)ᵇ (not xᵃ⁺ᵇ), (2x)³ = 8x³ (not 2x³), 5x⁰ = 5, both laws at once |
+| 3.1.10 | Räkneregler för rötter | `algebraRules.ts` | √2 · √8 = 4, √12 = 2√3 (not 4√3), √(9/16), (√7)² = 7, √(9 + 16) = 5 (not 3 + 4), √48/√3 |
+| 3.3.13 | Minus framför parentes | `algebraRules.ts` | −(x − 5), 7 − (x + 3), −3(x − 2), x − (2x − 4) — the slip: only the first sign changed; −3² = −9 and (−3)² = 9 |
+| 3.3.15 | Förenkla bråkuttryck | `algebraRules.ts` | (6x + 3)/3 = 2x + 1 (not 2x + 3), (x² − 9)/(x − 3), (x² + 4x)/x, x/2 + x/3 = 5x/6 (not 2x/5), (x + 5)/5 = x/5 + 1 (not x + 1) |
+| 3.3.16 | Lösa ut ur formler | `algebraRules.ts` | s = vt, F = ma, A = bh/2, y = kx + m, C = 2πr, P = 2a + 2b, V = πr²h/3, E = mc², v = s/t: the variable alone — upside down, subtracting instead of dividing, half the operations undone |
+| 4.1.4 | Negativa och rationella exponenter | `algebraRules.ts` | 2⁻³ = 1/8 (not −8), x⁻² = 1/x², 49^(1/2) = 7, 27^(1/3) = 3, 8^(2/3) = 4, (1/2)⁻³ = 8 |
+| 4.1.5 | Logaritmlagar | `algebraRules.ts` | lg 4 + lg 25 = 2 (not lg 29), lg 200 − lg 2, lg x³ = 3 lg x, lg(ab) = lg a + lg b, 10^(lg 7) = 7, lg 1 + lg 10 |
+| 4.2.6 | Exakta värden | `trig.ts` | sin, cos, tan of 0°–90° (sin and cos swapped, tan upside down as slips); the angle with a value; read off the half equilateral triangle (1, √3, 2) or the half square (1, 1, √2) |
+| 4.2.7 | Trigonometriska samband | `trig.ts` | sin v = sin(180° − v), cos v = sin(90° − v), cos(−v), sin(−v), sin²v + cos²v = 1, tan v = sin v / cos v; cos v from sin v with a Pythagorean triple (1 − sin v as the slip) |
 | 3.2.7 | Budget | `percent.ts` | a month's salary and costs: what's left (a cost forgotten), months of saving it for something (rounded up — one month short isn't enough), the rent's share of the salary (not of the costs) |
 | 3.9.1 | Programmering: variabler och loopar | `code.ts` | doubling in a loop, a running sum over i, medan (while), and a = b; b = a — not a swap |
 | 3.10.1 | Grafer och formler | `functions.ts` | a line on a grid: its formula y = kx + m, its k, its m, a y off it |
@@ -128,6 +137,15 @@ right option are.
     nearest ten, so an estimate tells them apart without counting.
   - **The budget** (3.2.7) is a `budget` scene: money in and out, row by row,
     the sums left to the child. The rent is a whole percent of the salary.
+  - **The algebra rules** (`algebraRules.ts`) are a family each, and every
+    wrong option is that rule's known slip with its reason. Options with a
+    fraction are written with `\dfrac`, to be read on a button. A test
+    evaluates the shown expression and every option at two values of x:
+    the right one agrees, every slip differs (`algebraChoices.test.ts`).
+  - **Trigonometry** (`trig.ts`) writes each exact value one way only (√2/2,
+    never 1/√2 beside it), so no two options are the same number — except
+    where read off a triangle with √2 as its hypotenuse, where 1/√2 is what
+    the picture gives. Its triangles are the `rightTriangle` scene.
   - **Programming** uses absolute arrows (↑ ↓ ← →), each one square. A program
     stays on the 5 × 5 grid all the way. The lettered squares are where the
     slips lead: a step missed, left/right or up/down swapped, a loop run once

@@ -17,6 +17,7 @@ age, förskoleklass to åk 9.
 | 2.9.9 | Lika mycket i olika enheter | 1,5 m and 150 cm, 2,3 kg and 2 300 g, 1 h 15 min and 75 min — one family each |
 | 3.3.9 | Para ihop uttryck | 2(x + 3) and 2x + 6, x · x and x², (x + 3)² and x² + 6x + 9 — a different rule each |
 | 3.10.3 | Para ihop graf och formel | three lines and their y = kx + m |
+| 3.1.11 | Para ihop: potenser | xᵃ · xᵇ, (xᵃ)ᵇ, xᵃ/xᵇ, x⁰, x⁻¹, √x and the one power each is — four of them, every power different |
 
 ## The question
 

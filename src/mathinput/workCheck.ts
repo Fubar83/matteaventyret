@@ -176,7 +176,35 @@ function isFactored(e: Expr): boolean {
   if (inner.op === "^") return hasSum(inner.left);
   if (inner.op !== "*") return false;
   const factors = (x: Expr): Expr[] => (x.kind === "bin" && x.op === "*" ? [...factors(x.left), ...factors(x.right)] : [x]);
-  return factors(inner).some((f) => hasSum(f) && freeVariables(f).size > 0);
+  const sums = factors(inner).filter((f) => hasSum(f) && freeVariables(f).size > 0);
+  // Factored all the way: 3(2x + 5), not 2(3x + 7,5) or (6x + 15) - nothing left to take out of a bracket.
+  return sums.length > 0 && sums.every(nothingCommon);
+}
+
+/** A term's whole-number coefficient: 6 in 6x², −1 in −x - null when it isn't that simple (a fraction, a root). */
+function coefficientOf(t: Expr): number | null {
+  if (t.kind === "num") return t.value;
+  if (t.kind === "var") return 1;
+  if (t.kind === "neg") return coefficientOf(t.arg);
+  if (t.kind === "bin" && t.op === "*") {
+    const [a, b] = [coefficientOf(t.left), coefficientOf(t.right)];
+    return a === null || b === null ? null : a * b;
+  }
+  if (t.kind === "bin" && t.op === "^") return t.left.kind === "var" ? 1 : null;
+  return null;
+}
+
+/** A sum with no common factor left: its whole coefficients share none, and not every term has a letter in it. */
+function nothingCommon(sum: Expr): boolean {
+  const terms = termsOf(sum.kind === "bin" && sum.op === "^" ? sum.left : sum);
+  if (terms.length < 2) return true;
+  if (terms.every((t) => freeVariables(t).size > 0)) return false;
+  const coefs = terms.map(coefficientOf);
+  // Decimals left in the bracket (2(3x + 7,5)): too much was taken out. A root or a fraction: not judged here.
+  if (coefs.some((c) => c !== null && !Number.isInteger(c))) return false;
+  if (coefs.some((c) => c === null)) return true;
+  const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
+  return (coefs as number[]).reduce((g, c) => gcd(g, Math.abs(c)), 0) === 1;
 }
 
 /** How many plain numbers multiply together in a term: 3 · 2x has two (not worked out yet), 6x one, x² none - an exponent isn't a factor. */

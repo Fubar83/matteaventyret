@@ -31,6 +31,7 @@ export const FigurerKroppar: Story = story("Figurer och kroppar", SORT.planeOrSo
 export const Primtal: Story = story("Primtal", SORT.primes);
 export const BrakKringEnHalv: Story = story("Bråk kring en halv", SORT.aroundAHalf);
 export const Rationella: Story = story("Rationella och irrationella tal", SORT.rational);
+export const StammerAlltid: Story = story("Stämmer alltid?", SORT.always);
 export const FarstTillFlest: Story = story("Färst till flest", SORT.fewestToMost);
 export const StorleksordnaTal: Story = story("Storleksordna tal", SORT.numbers);
 export const BrakDecimalProcent: Story = story("Bråk, decimaltal och procent", SORT.mixedForms);

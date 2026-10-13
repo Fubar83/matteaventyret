@@ -20,6 +20,13 @@ import { MUL_GUIDED_QUESTIONS } from "./questions/multiply";
 import { NUMBER_LINE_QUESTIONS } from "./questions/numberLine";
 import { PLACE_VALUE_QUESTIONS } from "./questions/placeValue";
 import { PROGRAM_QUESTIONS } from "./questions/program";
+import { RIGHT_TRIANGLE_QUESTIONS } from "./questions/rightTriangle";
+import { UNIT_CIRCLE_QUESTIONS } from "./questions/unitCircle";
+import { TEN_FRAME_QUESTIONS } from "./questions/tenFrame";
+import { SHARE_OUT_QUESTIONS } from "./questions/shareOut";
+import { PYRAMID_QUESTIONS } from "./questions/pyramid";
+import { TREE_QUESTIONS } from "./questions/tree";
+import { GRAPH_SHAPE_QUESTIONS } from "./questions/graphShape";
 import { MAX_ATTEMPTS } from "./questions/questionType";
 import { SHOP_QUESTIONS } from "./questions/shop";
 import { SHORT_DIVISION_QUESTIONS } from "./questions/shortDivision";
@@ -53,6 +60,13 @@ export const QUESTION_TYPES = [
   PROGRAM_QUESTIONS,
   GAUGE_QUESTIONS,
   DRAW_CHART_QUESTIONS,
+  RIGHT_TRIANGLE_QUESTIONS,
+  UNIT_CIRCLE_QUESTIONS,
+  TEN_FRAME_QUESTIONS,
+  SHARE_OUT_QUESTIONS,
+  PYRAMID_QUESTIONS,
+  TREE_QUESTIONS,
+  GRAPH_SHAPE_QUESTIONS,
 ] as const;
 
 type AnyType = (typeof QUESTION_TYPES)[number];

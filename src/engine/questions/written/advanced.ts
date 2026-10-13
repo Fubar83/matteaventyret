@@ -10,11 +10,14 @@
 import type { Rng } from "../../rng";
 import { pick, randInt } from "../../rng";
 import { coef, par, signed, st, tex, type WrittenProblem, type AnswerSpec, type SolutionStep } from "./problem";
+import { RATIO, randomShape, sideOf, SIDES, type Role } from "../rightTriangle";
+import { exact } from "../unitCircle";
 
 export type AdvancedStageId =
   | "3.1.1"
   | "3.1.2"
   | "3.1.3"
+  | "3.1.9"
   | "3.2.1"
   | "3.2.2"
   | "3.3.1"
@@ -23,11 +26,16 @@ export type AdvancedStageId =
   | "3.3.4"
   | "3.3.5"
   | "3.3.6"
+  | "3.3.14"
+  | "3.3.18"
   | "3.4.1"
   | "3.4.2"
   | "4.1.1"
   | "4.1.2"
+  | "4.1.6"
   | "4.2.1"
+  | "4.2.8"
+  | "4.2.12"
   | "4.3.1"
   | "4.3.2";
 
@@ -462,6 +470,233 @@ function trigonometry(rng: Rng): WrittenProblem {
   ]);
 }
 
+/**
+ * Trigonometri utan räknare: a side from an exact ratio (sin v = 3/5, from a
+ * Pythagorean triple), or an angle from two sides whose ratio is in the table
+ * (5 and 10: sin v = 1/2, v = 30°). The triangle is drawn, any way round.
+ */
+function trigNoCalculator(rng: Rng): WrittenProblem {
+  if (rng() < 0.6) {
+    const [p, q, h] = pick(rng, [[3, 4, 5], [5, 12, 13], [8, 15, 17]] as const);
+    const k = randInt(rng, 2, 4);
+    const [opp, adj] = rng() < 0.5 ? [p, q] : [q, p];
+    const sides: Record<Role, number> = { opposite: opp, adjacent: adj, hypotenuse: h };
+    const fn = pick(rng, ["sin", "cos", "tan"] as const);
+    const [top, bottom] = RATIO[fn];
+    // Mostly the top of the ratio is asked (x = c · sin v); sometimes the bottom (c = a / sin v).
+    const askTop = rng() < 0.7;
+    const [asked, given] = askTop ? [top, bottom] : [bottom, top];
+    const g = sides[given] * k;
+    const x = sides[asked] * k;
+    const shape = randomShape(rng);
+    const legs: [number, number] = shape.angleAt === 0 ? [adj, opp] : [opp, adj];
+    const labels: [string | null, string | null, string | null] = [null, null, null];
+    labels[SIDES.indexOf(sideOf(shape.angleAt, given))] = String(g);
+    labels[SIDES.indexOf(sideOf(shape.angleAt, asked))] = "x";
+    const ratio = `\\frac{${sides[top]}}{${sides[bottom]}}`;
+    const setUp = askTop ? `\\${fn} v = \\frac{x}{${g}}` : `\\${fn} v = \\frac{${g}}{x}`;
+    const last = askTop ? `x = ${g} \\cdot ${ratio} = ${x}` : `x = ${g} \\cdot \\frac{${sides[bottom]}}{${sides[top]}} = ${x}`;
+    return {
+      ...withSteps(base("4.2.8", "adv.prompt.trigSide", `\\${fn} v = ${ratio}`, { kind: "value", value: x }, setUp, [setUp, last]), [
+        st("step.trigSetUp", setUp, { fn }),
+        st(askTop ? "step.trigMultiply" : "step.trigDivide", last, { g }),
+      ]),
+      scene: { kind: "rightTriangle", shape: { ...shape, legs }, labels, angle: "v" },
+    };
+  }
+  // Two sides in a ratio from the table: 1 : 2 is sin 30° (or cos 60°), equal legs tan 45°.
+  const k = randInt(rng, 2, 9);
+  const which = pick(rng, ["sin30", "cos60", "tan45"] as const);
+  const [fn, roles, angle, ratio] =
+    which === "sin30"
+      ? (["sin", ["opposite", "hypotenuse"], 30, "\\frac{1}{2}"] as const)
+      : which === "cos60"
+        ? (["cos", ["adjacent", "hypotenuse"], 60, "\\frac{1}{2}"] as const)
+        : (["tan", ["opposite", "adjacent"], 45, "1"] as const);
+  const lengths: Record<Role, number> = { opposite: which === "tan45" ? k : which === "sin30" ? k : 0, adjacent: which === "tan45" ? k : which === "cos60" ? k : 0, hypotenuse: 2 * k };
+  const shape = randomShape(rng);
+  // Drawn true to shape: 30° has the short leg across from it.
+  const opp = which === "sin30" ? 1 : which === "cos60" ? 1.73 : 1;
+  const adj = which === "sin30" ? 1.73 : 1;
+  const legs: [number, number] = shape.angleAt === 0 ? [adj, opp] : [opp, adj];
+  const labels: [string | null, string | null, string | null] = [null, null, null];
+  for (const r of roles) labels[SIDES.indexOf(sideOf(shape.angleAt, r))] = String(lengths[r]);
+  const first = `\\${fn} v = \\frac{${lengths[roles[0]]}}{${lengths[roles[1]]}} = ${ratio}`;
+  const answer = `v = ${angle}^{\\circ}`;
+  return {
+    ...withSteps(base("4.2.8", "adv.prompt.trigAngle", "", { kind: "value", value: angle }, first, [first, answer]), [
+      st("step.trigWhichRatio", first, { fn }),
+      st("step.trigAngle", answer),
+    ]),
+    scene: { kind: "rightTriangle", shape: { ...shape, legs }, labels, angle: "v" },
+  };
+}
+
+/**
+ * Trigonometriska ekvationer, 0° ≤ v < 360°: sin, cos or tan equal to an exact
+ * value - the angle from the table, then the other one on the circle. Now and
+ * then 2 sin v = 1, to divide first.
+ */
+function trigEquations(rng: Rng): WrittenProblem {
+  const fn = pick(rng, ["sin", "cos", "tan"] as const);
+  const a = pick(rng, [30, 45, 60]);
+  const sign = pick(rng, [1, -1]);
+  const solutions = (
+    fn === "sin" ? (sign > 0 ? [a, 180 - a] : [180 + a, 360 - a]) : fn === "cos" ? (sign > 0 ? [a, 360 - a] : [180 - a, 180 + a]) : sign > 0 ? [a, 180 + a] : [180 - a, 360 - a]
+  ).sort((x, y) => x - y);
+  const tanValue: Record<number, string> = { 30: "\\frac{1}{\\sqrt{3}}", 45: "1", 60: "\\sqrt{3}" };
+  const positive = fn === "tan" ? tanValue[a] : exact(fn === "sin" ? Math.sin((a * Math.PI) / 180) : Math.cos((a * Math.PI) / 180));
+  const value = sign > 0 ? positive : `-${positive}`;
+  // 2 sin v = 1, 2 cos v = −√3: twice the value is 1, √2 or √3.
+  const doubled = fn !== "tan" && rng() < 0.35;
+  const twice = positive.replace(/\\frac\{(.+)\}\{2\}/, "$1");
+  const equation = doubled ? `2\\${fn} v = ${sign > 0 ? "" : "-"}${twice}` : `\\${fn} v = ${value}`;
+  const plain = `\\${fn} v = ${value}`;
+  const baseLine = `\\${fn} ${a}^{\\circ} = ${positive}`;
+  const both = `v = ${solutions[0]}^{\\circ}, v = ${solutions[1]}^{\\circ}`;
+  return withSteps(
+    base("4.2.12", "adv.prompt.trigEquation", `${equation},\\quad 0^{\\circ} \\le v < 360^{\\circ}`, { kind: "solutions", variable: "v", values: solutions }, doubled ? plain : baseLine, [...(doubled ? [plain] : []), baseLine, both]),
+    [
+      ...(doubled ? [st("step.divideBoth", plain, { n: 2 })] : []),
+      st("step.trigBase", baseLine, { fn }),
+      st(`step.trigSecond.${fn}`, both, { a }),
+    ]
+  );
+}
+
+/**
+ * Räkna med potenslagarna: a calculation that's quick with the laws and slow
+ * without - 2¹⁰ / 2⁷ = 2³ = 8, (3²)² = 3⁴, 5⁴ · 5³ / 5⁶ = 5, 10⁵ · 10⁻² = 1000.
+ */
+function powerLaws(rng: Rng): WrittenProblem {
+  const b = pick(rng, [2, 3, 5, 10]);
+  const most = b === 2 ? 6 : b === 3 ? 4 : b === 5 ? 3 : 4;
+  const e = randInt(rng, b === 10 ? 2 : 0, most);
+  const value = b ** e;
+  const p = (n: number) => `${b}^{${n}}`;
+  // Each law needs an e it can make: a power of a power needs e = 2k or 3k, a product e ≥ 2.
+  let kind = pick(rng, ["quotient", "product", "power", "mixed", "negative"] as const);
+  if (kind === "power" && (e < 2 || (e % 2 !== 0 && e % 3 !== 0))) kind = "quotient";
+  if (kind === "product" && e < 2) kind = "quotient";
+  let shown: string;
+  let law: string;
+  let key: string;
+  if (kind === "quotient") {
+    const m = e + randInt(rng, 3, 7);
+    shown = `\\frac{${p(m)}}{${p(m - e)}}`;
+    law = `${b}^{${m} - ${m - e}}`;
+    key = "step.powerQuotient";
+  } else if (kind === "power") {
+    const k = e % 2 === 0 ? 2 : 3;
+    shown = `(${p(e / k)})^{${k}}`;
+    law = `${b}^{${e / k} \\cdot ${k}}`;
+    key = "step.powerPower";
+  } else if (kind === "product") {
+    const m = randInt(rng, 1, e - 1);
+    shown = `${p(m)} \\cdot ${p(e - m)}`;
+    law = `${b}^{${m} + ${e - m}}`;
+    key = "step.powerProduct";
+  } else if (kind === "negative") {
+    const m = e + randInt(rng, 2, 5);
+    shown = `${p(m)} \\cdot ${p(e - m)}`;
+    law = `${b}^{${m} + (${e - m})}`;
+    key = "step.powerProduct";
+  } else {
+    // Both laws: a product over a power.
+    const m = randInt(rng, 2, 5);
+    const n = randInt(rng, 2, 5);
+    shown = `\\frac{${p(m)} \\cdot ${p(n)}}{${p(m + n - e)}}`;
+    law = `${b}^{${m} + ${n} - ${m + n - e}}`;
+    key = "step.powerMixed";
+  }
+  const one = `${shown} = ${law} = ${b}^{${e}}`;
+  return withSteps(base("3.1.9", "adv.prompt.powerLaws", shown, { kind: "value", value }, one, [one, `${b}^{${e}} = ${value}`]), [
+    st(key, one),
+    st(e === 0 ? "step.powerZero" : "step.calculate", `${b}^{${e}} = ${value}`),
+  ]);
+}
+
+/** A term as written: 6x, −x, 4x², 9 - with its sign, or without a + when it comes first. */
+function term(c: number, power: number, first = false): string {
+  const x = power === 0 ? "" : power === 1 ? "x" : `x^{${power}}`;
+  const n = Math.abs(c) === 1 && power > 0 ? "" : String(Math.abs(c));
+  if (first) return `${c < 0 ? "-" : ""}${n}${x}`;
+  return `${c < 0 ? "-" : "+"} ${n}${x}`;
+}
+
+/**
+ * Bryta ut: the greatest common factor out of a sum - a number (6x + 15 =
+ * 3(2x + 5)), x (x² − 7x = x(x − 7)) or both (4x² + 6x = 2x(2x + 3)).
+ */
+function commonFactor(rng: Rng): WrittenProblem {
+  const kind = pick(rng, ["number", "number", "x", "both"] as const);
+  const g = (a: number, b: number): number => (b === 0 ? Math.abs(a) : g(b, a % b));
+  let a: number;
+  let b: number;
+  do {
+    a = randInt(rng, 1, 7);
+    b = nonZero(rng, -9, 9);
+  } while (g(a, b) !== 1 || (kind === "x" && a !== 1));
+  const k = kind === "x" ? 1 : randInt(rng, 2, 6);
+  // number: k(ax + b); x: x(x + b); both: kx(ax + b).
+  const px = kind === "number" ? 1 : 2;
+  const shown = `${term(k * a, px, true)} ${term(k * b, px - 1)}`;
+  const outside = kind === "number" ? String(k) : kind === "x" ? "x" : `${k}x`;
+  const answer = `${outside}(${term(a, 1, true)} ${term(b, 0)})`;
+  const split = `${outside} \\cdot ${term(a, 1, true)} ${b < 0 ? "-" : "+"} ${outside} \\cdot ${Math.abs(b)}`;
+  return withSteps(base("3.3.14", "adv.prompt.factorOut", shown, { kind: "expression", variable: "x", latex: answer, form: "factored" }, `${shown} = ${split}`, [`${shown} = ${split}`, `= ${answer}`]), [
+    st("step.findCommon", `${shown} = ${split}`, { f: outside }),
+    st("step.takeOut", `${split} = ${answer}`),
+  ]);
+}
+
+/**
+ * Multiplicera parenteser: a(x + b) − c(x + d), where the minus changes every
+ * sign in its bracket; and (x + a)(x + b), every term times every term.
+ */
+function brackets(rng: Rng): WrittenProblem {
+  if (rng() < 0.45) {
+    const a = randInt(rng, 2, 6);
+    const b = nonZero(rng, -7, 7);
+    const c = pick(rng, [2, 3, 4, 5].filter((n) => n !== a));
+    const d = nonZero(rng, -7, 7);
+    const shown = `${a}(x ${signed(b)}) - ${c}(x ${signed(d)})`;
+    const out = `${a}x ${signed(a * b)} - ${c}x ${signed(-c * d)}`;
+    const k = a - c;
+    const m = a * b - c * d;
+    const answer = `${coef(k)}${m === 0 ? "" : ` ${signed(m)}`}`;
+    return withSteps(base("3.3.18", "adv.prompt.expandSimplify", shown, { kind: "expression", variable: "x", latex: answer, form: "expanded" }, `${shown} = ${out}`, [`${shown} = ${out}`, `= ${answer}`]), [
+      st("step.minusBracket", `${shown} = ${out}`),
+      st("step.simplifyTerms", `${out} = ${answer}`),
+    ]);
+  }
+  const a = nonZero(rng, -7, 8);
+  const b = nonZero(rng, -7, 8);
+  const shown = `(x ${signed(a)})(x ${signed(b)})`;
+  const four = `x^{2} ${signedTerm(b)} ${signedTerm(a)} ${signed(a * b)}`;
+  const answer = `x^{2}${a + b === 0 ? "" : ` ${signedTerm(a + b)}`} ${signed(a * b)}`;
+  return withSteps(base("3.3.18", "adv.prompt.expandSimplify", shown, { kind: "expression", variable: "x", latex: answer, form: "expanded" }, `${shown} = ${four}`, [`${shown} = ${four}`, `= ${answer}`]), [
+    st("step.everyTerm", `${shown} = ${four}`),
+    st("step.simplifyTerms", `${four} = ${answer}`),
+  ]);
+}
+
+/** Faktorisera x² + bx + c: two numbers with the product c and the sum b. */
+function factorQuadratic(rng: Rng): WrittenProblem {
+  let p: number;
+  let q: number;
+  do {
+    p = nonZero(rng, -9, 9);
+    q = nonZero(rng, -9, 9);
+  } while (p === q || p === -q);
+  const shown = `x^{2}${p + q === 0 ? "" : ` ${signedTerm(p + q)}`} ${signed(p * q)}`;
+  const answer = `(x ${signed(p)})(x ${signed(q)})`;
+  const pair = `${par(p)} \\cdot ${par(q)} = ${tex(p * q)}, \\quad ${par(p)} + ${par(q)} = ${tex(p + q)}`;
+  return withSteps(base("4.1.6", "adv.prompt.factor", shown, { kind: "expression", variable: "x", latex: answer, form: "factored" }, pair, [`${shown} = ${answer}`]), [
+    st("step.sumProduct", `${shown} = ${answer}`, { c: tex(p * q), b: tex(p + q), p: tex(p), q: tex(q) }),
+  ]);
+}
+
 /** Derivata: f(x) = ax^n + bx + c. */
 function derivative(rng: Rng): WrittenProblem {
   const a = nonZero(rng, -5, 6);
@@ -502,6 +737,7 @@ export const ADVANCED_GENERATORS: Record<AdvancedStageId, (rng: Rng) => WrittenP
   "3.1.1": negativeNumbers,
   "3.1.2": powers,
   "3.1.3": scientific,
+  "3.1.9": powerLaws,
   "3.2.1": percentOf,
   "3.2.2": changeFactor,
   "3.3.1": simplify,
@@ -510,11 +746,16 @@ export const ADVANCED_GENERATORS: Record<AdvancedStageId, (rng: Rng) => WrittenP
   "3.3.4": squareRules,
   "3.3.5": conjugateRule,
   "3.3.6": quadraticBasics,
+  "3.3.14": commonFactor,
+  "3.3.18": brackets,
   "3.4.1": pythagoras,
   "3.4.2": linear,
   "4.1.1": pq,
   "4.1.2": logarithms,
+  "4.1.6": factorQuadratic,
   "4.2.1": trigonometry,
+  "4.2.8": trigNoCalculator,
+  "4.2.12": trigEquations,
   "4.3.1": derivative,
   "4.3.2": integral,
 };

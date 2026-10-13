@@ -31,4 +31,5 @@ export const Klockor: Story = story("Klockor", MATCH.clocks);
 export const BrakDecimalProcent: Story = story("Bråk, decimaltal och procent", MATCH.forms);
 export const Enheter: Story = story("Lika mycket i olika enheter", MATCH.units);
 export const Uttryck: Story = story("Uttryck", MATCH.expressions);
+export const Potenser: Story = story("Potenser", MATCH.powers);
 export const GrafOchFormel: Story = story("Graf och formel", MATCH.graphs);
